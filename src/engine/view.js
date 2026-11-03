@@ -4,7 +4,7 @@
 
 import { CONFIG as C } from '../data/config.data.js';
 import { MODULES, TRACK } from '../data/modules.data.js';
-import { STATIONS } from '../data/crew.data.js';
+import { STATIONS, CREW } from '../data/crew.data.js';
 import { hoursFor } from './week.js';
 import { unlocked } from './state.js';
 import { moodWord, standardWord, trustWord, active } from './derive.js';
@@ -55,10 +55,13 @@ export function weekView(s, plan = {}) {
   };
 }
 
-/** What the pixel floor shows: who is where, and how they look from across the bay. */
+/** What the pixel floor shows: who is where, how they look from across the bay,
+ *  and what the bay itself shows (booth three's haze, a shut booth). */
 export function floorView(s) {
   const open = s.problems.filter((p) => p.state === 'active');
-  return s.crew.map((c) => {
+  const hazard = s.problems.find((p) => p.type === 'hazard' && p.state !== 'resolved');
+  const flags = { haze: !!hazard && !hazard.shut, boothShut: !!hazard?.shut };
+  const people = s.crew.map((c) => {
     let state = 'working';
     if (!active(c)) state = 'absent';
     else if (c.daysOut >= 3) state = 'absent';
@@ -66,8 +69,23 @@ export function floorView(s) {
     else if (c.morale < 0.45 || c.stress >= 3) state = 'frustrated';
     else if (open.some((p) => p.who.includes(c.id) && (p.type === 'friction' || p.type === 'load'))) state = 'talking';
     else if (c.daysOut > 0 || c.lateness > 0.3) state = 'idle';
-    return { id: c.id, name: c.name, station: c.station, slot: c.slot, look: c.look, state, lead: !!c.lead };
+    return { id: c.id, name: c.name, station: c.station, slot: c.slot, look: c.look, state, lead: !!c.lead, caption: captionFor(c, state) };
   });
+  return { people, flags };
+}
+
+const STATE_WORDS = { working: 'working', idle: 'standing around more than usual', talking: 'in a conversation that looks like it is not about work', frustrated: 'looks fed up', absent: 'not here' };
+function captionFor(c, state) {
+  const where = { fit: 'fit-up', weld: 'body weld', finish: 'finish' }[c.station];
+  return `${c.name}, ${where}: ${STATE_WORDS[state]}.`;
+}
+
+/** The title screen's bay: everyone working, nothing wrong yet. */
+export function demoFloor() {
+  return {
+    people: CREW.map((c) => ({ id: c.id, name: c.name, station: c.station, slot: c.slot, look: c.look, state: 'working', lead: !!c.lead, caption: captionFor(c, 'working') })),
+    flags: { haze: false, boothShut: false },
+  };
 }
 
 export function crewView(s) {
@@ -84,3 +102,8 @@ export function crewView(s) {
 }
 
 export { MODULES, TRACK };
+
+/** The crew as the brief shows them: name, station, a line about each. */
+export function crewStrip() {
+  return CREW.map((c) => ({ id: c.id, name: c.name, station: STATIONS[c.station].label, about: c.about, look: c.look, lead: !!c.lead }));
+}

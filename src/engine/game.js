@@ -3,4 +3,4 @@
 
 export { newSave, startRun, playWeek, endRun, saveDebrief, signOff, setOpenAll, unlocked, SAVE_KEY, serialize, deserialize, toCode, fromCode, migrate, SAVE_VERSION } from './state.js';
 export { newModule, advance, hoursFor } from './week.js';
-export { trackView, briefView, weekView, floorView, crewView, MODULES, TRACK } from './view.js';
+export { trackView, briefView, weekView, floorView, crewView, demoFloor, crewStrip, MODULES, TRACK } from './view.js';

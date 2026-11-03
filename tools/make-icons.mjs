@@ -13,7 +13,7 @@ import { launch } from './browser.mjs';
 
 const SRC = process.argv[2] || 'assets/icon.svg';
 const OUT = process.argv[3] || 'assets';
-const BG = '#d9822b';
+const BG = '#1a2028';
 const svg = await readFile(SRC, 'utf8');
 await mkdir(OUT, { recursive: true });
 

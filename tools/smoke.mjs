@@ -8,21 +8,28 @@
 // It also proves PROGRESS through the UI: the clock must move on every turn.
 //
 // ---- ADAPT THESE to the game's screens (the rest is generic) ---------------
-export const START = ['[data-act="new"]'];           // clicks that begin a game
+// Shift: the title starts the track, the track opens a brief, the brief starts
+// Monday. One turn is one week: pick nothing (the defaults), run the week, read
+// Friday, close it. The module ends on its end screen (.verdict).
+export const START = ['[data-act="new"]', '[data-act="brief"][data-id="the-week"]', '[data-act="start-module"]'];
 export const CLOCK = '.hud .turn';                    // element whose text is the game clock
-export const TABS = ['[data-tab="play"]', '[data-tab="ledger"]', '[data-tab="menu"]'];
-export const TURNS = Number(process.env.TURNS || 10);
+export const END = '.verdict';                        // present when the module has ended
+export const TABS = ['[data-tab="week"]', '[data-tab="crew"]', '[data-tab="log"]', '[data-tab="menu"]'];
+export const TURNS = Number(process.env.TURNS || 4);
 
 /** Take one turn the way a player would; return true if the clock moved. */
 export async function advanceOnce(page) {
+  if (await page.locator(END).count()) return true;
   const before = (await page.locator(CLOCK).textContent())?.trim();
+  const opt = page.locator('.ticket .opt:not(.on)').first();     // change one choice, as a player would
+  if (await opt.count()) await opt.click();
   const btn = page.locator('[data-action]:not([disabled])').first();
   if (!(await btn.count())) return false;
   await btn.click();
   for (let g = 0; g < 4 && (await page.locator('.scrim [data-act="close"]').count()); g++) {
     await page.locator('.scrim [data-act="close"]').first().click();
   }
-  if (await page.locator('[data-act="new"]').count()) return true; // the game ended: also progress
+  if (await page.locator(END).count()) return true; // the module ended: also progress
   return (await page.locator(CLOCK).textContent())?.trim() !== before;
 }
 // -----------------------------------------------------------------------------
@@ -52,7 +59,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   for (let i = 0; i < TURNS; i++) {
     if (!(await advanceOnce(page))) { check(`clock advanced on turn ${i + 1}`, false); break; }
     turns++;
-    if (await page.locator('[data-act="new"]').count()) break;
+    if (await page.locator(END).count()) break;
   }
   check(`played ${turns} turns through the UI`, turns > 0);
   await page.screenshot({ path: `${SHOTS}/1-played.png` });

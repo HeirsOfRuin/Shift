@@ -70,6 +70,15 @@ async function load(rel) {
   const leftover = code.match(/^import\s.+$/m);
   if (leftover) throw new Error(`${rel}: unsupported import form -> ${leftover[0]}`);
   const exports = collectExports(code, rel);
+  // Re-exports were rewritten to consts above, so the scan no longer sees them:
+  // add their names, or a facade module (export { a } from './x.js') bundles
+  // to an empty object and every import from it is undefined (Shift, 2026-11-03).
+  for (const named of reexports) {
+    for (const part of named.slice(1, -1).split(',')) {
+      const name = part.trim().split(/\s+as\s+/).pop().trim();
+      if (name && !exports.includes(name)) exports.push(name);
+    }
+  }
   code = code.replace(/^export\s+(?=(?:async\s+)?function|class|const|let|var)/gm, '');
   code = code.replace(/^export\s*\{[^}]*\}\s*;?/gm, '');
   for (const d of deps) await load(d);
@@ -162,8 +171,14 @@ const singleOut = single.split(PLACEHOLDER).join(id);
 await writeFile(join(ROOT, `dist/${SLUG}.html`), singleOut);
 
 // ---- the embed: content only; the host owns the document and the notch
+// Shift: the embed carries the side-inset promise and the web fonts (with
+// system fallbacks in styles.css), because the host it is published to
+// supplies the rest of the document.
+const FONT_LINKS = (html.match(/<link rel="(?:preconnect|stylesheet)" href="https:\/\/fonts\.[^>]+>/g) || []).join('\n');
 const embed = [
   `<title>${manifest.name}</title>`,
+  '<meta name="claude:viewport-fit-sides" content="cover">',
+  FONT_LINKS,
   styleTag,
   '<style>:root { --sa-top: 0px; --sa-bottom: 0px; }</style>',
   '<div id="app"></div>',
