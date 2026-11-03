@@ -1,0 +1,129 @@
+// Problem types. Logic-free: what each type is, its hidden causes, what people
+// tell you, and the actions on its card. What the actions DO, by cause, is in
+// src/engine/problems.js; what the player reads is in text.data.js.
+//
+// Every type has one passing cause: it sorts itself out, acting costs hours, and
+// heavy action does harm. The kill gate needed this, or doing nothing could never
+// be right and the tool would preach (docs/KILLGATE.md, run 1).
+//
+// Action fields: hours; kind (what the bots read: ask, fix, hold, contain,
+// yourself, soft, up, around, leave); fits (the causes it is the right answer
+// for; common sense a good supervisor has, never shown as a hint).
+
+export const PROBLEMS = {
+  late: {
+    label: 'Lateness',
+    causes: { childcare: 0.35, ride: 0.3, attitude: 0.35 },
+    passing: 'ride',
+    stories: { attitude: { ride: 0.4 } },
+    actions: {
+      talk: { label: 'Talk to {a.him} privately', hours: 1, kind: 'ask' },
+      document: { label: 'Write it up and start the discipline steps', hours: 1.5, kind: 'hold', fits: ['attitude'] },
+      accommodate: { label: 'Offer {a.him} a later start time', hours: 0.5, kind: 'fix', fits: ['childcare'] },
+      carpool: { label: 'Sort out a ride with someone on {a.his} road', hours: 1, kind: 'fix', fits: ['ride'] },
+      remind: { label: 'Mention it in passing', hours: 0.25, kind: 'soft' },
+    },
+  },
+  rework: {
+    label: 'Rework',
+    causes: { untrained: 0.4, rushing: 0.25, fixture: 0.15, newJig: 0.2 },
+    passing: 'newJig',
+    stories: {},
+    actions: {
+      investigate: { label: 'Watch {a.him} weld for a morning and pull the tickets', hours: 3, kind: 'ask' },
+      coach: { label: 'Coach {a.him} at the booth', hours: 1, kind: 'fix', fits: ['untrained', 'rushing'] },
+      correct: { label: 'Tell {a.him} to tighten up', hours: 0.5, kind: 'soft' },
+      fixYourself: { label: 'Fix the welds yourself', hours: 2, kind: 'yourself' },
+      fixFixture: { label: 'Rebuild the fixture with maintenance', hours: 4, kind: 'fix', fits: ['fixture'] },
+      document: { label: 'Write {a.him} up for quality', hours: 1.5, kind: 'hold' },
+    },
+  },
+  load: {
+    label: 'Carrying too much',
+    causes: { unowned: 0.45, personal: 0.3, crunch: 0.25 },
+    passing: 'crunch',
+    stories: { personal: { unowned: 0.3 } },
+    actions: {
+      talk: { label: 'Take {a.him} for a coffee and ask', hours: 1, kind: 'ask' },
+      redistribute: { label: 'Hand out what {a.hes} been carrying', hours: 2, kind: 'fix', fits: ['unowned'] },
+      timeOff: { label: 'Give {a.him} two days off', hours: 1, kind: 'fix', fits: ['personal'] },
+      carry: { label: 'Take some of it yourself', hours: 3, kind: 'yourself' },
+    },
+  },
+  friction: {
+    label: 'Friction',
+    causes: { workload: 0.3, personal: 0.25, roles: 0.25, badWeek: 0.2 },
+    passing: 'badWeek',
+    stories: { personal: { workload: 0.35 } },
+    actions: {
+      separate: { label: 'Talk to each of them on their own', hours: 2, kind: 'ask' },
+      reset: { label: 'Sit them down together and reset the work', hours: 1.5, kind: 'fix', fits: ['workload'] },
+      clarify: { label: 'Write down who owns what between their stations', hours: 3, kind: 'fix', fits: ['roles'] },
+      expectations: { label: 'Set out how people treat each other here', hours: 1, kind: 'fix', fits: ['personal'] },
+      warning: { label: 'Tell them both to knock it off', hours: 0.5, kind: 'soft' },
+    },
+  },
+  hazard: {
+    label: 'Safety',
+    causes: { filter: 0.3, motor: 0.3, duct: 0.2, noisy: 0.2 },
+    passing: 'noisy',
+    stories: {},
+    actions: {
+      look: { label: 'Go and look at it now', hours: 1, kind: 'ask' },
+      workOrder: { label: 'Put in a maintenance work order', hours: 0.25, kind: 'fix', fits: ['filter', 'motor', 'duct'] },
+      followUp: { label: 'Walk the work order over to maintenance', hours: 0.5, kind: 'fix', fits: ['motor', 'duct'] },
+      shutBooth: { label: 'Shut booth three until it is fixed', hours: 0.5, kind: 'contain', fits: ['duct', 'motor'] },
+      moveWelder: { label: 'Move {a} to another booth for now', hours: 0.5, kind: 'contain' },
+    },
+  },
+  recurring: {
+    label: 'The same fire',
+    causes: { pin: 0.3, setup: 0.3, steel: 0.2, batch: 0.2 },
+    passing: 'batch',
+    stories: {},
+    actions: {
+      investigate: { label: 'Spend a morning finding out why it keeps moving', hours: 3, kind: 'ask' },
+      fixYourself: { label: 'Re-square the jig yourself again', hours: 2, kind: 'yourself' },
+      leadFix: { label: 'Have Kev re-square it', hours: 0.5, kind: 'yourself' },
+      workOrder: { label: 'Work order: replace the locating pins', hours: 0.5, kind: 'fix', fits: ['pin'] },
+      standardWork: { label: 'Write the setup down with the crew and train it', hours: 4, kind: 'fix', fits: ['setup'] },
+      raiseFab: { label: 'Take the parts to Raymond in fabrication', hours: 1, kind: 'fix', fits: ['steel'] },
+      escalate: { label: 'Tell Dana fabrication is sending bad parts', hours: 0.5, kind: 'up' },
+    },
+  },
+  escalation: {
+    label: 'A decision',
+    causes: { yours: 0.3, signoff: 0.3, engineering: 0.25, dropped: 0.15 },
+    passing: 'dropped',
+    stories: {},
+    actions: {
+      check: { label: 'Check who decides this before anyone does', hours: 1, kind: 'ask' },
+      decide: { label: 'Make the call yourself', hours: 0.5, kind: 'fix', fits: ['yours'] },
+      askRuss: { label: 'Put it to Russ while Dana is away', hours: 0.5, kind: 'fix', fits: ['signoff'] },
+      engineering: { label: 'Send it to Simone and engineering', hours: 1, kind: 'fix', fits: ['engineering'] },
+      around: { label: 'Go straight to Irene', hours: 0.5, kind: 'around' },
+    },
+  },
+  standards: {
+    label: 'Two standards',
+    causes: { pressure: 0.3, spec: 0.3, unaware: 0.25, newHire: 0.15 },
+    passing: 'newHire',
+    stories: { pressure: { unaware: 0.3 } },
+    actions: {
+      talkPeer: { label: 'Go and talk to Theresa', hours: 1, kind: 'ask' },
+      writeStandard: { label: 'Write a spatter standard with Theresa and Val', hours: 3, kind: 'fix', fits: ['spec'] },
+      handoff: { label: 'Rework the handoff times with Theresa', hours: 2, kind: 'fix', fits: ['pressure'] },
+      showHer: { label: 'Bring Theresa the kickback tickets side by side', hours: 1, kind: 'fix', fits: ['unaware'] },
+      complain: { label: 'Take it to Dana', hours: 0.5, kind: 'up' },
+      matchThem: { label: 'Tell the crew to send whatever paint will take', hours: 0, kind: 'soft' },
+    },
+  },
+};
+
+// Where a problem of each type can land, when a module draws one at random.
+export const LANDS_ON = {
+  late: [['brent'], ['tyler'], ['lyle'], ['joel']],
+  rework: [['tyler'], ['marisol'], ['brent']],
+  load: [['kev'], ['donna']],
+  friction: [['marisol', 'donna'], ['brent', 'tyler'], ['kev', 'donna'], ['lyle', 'brent']],
+};
