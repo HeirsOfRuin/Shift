@@ -1,0 +1,7 @@
+node_modules/
+dist/
+out/
+release/
+tools/_*
+*.tmp.*
+.DS_Store
