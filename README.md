@@ -13,6 +13,7 @@ or art exists.
 
 | Document | Holds |
 |---|---|
+| `docs/CONCEPT.md` | Read first. The handoff: what Shift is, why, the sources, every decision in the author's words, the frameworks it measures against, what was set aside, status and next steps |
 | `docs/PLAN.md` | The design plan: the plant, the week engine, six tracks, art, measurement, build order, the author's decisions |
 | `docs/SPEC.md` | The one-page spec for the Supervisor track, the first thing built |
 
