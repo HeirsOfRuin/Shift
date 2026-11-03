@@ -46,6 +46,37 @@ export const CAST = {
   marion: { name: 'Marion', full: 'Marion Dyck', pronoun: 'she', role: 'Controller (HR goes through her office)' },
 };
 
+// Who is who beyond the bay (docs/ORG.md), for the People tab. The author on
+// beta 1: "You had no clue who anyone was beyond the people on your screen."
+export const PLANT = {
+  name: 'Northern Motors',
+  about: 'Ninety-two people in one plant, building three vehicle lines with a variant each from raw steel to drive-away, about six vehicles a week. Tires and glass are the only finished parts bought in. It grew from a twelve-person fabrication shop, and most of the people who ran it at twelve still run it at ninety-two.',
+  flow: ['Fabrication', 'Machining', 'Welding (you)', 'Paint', 'Electrical', 'Interior', 'Assembly'],
+  vehicles: [
+    { name: 'Drayman and Drayman Crew', what: 'Work truck, flat deck; the Crew has a four-door cab and more welding' },
+    { name: 'Hauler and Hauler 9', what: 'Cargo van and nine-seat passenger van; heavy on interior and electrical' },
+    { name: 'Surveyor and Surveyor Rescue', what: '4x4 field vehicle and the fire and EMS fit-out; the longest build in the plant' },
+  ],
+  groups: [
+    { title: 'Your chain', ids: ['dana', 'russ', 'irene', 'glen'] },
+    { title: 'Your peers on the floor', ids: ['raymond', 'theresa'] },
+    { title: 'People your week depends on', ids: ['jess', 'val', 'simone', 'corey', 'marion'] },
+  ],
+};
+export const CAST_ABOUT = {
+  dana: 'Your manager. Runs the Metal side: fabrication, machining, welding, paint. Fair, busy, hates surprises more than bad news.',
+  russ: 'Plant manager. Came up through assembly and is still on the floor more than in his office. Answers email on Fridays.',
+  irene: 'COO, hired three years ago to put structure in. Half the plant still routes around her to Glen.',
+  glen: 'CEO and founder. Started it as a twelve-person fab shop. Walks the floor most mornings and still gives supervisors direct instructions, which nobody upstairs has told him to stop.',
+  raymond: 'Fabrication supervisor, upstream of you. Good at his job, quiet about problems until someone brings him a part.',
+  theresa: 'Paint supervisor, downstream of you. Always behind, always on the phone. You have never once sat down with her about anything.',
+  jess: 'Production scheduler. The one person who knows how the schedule actually gets built. When she is away the plant runs on last week.',
+  val: 'QC lead. Reports to the plant manager, not to engineering, which is why a recurring defect is a production problem first.',
+  simone: 'Product manager, on the engineering side. Owns what each vehicle is and what sales may promise. Outnumbered.',
+  corey: 'Sales manager. Sells on relationships and lead time. His promise of a date is how most rush orders reach your floor.',
+  marion: 'Controller. HR goes through her office, and discipline paperwork goes past her desk; she is careful about it.',
+};
+
 export const PRONOUNS = {
   he: { he: 'he', him: 'him', his: 'his', He: 'He', His: 'His', Him: 'Him', hes: "he's", Hes: "He's" },
   she: { he: 'she', him: 'her', his: 'her', He: 'She', His: 'Her', Him: 'Her', hes: "she's", Hes: "She's" },

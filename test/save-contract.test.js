@@ -9,13 +9,15 @@ import { decide } from '../sim/bot.js';
 
 test('the save key has not been renamed', () => assert.equal(SAVE_KEY, 'shift.save.v1'));
 
-test('the v1 fixture loads and plays on to the end', () => {
-  let save = deserialize(readFileSync(new URL('./fixtures/v1-save.json', import.meta.url), 'utf8'));
-  assert.equal(save.v, SAVE_VERSION);
-  assert.ok(save.run && !save.run.over);
-  while (!save.run.over) save = playWeek(save, decide(save.run, 'balanced')).save;
-  assert.equal(save.track.modules['the-week'].plays, 2);
-});
+for (const v of [1, 2]) {
+  test(`the v${v} fixture loads and plays on to the end`, () => {
+    let save = deserialize(readFileSync(new URL(`./fixtures/v${v}-save.json`, import.meta.url), 'utf8'));
+    assert.equal(save.v, SAVE_VERSION);
+    assert.ok(save.run && !save.run.over);
+    while (!save.run.over) save = playWeek(save, decide(save.run, 'balanced')).save;
+    assert.equal(save.track.modules['the-week'].plays, 2);
+  });
+}
 
 test('a save survives the text code and comes back identical', () => {
   let save = startRun(newSave(), 'the-week', 7);

@@ -11,7 +11,7 @@
 
 import {
   newSave, startRun, playWeek, saveDebrief, signOff, setOpenAll, SAVE_KEY, serialize, deserialize, toCode, fromCode,
-  trackView, briefView, weekView, demoFloor, crewStrip, MODULES, TRACK,
+  trackView, briefView, weekView, demoFloor, crewStrip, peopleView, markSeen, MODULES, TRACK,
 } from '../engine/game.js';
 import { STORAGE_OK, lsGet, lsSet } from './storage.js';
 import { registerSW, installPrompt } from './sw-register.js';
@@ -28,7 +28,8 @@ let modal = null;
 let pending = null;          // an in-page confirmation: { act, text, yes }
 let codeBox = null;          // 'load' | 'export' | null
 let banner = null;
-let routineOpen = false;     // the standing week, folded to one line unless opened
+let routineOpen = false;
+let floorOpen = true;        // the floor's itemised hours, open until folded     // the standing week, folded to one line unless opened
 let busy = false;
 let install = null;
 
@@ -123,7 +124,7 @@ const TYPE = { late: 'Lateness', rework: 'Rework', load: 'Carrying too much', fr
 function weekScreen() {
   const v = weekView(save.run, plan);
   const last = v.paint.lastShipped === null ? 'no week yet' : `${v.paint.lastShipped} of ${v.paint.lastAsked} last week`;
-  const tabs = [['week', 'Week'], ['crew', 'Crew'], ['log', 'Log'], ['menu', 'Menu']];
+  const tabs = [['week', 'Week'], ['crew', 'People'], ['log', 'Log'], ['menu', 'Menu']];
   const body = tab === 'week' ? weekTab(v) : tab === 'crew' ? crewTab(v) : tab === 'log' ? logTab(v) : menuTab();
   return `<header class="hud"><span class="turn">Week ${v.week} of ${v.weeks}</span><span class="mod">${esc(v.module.title)}</span><span class="paint">Paint: ${esc(last)}</span></header>
     <nav class="tabs">${tabs.map(([id, label]) => `<button data-tab="${id}" class="${tab === id ? 'on' : ''}">${label}</button>`).join('')}</nav>
@@ -137,12 +138,24 @@ function weekTab(v) {
   if (v.managerAway) out.push('<p class="banner info">Dana is away. Russ is covering her departments as well as his own.</p>');
   out.push(`<div class="bay"><div class="legend"><span>Fit-up</span><span>Body weld</span><span>Finish</span><span>Paint</span></div><canvas data-bay="week" aria-label="The welding bay this week"></canvas><p class="caption" data-caption>Tap someone to see how they look from across the bay.</p></div>`);
   out.push(`<p class="soft"><span class="label">This module</span><br>${esc(v.module.goal)}</p>`);
-  out.push(hoursPanel(v.hours));
+  if (!save.track.seen?.howto) out.push(howTo());
+  out.push(hoursPanel(v.hours, v.floorItems, v.tired));
   out.push(`<div class="tickets">${v.cards.map(ticket).join('')}</div>`);
   return out.join('');
 }
 
-function hoursPanel(hr) {
+// The first week's explainer. The author on beta 1: "It definitely needs more
+// depth and more explanation."
+function howTo() {
+  return `<article class="ticket"><div class="kind"><span class="label">How a week works</span></div><h3>Forty hours, and the floor takes most of them</h3>
+    <div class="prose"><p>Each turn is a week. Before you choose anything, the floor has already taken its hours: walk-ups, chasing parts, calls about bodies gone to paint. Every open problem adds more. The bar below shows where they go.</p>
+    <p>Your standing week (meetings, timecards, huddles) comes next. What is left is yours to spend on the tickets: the module's problem, requests, an hour with someone, welding a booth yourself, walking the floor.</p>
+    <p>Going past forty is allowed, and it costs: weeks over forty wear you down, and run down, your fixes land less often. If the week will not fit, something in the system is taking too much. Usually it is a problem nobody has fixed at the root.</p>
+    <p>Nobody tells you the cause of a problem. People tell you what they tell you. Ask, watch, act, and read Friday's report. The People tab says who everyone is.</p></div>
+    <button class="btn" data-act="howto-done">Got it</button></article>`;
+}
+
+function hoursPanel(hr, items = [], tired = '') {
   const max = Math.max(70, Math.ceil(hr.total / 5) * 5);
   const w = (n) => `${(100 * n / max).toFixed(2)}%`;
   const state = hr.total > hr.bottleneck ? 'bottleneck' : hr.total > hr.ceiling ? 'over' : '';
@@ -152,6 +165,8 @@ function hoursPanel(hr) {
     <div class="marks"><i style="left:${w(hr.ceiling)}">40</i><i style="left:${w(hr.bottleneck)}">55</i></div>
     <div class="key"><span><b class="floor"></b>The floor ${h(hr.floor)}</span>${hr.meetings ? `<span><b class="meet"></b>Audit room ${h(hr.meetings)}</span>` : ''}<span><b class="routine"></b>Standing week ${h(hr.routine)}</span><span><b class="chosen"></b>Your choices ${h(hr.chosen)}</span></div>
     <p class="limit">${esc(hr.limit)}</p>
+    ${tired ? `<p class="banner">${esc(tired)}</p>` : ''}
+    ${items.length ? `<details class="floorlist"${floorOpen ? ' open' : ''}><summary data-act="floor-toggle">Where the floor's ${h(hr.floor)} go</summary><ul>${[...items].sort((a, b) => Number(!!(b.problem || b.pushed)) - Number(!!(a.problem || a.pushed)) || b.hours - a.hours).map((it) => `<li class="${it.problem ? 'fallout' : it.pushed ? 'pushed' : ''}"><span>${esc(it.label)}${it.pushed ? ' <span class="chip">pushed off</span>' : ''}</span><span class="num">${h(it.hours)}</span></li>`).join('')}</ul><p class="soft">Fixing a problem at the root takes its fallout off this list. Developing Kev and training Joel shrink it too.</p></details>` : ''}
   </div>`;
 }
 
@@ -182,7 +197,16 @@ function ticket(c) {
 }
 
 function crewTab(v) {
-  return `<h2>The crew</h2><p class="soft">What you can see from across the bay and what people have told you. What they have not told you is not here.</p>
+  const pv = peopleView();
+  const plant = `<section><h2>Beyond the bay</h2><p class="soft">${esc(pv.about)}</p>
+    <p><span class="label">The line, in order</span><br>${pv.flow.map(esc).join(' &rarr; ')} &rarr; out the door</p>
+    <ul class="notes">${pv.vehicles.map((x) => `<li><strong>${esc(x.name)}:</strong> ${esc(x.what)}</li>`).join('')}</ul>
+    ${pv.groups.map((g) => `<p class="label">${esc(g.title)}</p><div class="people">${g.people.map((p) => `<div class="person nopic"><div class="body"><span class="name">${esc(p.name)}</span><span class="soft">${esc(p.role)}</span><span>${esc(p.about)}</span></div></div>`).join('')}</div>`).join('')}</section>`;
+  return crewList(v) + plant;
+}
+
+function crewList(v) {
+  return `<h2>Your crew</h2><p class="soft">What you can see from across the bay and what people have told you. What they have not told you is not here.</p>
     <div class="people">${v.crew.map((c) => `<div class="person"><canvas data-portrait="${c.id}" aria-hidden="true"></canvas><div class="body"><span class="name">${esc(c.name)}</span><span class="soft">${esc(c.station)}${c.lead ? ' &middot; lead' : ''} &middot; ${esc(c.status)}</span>
       ${c.mood ? `<dl class="facts"><dt>Seems</dt><dd>${esc(c.mood)}</dd><dt>With you</dt><dd>${esc(c.trust)}</dd></dl>` : ''}
       <span>${esc(c.about)}</span>${c.known.map((k) => `<span class="soft">${esc(k.title)}${k.told ? `: ${esc(k.told)}` : ''}</span>`).join('')}</div></div>`).join('')}</div>`;
@@ -228,8 +252,9 @@ function endScreen() {
     ${o.carried.length ? `<section><h3>Still open</h3><ul class="notes">${o.carried.map((c) => `<li>${esc(c)}</li>`).join('')}</ul></section>` : ''}
     <section class="profile"><div class="row" style="justify-content:space-between"><h3>Practice profile</h3><span class="chip amber">${esc(p.label)}</span></div>
       <p class="soft">How your decisions read against what you knew when you made them, on the same 0 to 25 scale as the behaviour assessment. A conversation starter for the debrief, never a score on a person.</p>
-      ${p.domains.map((d) => `<div class="dom"><span>${esc(d.label)}</span><span class="score">${d.score === null ? 'not seen' : `${d.score} &middot; ${esc(d.band)}`}</span><div class="meter"><span style="width:${d.score === null ? 0 : (d.score / 25 * 100).toFixed(1)}%"></span></div></div>`).join('')}
-      ${p.overall !== null ? `<p><span class="label">Overall, supervisor weighting</span><br><span class="num">${p.overall}</span> of 100</p>` : ''}
+      ${p.domains.map((d) => `<div class="dom"><span>${esc(d.label)}</span><span class="score">${d.score === null ? '' : `${d.score} &middot; `}${esc(d.band)}</span><div class="meter"><span style="width:${d.score === null ? 0 : (d.score / 25 * 100).toFixed(1)}%"></span></div>
+        <p class="soft explain">${esc(d.explain)}</p>${d.evidence.length ? `<ul class="notes">${d.evidence.map((e) => `<li>Week ${e.week}: ${esc(e.note)} <span class="num">${e.pts > 0 ? '+' : ''}${e.pts}</span></li>`).join('')}</ul>` : ''}</div>`).join('')}
+      ${p.overall !== null ? `<p><span class="label">Overall, supervisor weighting</span><br><span class="num">${p.overall}</span> of 100</p>` : `<p class="banner info">${esc(p.why)}</p>`}
       ${p.strengths.length ? `<p class="label">What you did well</p><ul class="notes">${p.strengths.map((n) => `<li>${esc(n.note)}${n.n > 1 ? ` (${n.n} times)` : ''}</li>`).join('')}</ul>` : ''}
       ${p.gaps.length ? `<p class="label">What to talk about</p><ul class="notes">${p.gaps.map((n) => `<li>${esc(n.note)}${n.n > 1 ? ` (${n.n} times)` : ''}</li>`).join('')}</ul>` : ''}
     </section>
@@ -348,6 +373,8 @@ function act(t) {
     case 'copy': copy(app.querySelector(`#${t.dataset.target}`)?.value || '', app.querySelector(`#${t.dataset.target}`)); return;
     case 'install': install?.(); return;
     case 'routine-open': routineOpen = true; return;
+    case 'howto-done': save = markSeen(save, 'howto'); persist(); return;
+    case 'floor-toggle': floorOpen = !floorOpen; return;
     case 'routine-close': routineOpen = false; return;
   }
 }
@@ -368,6 +395,7 @@ function run() {
 app.addEventListener('click', (e) => {
   const t = e.target.closest('[data-act],[data-tab],[data-action],[data-opt],[data-skip]');
   if (!t || busy) return;
+  if (t.tagName === 'SUMMARY') e.preventDefault();   // the page owns the open state
   busy = true;
   let keepScroll = false;
   try {
@@ -375,7 +403,7 @@ app.addEventListener('click', (e) => {
     else if (t.dataset.action === 'run') run();
     else if (t.dataset.opt) { plan.picks[t.dataset.card] = t.dataset.opt; keepScroll = true; }
     else if (t.dataset.skip) { const id = t.dataset.skip; plan.skip = plan.skip.includes(id) ? plan.skip.filter((x) => x !== id) : [...plan.skip, id]; keepScroll = true; }
-    else { act(t); if (t.dataset.act?.startsWith('routine-')) keepScroll = true; }
+    else { act(t); if (/^(routine-|floor-|howto-)/.test(t.dataset.act || '')) keepScroll = true; }
     const y = scrollY;
     render();
     if (keepScroll) scrollTo(0, y);

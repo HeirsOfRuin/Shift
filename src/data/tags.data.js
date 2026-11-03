@@ -8,10 +8,10 @@
 // author should confirm or correct it; nothing else changes if he does.
 
 export const DOMAINS = {
-  SA: { label: 'Self-Awareness', short: 'SA' },
-  SM: { label: 'Self-Management', short: 'SM' },
-  SOC: { label: 'Social Awareness', short: 'SOC' },
-  RM: { label: 'Relationship Management', short: 'RM' },
+  SA: { label: 'Self-Awareness', short: 'SA', explain: 'Knowing what you know and what you do not: reading the forecast before reaching for a stinger, changing course when a fix does not hold, noticing your own load, finding out whose call it is.' },
+  SM: { label: 'Self-Management', short: 'SM', explain: 'Staying steady: keeping the week inside forty while still acting, not putting the same fire out by hand every week, not running yourself down.' },
+  SOC: { label: 'Social Awareness', short: 'SOC', explain: 'Reading people and the floor: asking before acting, walking the floor, going across to a peer, not leaving a signal alone.' },
+  RM: { label: 'Relationship Management', short: 'RM', explain: 'Coaching, holding standards and settling conflict: fitting the fix to the reason, handing real work to people, holding the line when it is attitude.' },
 };
 
 export const SUBDOMAINS = {

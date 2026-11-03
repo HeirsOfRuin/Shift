@@ -13,7 +13,7 @@
 import { PROBLEMS } from '../data/problems.data.js';
 
 // The right action usually works, not always; a second try works more often.
-const works = (K, p, action, first, again) => K.r.outcomes.next() < ((p.tries[action] || 0) > 1 ? again : first);
+const works = (K, p, action, first, again) => K.r.outcomes.next() < ((p.tries[action] || 0) > 1 ? again : first) * (K.sharp ?? 1);
 const told = (p) => { if (!p.told) p.told = p.story; };
 
 export const TYPES = {

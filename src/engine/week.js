@@ -67,18 +67,31 @@ export function spawn(s, type, who, { main = false, seen = false, source = 'scri
   return p;
 }
 
+// The floor's hours, item by item: the standing load, what each open problem
+// adds (seen or not: you feel a busier floor before you know why), new hands,
+// a lead who is out or stretched, and anything you pushed off that came back.
 function interruptions(s) {
   const I = C.interrupts;
-  let h = I.base;
+  const items = C.floorLoad.map((f) => ({ label: f.label, hours: f.hours }));
+  if (s.dept.bench >= 0.55) items[0] = { label: `${items[0].label} (Kev takes some)`, hours: items[0].hours - 2 };
+  let unseen = 0;
   for (const p of s.problems) {
-    if (p.state === 'active') h += I.perProblem + I.perSeverity * (p.severity - 1) + (p.extraInterrupts || 0);
-    if (p.state === 'quiet') h += 1;
+    let h = 0;
+    if (p.state === 'active') h = I.perProblem + I.perSeverity * (p.severity - 1) + (p.extraInterrupts || 0);
+    if (p.state === 'quiet') h = 1;
+    if (!h) continue;
+    if (p.seen) items.push({ label: `Fallout from: ${say(s, `card.${p.type}.title`, { p, i: 0 })}`, hours: h, problem: true });
+    else unseen += h;
   }
-  h += s.crew.filter((c) => active(c) && c.skill < 0.45).length * I.newHand;
+  if (unseen) items.push({ label: 'More walk-ups than usual, for reasons nobody has told you yet', hours: unseen, problem: true });
+  const newHands = s.crew.filter((c) => active(c) && c.skill < 0.45);
+  if (newHands.length) items.push({ label: `${newHands.map((c) => c.name).join(' and ')} still ask${newHands.length > 1 ? '' : 's'} before guessing`, hours: newHands.length * I.newHand });
   const kev = person(s, 'kev');
-  if (!active(kev)) h += I.leadOut;
-  else if (kev.stress >= 3) h += I.leadStrained;
-  return Math.round(h * 2) / 2;
+  if (!active(kev)) items.push({ label: 'Catching what Kev usually catches', hours: I.leadOut });
+  else if (kev.stress >= 3) items.push({ label: 'Kev is stretched; more of it comes to you', hours: I.leadStrained });
+  for (const f of s.dept.floorExtra || []) if (f.from <= s.week && f.until >= s.week) items.push({ label: f.label, hours: f.hours, pushed: true });
+  const total = Math.round(items.reduce((a, it) => a + it.hours, 0) * 2) / 2;
+  return { total, items };
 }
 
 // ---------------------------------------------------------------- Monday
@@ -90,8 +103,11 @@ export function startWeek(s) {
   }
   const meetings = (s.setup.meetings || {})[s.week] || 0;
   const away = meetings >= 12;
+  const floor = interruptions(s);
+  if (away) { for (const it of floor.items) it.hours = Math.round(it.hours * 0.4 * 2) / 2; floor.total = Math.round(floor.items.reduce((a, it) => a + it.hours, 0) * 2) / 2; }
   s.monday = {
-    interrupts: away ? Math.round(interruptions(s) * 0.4 * 2) / 2 : interruptions(s),
+    interrupts: floor.total,
+    floorItems: floor.items,
     meetings,
     away,
     managerAway: !!(s.setup.managerAway && s.week >= s.setup.managerAway[0] && s.week <= s.setup.managerAway[1]),
@@ -129,6 +145,7 @@ export function advance(prev, plan = {}) {
     events: streamFor(s.seed, s.week, 'events'),
   };
   const K = kernel(s, r, lines);
+  K.sharp = (s.dept.tired || 0) >= C.tiredSlips ? C.tiredOdds : 1;   // run down, fixes work less often
   s.week_ = { defects: 0, capacity: 0, demand: 0, capacityMul: 1 };
   const picks = {};
   for (const card of m.cards) {
@@ -169,6 +186,13 @@ export function advance(prev, plan = {}) {
         continue;
       }
       p.acted = true;
+      // knowing what you know: find out before acting, then act on what you found
+      if (!p.told && opt.kind === 'ask') K.score(p, 'Emotional Awareness', 2, 'Found out before acting');
+      else if (!p.told && ['fix', 'hold', 'soft', 'yourself', 'up', 'around'].includes(opt.kind)) K.score(p, 'Emotional Awareness', -1, 'Acted before finding out why');
+      else if (p.told && (opt.fits || []).includes(p.told)) K.score(p, 'Emotional Awareness', 2, 'Acted on what you had found out');
+      // changing course when a fix did not hold is the self-awareness this measures
+      if (Object.keys(p.fails).length && !p.fails[opt.id] && opt.kind !== 'leave') K.score(p, 'Emotional Awareness', 2, 'Changed course when a fix did not hold');
+      else if ((p.fails[opt.id] || 0) >= 2) K.score(p, 'Emotional Awareness', -1, 'Tried the same failed fix a third time');
       if (!p.tried.includes(opt.id)) p.tried.push(opt.id);
       p.tries[opt.id] = (p.tries[opt.id] || 0) + 1;
       const before = p.state;
@@ -178,7 +202,7 @@ export function advance(prev, plan = {}) {
       continue;
     }
     if (card.kind === 'cover') { cover = Number(opt.days || 0); continue; }
-    if (card.kind === 'walk') { walk = opt.id === 'walk'; if (walk) K.score(null, 'Basic Empathy', 1, 'Walked the floor'); continue; }
+    if (card.kind === 'walk') { walk = opt.id === 'walk'; if (walk) K.score(null, 'Basic Empathy', 2, 'Walked the floor'); continue; }
     if (card.kind === 'coach') {
       if (opt.id === 'none') continue;
       const c = person(s, opt.id);
@@ -192,6 +216,25 @@ export function advance(prev, plan = {}) {
     for (const [sub, pts, note] of opt.score || []) K.score(null, sub, pts, note);
   }
   if (cover) lines.push({ kind: 'result', text: say(s, cover > 1 ? 'you.coveredDays' : 'you.coveredDay', { n: cover }) });
+
+  // your own load: over forty is a symptom, and it accumulates
+  const wasTired = s.dept.tired || 0;
+  s.dept.tired = hours > C.hoursCeiling ? wasTired + (hours - C.hoursCeiling) * C.tiredPerHour : Math.max(0, wasTired - C.tiredRecover);
+  const chosen = hours - m.interrupts - m.meetings - C.routine.filter((it) => !s.dept.routineGone.includes(it.id) && !skip.includes(it.id)).reduce((a, it) => a + it.hours, 0);
+  if (hours > C.tiredAt) K.score(null, 'Impulse Control', -1, 'Worked past forty-five');
+  else if (hours <= C.hoursCeiling && chosen >= 2) K.score(null, 'Impulse Control', 2, 'Kept the week inside forty and still acted');
+  const lastHours = s.history.at(-1)?.hours ?? 0;
+  if (lastHours > C.tiredAt && hours <= C.hoursCeiling + 2) K.score(null, 'Emotional Awareness', 2, 'Noticed your own load and pulled back');
+  if (s.dept.tired >= C.tiredHome && wasTired < C.tiredHome) lines.push({ kind: 'consequence', text: say(s, 'you.tiredHome') });
+  else if (s.dept.tired >= C.tiredSlips && wasTired < C.tiredSlips) lines.push({ kind: 'consequence', text: say(s, 'you.tiredSlips') });
+  // reading the forecast before reaching for a stinger
+  const cardCover = m.cards.find((c) => c.kind === 'cover');
+  if (cardCover) {
+    const gap = m.demand - m.forecast;
+    if (cover && gap > 0) K.score(null, 'Emotional Awareness', 2, 'Saw the gap coming and covered it');
+    else if (cover && gap < -0.3) K.score(null, 'Emotional Awareness', -1, 'Welded when the booths were fine');
+    else if (!cover && gap > 1) K.score(null, 'Emotional Awareness', -1, 'Let a known gap go unfilled');
+  }
 
   // you as the bottleneck
   if (hours > C.bottleneckAt) { s.dept.overStreak++; s.week_.capacityMul *= 0.95; K.score(null, 'Impulse Control', -1, 'Worked past the point of being useful'); }
@@ -286,7 +329,7 @@ export function advance(prev, plan = {}) {
     const roll = r.outcomes.next();
     let how = null;
     if (TYPES[p.type].notice(K, p, P)) how = 'obvious';
-    else if (walk && roll < 0.85) how = 'walk';
+    else if (walk && roll < (K.sharp < 1 ? 0.7 : 0.85)) how = 'walk';
     else if (cover && roll < 0.5) how = 'cover';
     else if (p.severity >= 2 || (a && a.stress >= 3) || roll < 0.2) how = 'loud';
     else if (m.away && s.dept.bench > 0.4 && roll < s.dept.bench) how = 'lead';
@@ -301,7 +344,8 @@ export function advance(prev, plan = {}) {
     week: s.week, hours, interrupts: m.interrupts, meetings: m.meetings, shipped: round1(shipped), bodies, asked,
     found: round1(found), escapes: round1(escapes), cover, walk, skip,
     lines: [{ kind: 'number', text: say(s, bodies >= asked ? 'friday.met' : 'friday.short', { n: bodies, asked }) }, ...lines,
-      { kind: 'number', text: say(s, hours > C.bottleneckAt ? 'friday.hours.bottleneck' : hours > C.tiredAt ? 'friday.hours.long' : 'friday.hours.ok', { n: Math.round(hours) }) }],
+      { kind: 'number', text: say(s, hours > C.bottleneckAt ? 'friday.hours.bottleneck' : hours > C.tiredAt ? 'friday.hours.long' : hours > C.hoursCeiling ? 'friday.hours.over' : 'friday.hours.ok', { n: Math.round(hours) }) },
+      ...(hours > C.hoursCeiling ? [{ kind: 'number', text: say(s, 'friday.why', { n: Math.round(m.interrupts), item: biggest(m.floorItems) }) }] : [])],
   };
   s.history.push(record);
   delete s.week_;
@@ -429,7 +473,7 @@ export function newModule(moduleId, seed) {
     dept: {
       fitBuf: 1.5, weldBuf: 0.5, shipped: 0, demanded: 0, escapes: 0, rework: 0,
       standard: C.standardHome, bench: 0.3, managerTrust: 0.6, peerTrust: 0.5, safetyDebt: 0, fixtureFixed: false, escapeAdd: 0,
-      overStreak: 0, bottleneck: false, starvedStreak: 0, starved: false, lost: [], surprise: false, flags: {}, routineGone: [], usedCards: [],
+      overStreak: 0, bottleneck: false, tired: 0, floorExtra: [], starvedStreak: 0, starved: false, lost: [], surprise: false, flags: {}, routineGone: [], usedCards: [],
     },
     problems: [], queue: [], nextId: 1, script: script.filter(Boolean),
     history: [], decisions: [], trace: [], monday: null,
@@ -438,6 +482,12 @@ export function newModule(moduleId, seed) {
   if (module.setup?.dept) Object.assign(s.dept, module.setup.dept);
   startWeek(s);
   return s;
+}
+
+function biggest(items) {
+  const fallout = items.filter((it) => it.problem || it.pushed).sort((a, b) => b.hours - a.hours)[0];
+  const top = fallout || [...items].sort((a, b) => b.hours - a.hours)[0];
+  return top.label.charAt(0).toLowerCase() + top.label.slice(1);
 }
 
 export const digestOf = (s) => hashString(JSON.stringify([s.week, s.dept.shipped, s.problems.map((p) => [p.state, p.cause]), s.crew.map((c) => c.status)]));

@@ -20,7 +20,7 @@ const R = {
     body: "Marion's office sent the second reminder Monday. Four appraisals for your crew, due at the end of the month. Done properly they take the better part of an hour each, and the people getting them can tell when they weren't.",
     options: [
       { id: 'do', label: 'Do them properly this week', hours: 3, kind: 'do', effects: [{ trust: 0.03, who: 'all' }], score: [['Accountability Management', 1, 'Kept a promise to HR and the crew']] },
-      { id: 'later', label: 'Push them to next month', hours: 0, kind: 'skip', effects: [{ queue: { weeks: 2, effects: [{ managerTrust: -0.06 }], line: "Marion's office copied Dana on the third reminder about your appraisals." }, because: 'You put the appraisals off' }] },
+      { id: 'later', label: 'Push them to next month', hours: 0, kind: 'skip', effects: [{ floorLoad: { label: "HR's follow-up on the appraisals you pushed off", hours: 2, inWeeks: 2 } }, { queue: { weeks: 2, effects: [{ managerTrust: -0.06 }], line: "Marion's office copied Dana on the third reminder about your appraisals." }, because: 'You put the appraisals off' }] },
     ],
   },
   engReview: {
@@ -52,7 +52,7 @@ const R = {
     body: "{c} caught you at the coffee machine. He isn't sure he's reading the gap gauge right on the finish checks, and he doesn't want to ask Donna a third time. Doing it properly at the bench is an hour.",
     options: [
       { id: 'do', label: 'Show him at the bench', hours: 1, kind: 'do', effects: [{ skill: 0.05, who: 'joel' }, { trust: 0.05, who: 'joel' }], score: [['Early Coaching & Guidance', 2, 'Answered a new hand at the bench']] },
-      { id: 'skip', label: 'Tell him to ask Donna', hours: 0, kind: 'skip', effects: [{ trust: -0.03, who: 'joel' }, { line: "{c} didn't ask Donna. He didn't ask anyone." }], score: [['Early Coaching & Guidance', -1, "Sent a new hand's question somewhere else"]] },
+      { id: 'skip', label: 'Tell him to ask Donna', hours: 0, kind: 'skip', effects: [{ floorLoad: { label: 'Rework on finish checks Joel was not sure about', hours: 1, weeks: 2 } }, { trust: -0.03, who: 'joel' }, { line: "{c} didn't ask Donna. He didn't ask anyone." }], score: [['Early Coaching & Guidance', -1, "Sent a new hand's question somewhere else"]] },
     ],
   },
   kevVacation: {
@@ -60,7 +60,7 @@ const R = {
     body: "{c} wants the last week of the month off for his daughter's wedding. He needs an answer so he can book, and it means sorting out cover at fit-up. Half an hour, if you do it now.",
     options: [
       { id: 'do', label: 'Sort the cover and say yes', hours: 0.5, kind: 'do', effects: [{ morale: 0.05, who: 'kev' }, { trust: 0.05, who: 'kev' }] },
-      { id: 'skip', label: 'Say you will get back to him', hours: 0, kind: 'skip', effects: [{ morale: -0.05, who: 'kev' }, { trust: -0.04, who: 'kev' }, { line: '{c} asked again on Thursday, more carefully than the first time.' }] },
+      { id: 'skip', label: 'Say you will get back to him', hours: 0, kind: 'skip', effects: [{ floorLoad: { label: "Sorting Kev's vacation cover in a hurry", hours: 1 } }, { morale: -0.05, who: 'kev' }, { trust: -0.04, who: 'kev' }, { line: '{c} asked again on Thursday, more carefully than the first time.' }] },
     ],
   },
   jessForecast: {
@@ -68,7 +68,7 @@ const R = {
     body: 'Jess is building next month around the Rescue order and wants your honest number for each week, not the hopeful one. An hour with the sheet.',
     options: [
       { id: 'do', label: 'Give her the honest numbers', hours: 1, kind: 'do' },
-      { id: 'skip', label: 'Tell her to use last month', hours: 0, kind: 'skip', effects: [{ demand: 1, inWeeks: 2 }, { line: "Jess built the month on last month's number. Paint will want an extra body in two weeks." }] },
+      { id: 'skip', label: 'Tell her to use last month', hours: 0, kind: 'skip', effects: [{ demand: 1, inWeeks: 2 }, { floorLoad: { label: "Re-planning the week Jess built on last month's numbers", hours: 2, inWeeks: 2 } }, { line: "Jess built the month on last month's number. Paint will want an extra body in two weeks." }] },
     ],
   },
   supplierCall: {
@@ -92,7 +92,7 @@ const R = {
     body: 'Two bodies went over Monday with spatter in the drip rail. Theresa wants half an hour, and she would like it today.',
     options: [
       { id: 'do', label: 'Go over to paint', hours: 0.5, kind: 'do', effects: [{ peerTrust: 0.03 }] },
-      { id: 'skip', label: 'Send her an email', hours: 0, kind: 'skip', effects: [{ peerTrust: -0.04 }] },
+      { id: 'skip', label: 'Send her an email', hours: 0, kind: 'skip', effects: [{ peerTrust: -0.04 }, { floorLoad: { label: 'The email thread with paint that should have been a conversation', hours: 1 } }] },
     ],
   },
   danaPage: {
@@ -100,7 +100,7 @@ const R = {
     body: 'Russ asked Dana why welding overtime went up last quarter, so Dana is asking you. One page, by Thursday.',
     options: [
       { id: 'do', label: 'Write it', hours: 1.5, kind: 'do', effects: [{ managerTrust: 0.05 }] },
-      { id: 'skip', label: 'Tell her you are slammed', hours: 0, kind: 'skip', effects: [{ managerTrust: -0.06 }] },
+      { id: 'skip', label: 'Tell her you are slammed', hours: 0, kind: 'skip', effects: [{ managerTrust: -0.06 }, { floorLoad: { label: 'Dana asking about the overtime page, again', hours: 1, weeks: 2 } }] },
     ],
   },
 };
@@ -245,31 +245,31 @@ export const MODULES = {
       { id: 'scheduler', week: 1, cue: 'develop', who: 'kev', title: "{c} could take Jess's numbers",
         body: "Every week you give Jess the capacity numbers. It's an hour, and it's the hour that tells you what next week looks like. {c} has watched you do it a hundred times. He has never done it.",
         options: [
-          { id: 'teach', label: 'Sit with him and hand it over', hours: 1.5, kind: 'delegate', effects: [{ bench: 0.15 }, { removeRoutine: 'scheduler' }, { morale: 0.03, who: 'kev' }], score: [['Culture & Organizational Influence', 2, 'Handed over a real piece of the job']] },
-          { id: 'keep', label: 'Keep doing it yourself', hours: 0, kind: 'keep' },
+          { id: 'teach', label: 'Sit with him and hand it over', hours: 1.5, kind: 'delegate', effects: [{ bench: 0.15 }, { removeRoutine: 'scheduler' }, { morale: 0.03, who: 'kev' }], score: [['Emotional Awareness', 1, 'Saw what only you were holding'], ['Culture & Organizational Influence', 2, 'Handed over a real piece of the job']] },
+          { id: 'keep', label: 'Keep doing it yourself', hours: 0, kind: 'keep', score: [['Emotional Awareness', -1, 'Kept a piece of the job only you can do']] },
         ] },
       { id: 'huddles', week: 1, cue: 'develop', who: 'kev', title: 'Let {c} run the huddles',
         body: 'The morning huddle is yours. Five minutes, every day. If {c} runs it, the crew starts looking at him first in the morning, which is the point.',
         options: [
-          { id: 'teach', label: 'Run the first two together, then hand it over', hours: 1, kind: 'delegate', effects: [{ bench: 0.15 }, { removeRoutine: 'huddles' }], score: [['Culture & Organizational Influence', 2, 'Let the lead lead']] },
-          { id: 'keep', label: 'Keep running them', hours: 0, kind: 'keep' },
+          { id: 'teach', label: 'Run the first two together, then hand it over', hours: 1, kind: 'delegate', effects: [{ bench: 0.15 }, { removeRoutine: 'huddles' }], score: [['Emotional Awareness', 1, 'Saw what only you were holding'], ['Culture & Organizational Influence', 2, 'Let the lead lead']] },
+          { id: 'keep', label: 'Keep running them', hours: 0, kind: 'keep', score: [['Emotional Awareness', -1, 'Kept a piece of the job only you can do']] },
         ] },
       { id: 'steps', week: 2, cue: 'develop', who: 'kev', title: 'Walk {c} through the hard conversations',
         body: "If someone is late three times while you're in the audit room, {c} is who they'll be late to. He doesn't know the steps, and he doesn't want to get them wrong in front of the crew.",
         options: [
-          { id: 'teach', label: 'Walk him through how you handle it', hours: 1.5, kind: 'delegate', effects: [{ bench: 0.15 }, { flag: 'kevSteps' }], score: [['Early Coaching & Guidance', 2, 'Prepared the lead for the hard part']] },
-          { id: 'keep', label: 'Tell him to call you', hours: 0, kind: 'keep' },
+          { id: 'teach', label: 'Walk him through how you handle it', hours: 1.5, kind: 'delegate', effects: [{ bench: 0.15 }, { flag: 'kevSteps' }], score: [['Emotional Awareness', 1, 'Saw what only you were holding'], ['Early Coaching & Guidance', 2, 'Prepared the lead for the hard part']] },
+          { id: 'keep', label: 'Tell him to call you', hours: 0, kind: 'keep', score: [['Emotional Awareness', -1, 'Planned to be reachable instead of replaceable']] },
         ] },
       { id: 'cross', week: 2, cue: 'develop', who: 'marisol', title: 'Show {c} the finish checks',
         body: "If Donna's off while you're away, finish slows to a crawl. {c} could cover the checks with an hour of showing.",
         options: [
-          { id: 'teach', label: 'Show her', hours: 1, kind: 'delegate', effects: [{ bench: 0.05 }, { skill: 0.03, who: 'marisol' }] },
+          { id: 'teach', label: 'Show her', hours: 1, kind: 'delegate', effects: [{ bench: 0.05 }, { skill: 0.03, who: 'marisol' }], score: [['Emotional Awareness', 1, 'Saw what only you were holding']] },
           { id: 'keep', label: 'Hope Donna stays healthy', hours: 0, kind: 'keep' },
         ] },
       { id: 'announce', week: 2, cue: 'develop', who: 'kev', title: 'Tell the crew who is in charge',
         body: "The crew knows you'll be busy. They don't know what that means for them. Ten minutes at the huddle with {c} standing beside you would settle it.",
         options: [
-          { id: 'teach', label: 'Say it at the huddle with him there', hours: 0.5, kind: 'delegate', effects: [{ bench: 0.1 }], score: [['Tone-Setting', 2, 'Made the handover visible']] },
+          { id: 'teach', label: 'Say it at the huddle with him there', hours: 0.5, kind: 'delegate', effects: [{ bench: 0.1 }], score: [['Emotional Awareness', 1, 'Saw what only you were holding'], ['Tone-Setting', 2, 'Made the handover visible']] },
           { id: 'keep', label: 'Let them work it out', hours: 0, kind: 'keep', effects: [{ bench: -0.05 }] },
         ] },
     ],

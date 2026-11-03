@@ -10,7 +10,7 @@ import { MODULES, TRACK } from '../data/modules.data.js';
 import { newModule, advance as advanceWeek } from './week.js';
 
 export const SAVE_KEY = 'shift.save.v1'; // never rename
-export const SAVE_VERSION = 1;
+export const SAVE_VERSION = 2;
 export const CODE_PREFIX = 'SHFT1.';
 
 export function newSave() {
@@ -71,10 +71,25 @@ export function signOff(save, moduleId, coach) {
   return s;
 }
 
+/** Remember that the player has seen a one-time explainer (by key). */
+export function markSeen(save, key) { const s = structuredClone(save); s.track.seen = { ...(s.track.seen || {}), [key]: true }; return s; }
+
 export function setOpenAll(save, on) { const s = structuredClone(save); s.track.openAll = !!on; return s; }
 
 /** MIGRATIONS[v](save) returns the save at version v + 1. Add one per version bump. */
-export const MIGRATIONS = {};
+export const MIGRATIONS = {
+  // Beta 1 to 2: fatigue, pushed-off floor hours, and the floor itemised.
+  1: (s) => {
+    const heal = (run) => {
+      if (!run) return run;
+      run.dept.tired = run.dept.tired ?? 0;
+      run.dept.floorExtra = run.dept.floorExtra ?? [];
+      if (run.monday && !run.monday.floorItems) run.monday.floorItems = [{ label: 'The floor (itemised from next week)', hours: run.monday.interrupts }];
+      return run;
+    };
+    return { ...s, v: 2, run: heal(s.run) };
+  },
+};
 
 export function migrate(save) {
   let s = save;

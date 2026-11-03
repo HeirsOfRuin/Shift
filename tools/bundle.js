@@ -174,7 +174,14 @@ await writeFile(join(ROOT, `dist/${SLUG}.html`), singleOut);
 // Shift: the embed carries the side-inset promise and the web fonts (with
 // system fallbacks in styles.css), because the host it is published to
 // supplies the rest of the document.
-const FONT_LINKS = (html.match(/<link rel="(?:preconnect|stylesheet)" href="https:\/\/fonts\.[^>]+>/g) || []).join('\n');
+// The offline builds (single file, site) use the system fallbacks in
+// styles.css: a font request with the network off is a console error and a
+// stall (bundle check, beta 2).
+const FONT_LINKS = [
+  '<link rel="preconnect" href="https://fonts.googleapis.com">',
+  '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>',
+  '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Big+Shoulders+Display:wght@700;800&family=IBM+Plex+Mono:wght@500;600&display=swap">',
+].join('\n');
 const embed = [
   `<title>${manifest.name}</title>`,
   '<meta name="claude:viewport-fit-sides" content="cover">',

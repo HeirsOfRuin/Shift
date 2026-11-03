@@ -4,7 +4,7 @@
 
 import { CONFIG as C } from '../data/config.data.js';
 import { MODULES, TRACK } from '../data/modules.data.js';
-import { STATIONS, CREW } from '../data/crew.data.js';
+import { STATIONS, CREW, CAST, PLANT, CAST_ABOUT } from '../data/crew.data.js';
 import { hoursFor } from './week.js';
 import { unlocked } from './state.js';
 import { moodWord, standardWord, trustWord, active } from './derive.js';
@@ -43,6 +43,8 @@ export function weekView(s, plan = {}) {
   return {
     module: { id: s.moduleId, title: module.title, goal: module.goalText },
     week: Math.min(s.week, s.weeks), weeks: s.weeks, over: s.over, outcome: s.outcome,
+    floorItems: s.over ? [] : m.floorItems,
+    tired: s.dept.tired >= C.tiredHome ? 'Run down: it is starting to show at home' : s.dept.tired >= C.tiredSlips ? 'Running down: your fixes land less often until you get a few normal weeks' : s.dept.tired > 0 ? 'A little tired from last week' : '',
     hours: { total: hours, floor: s.over ? 0 : m.interrupts, meetings: s.over ? 0 : m.meetings, routine: routineHours, chosen: Math.max(0, hours - (m?.interrupts || 0) - (m?.meetings || 0) - routineHours), ceiling: C.hoursCeiling, tired: C.tiredAt, bottleneck: C.bottleneckAt, limit },
     away: m?.away, managerAway: m?.managerAway,
     cards: s.over ? [] : m.cards,
@@ -106,4 +108,12 @@ export { MODULES, TRACK };
 /** The crew as the brief shows them: name, station, a line about each. */
 export function crewStrip() {
   return CREW.map((c) => ({ id: c.id, name: c.name, station: STATIONS[c.station].label, about: c.about, look: c.look, lead: !!c.lead }));
+}
+
+/** Who is who: the plant, the vehicles, and the people beyond the bay. */
+export function peopleView() {
+  return {
+    plant: PLANT.name, about: PLANT.about, flow: PLANT.flow, vehicles: PLANT.vehicles,
+    groups: PLANT.groups.map((g) => ({ title: g.title, people: g.ids.map((id) => ({ id, name: CAST[id].full, role: CAST[id].role, about: CAST_ABOUT[id] })) })),
+  };
 }

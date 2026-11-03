@@ -31,7 +31,23 @@ export const CONFIG = {
     { id: 'huddles', label: 'Morning huddles', hours: 2.5, why: 'Five minutes a day with the crew. Skip them and the day starts without a plan.' },
   ],
 
-  interrupts: { base: 27, perProblem: 2, perSeverity: 1, newHand: 1, leadOut: 6, leadStrained: 2 },
+  interrupts: { base: 22, perProblem: 3, perSeverity: 1.5, newHand: 1, leadOut: 6, leadStrained: 2 },
+  // A clean week (no open problems) leaves about eight hours after the floor
+  // and the standing week; every open problem eats three or more of them, so a
+  // well-run department fits in forty and a festering one does not (beta 2).
+  // What the floor's base hours are made of, so the week shows where the time
+  // goes (the author on beta 1: "You never felt under pressure much"; a grey
+  // block of 30 hours was nothing to push against). Sums to interrupts.base.
+  floorLoad: [
+    { id: 'walkups', label: 'Walk-ups: questions, a missing part, where does this go', hours: 7 },
+    { id: 'chasing', label: 'Chasing fabrication and stores for parts', hours: 6 },
+    { id: 'calls', label: 'Paint and QC calls about bodies already gone', hours: 4 },
+    { id: 'office', label: 'Email, the phone, the office', hours: 5 },
+  ],
+  // Over forty is a symptom (the author: "If a job can't be done in your
+  // scheduled time, something is wrong"). Weeks over forty build fatigue;
+  // weeks under it let it recover. Run down, your fixes work less often.
+  tiredPerHour: 1 / 8, tiredRecover: 0.6, tiredSlips: 1, tiredHome: 1.6, tiredOdds: 0.82,
   walkHours: 2,
   coverMax: 3,
 

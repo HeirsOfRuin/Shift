@@ -43,5 +43,7 @@ export function applyEffects(K, effects, ctx = {}) {
     if (e.line) K.lineRaw(e.kind || 'result', e.line, ctx);
     if (e.queue) s.queue.push({ week: s.week + (e.queue.weeks || 1), kind: 'effects', data: { effects: e.queue.effects || [], line: e.queue.line, trace: e.queue.trace }, because: { week: s.week, text: fill(s, e.because || '', ctx) } });
     if (e.spawn) K.spawn(e.spawn.type, e.spawn.who, { seen: !!e.spawn.seen, source: 'card' });
+    // what you pushed off comes back as floor hours: { floorLoad: { label, hours, weeks, inWeeks } }
+    if (e.floorLoad) { s.dept.floorExtra = s.dept.floorExtra || []; const from = s.week + (e.floorLoad.inWeeks ?? 1); s.dept.floorExtra.push({ label: e.floorLoad.label, hours: e.floorLoad.hours, from, until: from + (e.floorLoad.weeks || 1) - 1 }); }
   }
 }

@@ -51,6 +51,8 @@ export function judge(s) {
   return { win, checks, carried, profile: profile(s), summary: say(s, win ? 'end.win' : d.starved ? 'end.starved' : 'end.loss') };
 }
 
+const MIN_DECISIONS = 3;
+
 export function profile(s) {
   const by = {};
   for (const k of Object.keys(DOMAINS)) by[k] = { earned: 0, possible: 0, notes: [] };
@@ -64,13 +66,20 @@ export function profile(s) {
     subs[dcs.sub].earned += dcs.pts; subs[dcs.sub].possible += 2;
     dom.notes.push({ pts: dcs.pts, note: dcs.note, week: dcs.week });
   }
+  // A score from one or two decisions is noise that reads like a verdict (the
+  // author on beta 1: "the score was only based on the 2 seen domains, making
+  // it a false low score"). A domain scores only with MIN_DECISIONS behind it;
+  // the overall only when every domain does.
   const domains = Object.entries(by).map(([k, v]) => {
-    const score = v.possible ? Math.max(0, (v.earned / v.possible) * 25) : null;
-    return { id: k, label: DOMAINS[k].label, score: score === null ? null : Math.round(score * 10) / 10, band: score === null ? 'Not seen' : BANDS.find((b) => score >= b.min).label, decisions: v.possible / 2 };
+    const n = v.possible / 2;
+    const score = n >= MIN_DECISIONS ? Math.max(0, (v.earned / v.possible) * 25) : null;
+    const evidence = [...v.notes].sort((a, b) => Math.abs(b.pts) - Math.abs(a.pts)).slice(0, 4).map((x) => ({ note: x.note, pts: x.pts, week: x.week }));
+    return { id: k, label: DOMAINS[k].label, explain: DOMAINS[k].explain, score: score === null ? null : Math.round(score * 10) / 10, band: score === null ? `Not enough seen (${n} decision${n === 1 ? '' : 's'})` : BANDS.find((b) => score >= b.min).label, decisions: n, evidence };
   });
   const seen = domains.filter((d) => d.score !== null);
   let overall = null;
-  if (seen.length) {
+  const complete = seen.length === domains.length;
+  if (complete) {
     const wsum = seen.reduce((a, d) => a + WEIGHTS[d.id], 0);
     overall = seen.reduce((a, d) => a + d.score * WEIGHTS[d.id], 0) / wsum * 4;
     const low = Math.min(...seen.map((d) => d.score));
@@ -81,7 +90,8 @@ export function profile(s) {
   const gaps = s.decisions.filter((d) => d.pts < 0).map((d) => d.note);
   const count = (arr) => Object.entries(arr.reduce((m, n) => ((m[n] = (m[n] || 0) + 1), m), {})).sort((a, b) => b[1] - a[1]).slice(0, 4).map(([note, n]) => ({ note, n }));
   return {
-    domains, overall, label: 'Practice, not assessment',
+    domains, overall, complete, label: 'Practice, not assessment',
+    why: complete ? '' : `No overall score: ${domains.filter((d) => d.score === null).map((d) => d.label).join(' and ')} did not have ${MIN_DECISIONS} decisions behind ${seen.length === 3 ? 'it' : 'them'} this run. A score from fewer would be noise.`,
     subdomains: Object.entries(subs).map(([k, v]) => ({ id: k, score: Math.round(Math.max(0, v.earned / v.possible) * 250) / 10, n: v.possible / 2 })).sort((a, b) => b.n - a.n),
     strengths: count(strengths), gaps: count(gaps),
   };
