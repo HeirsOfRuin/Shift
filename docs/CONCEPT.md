@@ -1,7 +1,8 @@
 # Shift: the concept, for a reader who was not there
 
 Written 2026-11-03 as the handoff for any new session. Read this first, then
-`PLAN.md` (the full design) and `SPEC.md` (the Supervisor track, one page).
+`PLAN.md` (the full design), `ORG.md` (the company, the cast, the vehicles)
+and `SPEC.md` (the Supervisor track, one page).
 Everything here was agreed with the author in conversation; his words are
 quoted where they decided something. Where this document and `PLAN.md`
 disagree, `PLAN.md` is more detailed and this one is more current only if its
@@ -96,21 +97,29 @@ Google Doc copies of the same things.
 | 2026-11-03 | Replays before sign-off: "Yes." |
 | 2026-11-03 | Voice: "Plain, dry, but with some life, like a good narrator, not like a robot." |
 | 2026-11-03 | Its own repository: "all of this should be moved to its own repo. It is called Shift." |
+| 2026-11-03 | The organisation: "Make a complete org chart, with a CEO, a COO, a product manager (on the engineer side), also include service, engineer (design, manufacturing, software), and sales departments." Built in `ORG.md`. |
+| 2026-11-03 | The vehicles: "The company makes 6 different vehicles, 3 are specific vehicles, each with a variation model." Built in `ORG.md`. |
+| 2026-11-03 | Voice, second pass: "Make the narrative a bit more realistically human." `PLAN.md` section 7 rewritten with three samples. |
 
 Decisions the agent made and the author has not yet confirmed or struck: the
-placeholder plant name Tamarack Motor Works; the vehicle (a light utility
-vehicle, about six a week); the player runs welding first; the extra
-pipeline-gap modules (Nobody upstairs, Acting supervisor, The empty chair); the
-voice sample in `PLAN.md` section 7.
+placeholder plant name Tamarack Motor Works; every person's name in `ORG.md`;
+the vehicle names (Drayman, Hauler, Surveyor) and the work-content table; the
+player runs welding first; the extra pipeline-gap modules (Nobody upstairs,
+Acting supervisor, The empty chair); the three voice samples in `PLAN.md`
+section 7.
 
 ## 6. The design in brief
 
 Detail is in `PLAN.md`; this is the shape.
 
-- **The world.** Tamarack Motor Works, about sixty people, seven departments
-  in flow order: fabrication, machining, welding, paint, electrical, interior,
-  assembly. A plant manager, two operations managers, a scheduler, a QC lead.
-  About forty named crew with pixel sprites, each with visible traits and
+- **The world.** Tamarack Motor Works, ninety-two people, three vehicle lines
+  with a variant each (Drayman work truck, Hauler van, Surveyor 4x4), six
+  vehicles a week. Seven production departments in flow order: fabrication,
+  machining, welding, paint, electrical, interior, assembly, under a plant
+  manager and two operations managers; beside them engineering (a product
+  manager, design, manufacturing, software), sales, service, finance, a CEO
+  and a COO. The product mix moves the bottleneck. The full chart, the named
+  cast and the welding crew are in `ORG.md`. Crew have visible traits and
   hidden ones (a concern, a trigger, growth potential, trust in you). Managers
   and supervisors can be absent, quit or promoted mid-module; the bench holds
   or it does not.
@@ -237,11 +246,9 @@ everything is urgent nothing is strategic; 3 Structure protects good people;
 
 ## 10. Status and the exact next steps
 
-**Done (2026-11-03):** the design plan, the Supervisor spec, this document.
-The repository exists locally on the agent's machine with these files
-committed on `main`; the GitHub repository `HeirsOfRuin/Shift` must be created
-by the author (a session cannot create repositories), then attached and
-pushed. The Game-Workshop backlog entry points here.
+**Done (2026-11-03):** the design plan, the organisation and product line,
+the Supervisor spec, this document. The repository is `HeirsOfRuin/Shift` on
+GitHub, private, branch `main`. The Game-Workshop backlog entry points here.
 
 **Next, in order, with the workshop's gates:**
 1. The author approves `SPEC.md` or marks it up.

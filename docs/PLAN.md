@@ -25,8 +25,11 @@ conversation something real to talk about.
 | 2026-11-03 | **Replays** before sign-off: "Yes." |
 | 2026-11-03 | **Voice.** "Plain, dry, but with some life, like a good narrator, not like a robot." |
 | 2026-11-03 | **Its own repository**, `HeirsOfRuin/Shift`, private for the pilot. |
+| 2026-11-03 | **The organisation.** "Make a complete org chart, with a CEO, a COO, a product manager (on the engineer side), also include service, engineer (design, manufacturing, software), and sales departments." Built in `ORG.md`. |
+| 2026-11-03 | **The vehicles.** "The company makes 6 different vehicles, 3 are specific vehicles, each with a variation model." Built in `ORG.md`. |
+| 2026-11-03 | **Voice, second pass.** "Make the narrative a bit more realistically human." Section 7 rewritten with three samples. |
 | open | The plant's name. `Tamarack Motor Works` is a placeholder until the author replaces it. |
-| open | The vehicle: a light utility vehicle, about six a week, is the working assumption. |
+| open | Every name in `ORG.md`, the vehicle names (Drayman, Hauler, Surveyor) and the work-content table are the agent's first cut, not yet confirmed. |
 
 ---
 
@@ -46,9 +49,12 @@ conversation something real to talk about.
 
 ## 2. The world: one plant, shared by every track
 
-**Tamarack Motor Works** (placeholder name). About sixty people. It builds a
-light utility vehicle from raw steel to drive-away, roughly six a week when
-everything works. Seven departments, in the order the vehicle moves:
+**Tamarack Motor Works** (placeholder name). Ninety-two people, fifty-one of
+them in production. It builds three vehicle lines, each with a variant (a work
+truck, a van, a 4x4 field vehicle), from raw steel to drive-away, about six
+vehicles a week when everything works. The full organisation, the named cast,
+the welding crew and the six vehicles are in `ORG.md`. Seven production
+departments, in the order the vehicle moves:
 
 | Department | People | Feeds | What can go wrong here |
 |---|---|---|---|
@@ -60,9 +66,17 @@ everything works. Seven departments, in the order the vehicle moves:
 | Interior | 5 to 10 | Assembly | Waits on everyone upstream |
 | Assembly | 5 to 10 | Shipping | Tires and windows bought in; the only place the whole vehicle exists |
 
-Above the departments: a plant manager, two operations managers (each covering
-three or four departments), a scheduler and a QC lead. Each department's
-supervisor is a named character; so are a few leads.
+Above the departments: a plant manager and two operations managers (Metal:
+fabrication, machining, welding, paint; Finishing: electrical, interior,
+assembly), a scheduler, quality, maintenance and materials. Beside the plant:
+engineering (a product manager, design, manufacturing and software
+engineering), sales, service, and finance and administration, under a CEO who
+founded the company as a twelve-person fab shop and a COO hired to put
+structure in. Each department's supervisor is a named character; so are the
+leads and the front office. The product mix moves the bottleneck between
+departments, and a sales rep's promise is how a rush order enters the plant;
+that is why a welding supervisor's week depends on decisions made in the
+front office.
 
 **The pipeline is a mechanic.** Supervisors and managers can be on leave, quit,
 get promoted or be covering two departments at once, mid-module. Escalations
@@ -284,14 +298,52 @@ and a way to bring hints back. Progress lives in the save.
 
 ## 7. Voice
 
-Plain, dry, with some life: a good narrator, not a robot. The report tells you
-what happened the way a straight colleague would, with a little weight on the
-detail that matters and no speech about it. A sample to calibrate against, for
-the author to accept or strike:
+The author's words: "Plain, dry, but with some life, like a good narrator, not
+like a robot," and on the first sample, "Make the narrative a bit more
+realistically human." What that means on the page:
 
-> Paint got five bodies. They wanted six. Dale's station sat empty from
-> Thursday noon; nobody told you where he went until Friday, and the person who
-> told you was not Dale.
+- Sentences the length a person uses when telling you about their day. Not
+  clipped fragments stacked for effect; that is the robot cadence.
+- People are people. The report says who did what, how you came to know it,
+  and what they said, in their words when the words matter.
+- One small physical detail per report, where it carries information: the
+  frame still clamped in the jig, the booth door left open. Not every line.
+- The narrator knows the floor and likes the people. Dry humour is allowed;
+  sarcasm at the crew's expense is not.
+- Uncertainty is said the way a person says it: "nobody is sure yet whether."
+- No corporate language, and nothing a tool would say about itself.
+- Second person. Past tense for what happened, present for what is in front
+  of you.
+
+Three samples to calibrate against, for the author to accept or strike. The
+people are from `ORG.md`.
+
+A Friday report:
+
+> Paint ended the week one body short. Five went over; they had planned on
+> six, and Theresa has already asked whether next week looks the same, in the
+> tone she uses when she already knows the answer. The short one is Lyle's. He
+> left at noon on Thursday and nobody mentioned it to you until Friday morning,
+> when Kev said over his coffee that he'd figured you knew. You didn't. Lyle
+> hasn't said anything, and Thursday's frame is still clamped in his jig with
+> the tacks half done.
+
+A module brief (The late one):
+
+> It's the first week of March. The Drayman line is running ahead for once, and
+> the Surveyor Rescue that ships at the end of the month is the one Russ asks
+> about every morning before he has his coat off. Your crew is seven. Brent has
+> been late three times in two weeks. The second time, nobody said anything, so
+> by the third time it had started to look like a pattern to everyone except
+> Brent. Dana is in the building this month. That won't always be true.
+
+A mid-week interruption:
+
+> Tuesday, twenty to eleven. The press in fabrication is down, and maintenance
+> thinks it's the hydraulic pump, which means this afternoon or Thursday
+> depending on whether the part is sitting in Winnipeg or in Toronto. Fit-up
+> runs out of brackets by tomorrow's lunch. Raymond is standing in your
+> doorway. He hasn't asked for anything yet, which is how Raymond asks.
 
 Calibration happens on the first polished module (section 11, stage 5): two or
 three Friday reports and one brief at full polish, the author's verdict, then

@@ -5,11 +5,13 @@ is built. Numbers here are first guesses and become parameters of the prototype.
 
 ## Setting
 
-Tamarack Motor Works (placeholder name), a plant of about sixty that builds a
-light utility vehicle from raw steel to drive-away. Seven departments in flow
-order: fabrication, machining, welding, paint, electrical, interior, assembly.
-Tires and windows are the only finished parts bought in. Six vehicles a week
-when everything works, which it rarely does.
+Tamarack Motor Works (placeholder name), ninety-two people, builds three
+vehicle lines with a variant each (a work truck, a van, a 4x4 field vehicle)
+from raw steel to drive-away. Seven production departments in flow order:
+fabrication, machining, welding, paint, electrical, interior, assembly. Tires
+and windows are the only finished parts bought in. Six vehicles a week when
+everything works, which it rarely does, and the mix of the six decides which
+department is the bottleneck. The people and the vehicles are in `ORG.md`.
 
 You are the welding supervisor: seven welders and fitters, a department fed by
 fabrication and machining and waited on by paint. Your manager is one of two
