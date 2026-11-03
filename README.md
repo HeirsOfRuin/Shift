@@ -15,7 +15,7 @@ or art exists.
 |---|---|
 | `docs/CONCEPT.md` | Read first. The handoff: what Shift is, why, the sources, every decision in the author's words, the frameworks it measures against, what was set aside, status and next steps |
 | `docs/PLAN.md` | The design plan: the plant, the week engine, six tracks, voice, art, measurement, build order, the author's decisions |
-| `docs/ORG.md` | Tamarack Motor Works: the full org chart with a named cast, the welding crew, the six vehicles and how the mix moves the bottleneck |
+| `docs/ORG.md` | Northern Motors: the full org chart with a named cast, the welding crew, the six vehicles and how the mix moves the bottleneck |
 | `docs/SPEC.md` | The one-page spec for the Supervisor track, the first thing built |
 
 ## What it is trying to be

@@ -1,4 +1,4 @@
-# Tamarack Motor Works: the company, the people, the vehicles
+# Northern Motors: the company, the people, the vehicles
 
 Written 2026-11-03 from the author's decisions: "Make a complete org chart,
 with a CEO, a COO, a product manager (on the engineer side), also include
@@ -6,13 +6,13 @@ service, engineer (design, manufacturing, software), and sales departments.
 The company makes 6 different vehicles, 3 are specific vehicles, each with a
 variation model."
 
-Everything here is fiction. The company name is a placeholder until the author
-replaces it. Every person named is invented for this tool; none is a real
+Everything here is fiction. The author named the company ("The name is
+Northern Motors") and accepted the cast ("The names look good"). Every person named is invented for this tool; none is a real
 person, and the names deliberately avoid anyone in the author's working life.
 
 ## The company in one paragraph
 
-Tamarack Motor Works builds complete vehicles in one plant: three vehicle
+Northern Motors builds complete vehicles in one plant: three vehicle
 lines, each with a variant, about six vehicles a week, sold to municipalities,
 utilities, contractors, rural fleets and fire departments across the prairies.
 Everything but the tires and the glass is made in the building, from cut steel

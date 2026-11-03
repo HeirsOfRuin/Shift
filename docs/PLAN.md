@@ -28,8 +28,9 @@ conversation something real to talk about.
 | 2026-11-03 | **The organisation.** "Make a complete org chart, with a CEO, a COO, a product manager (on the engineer side), also include service, engineer (design, manufacturing, software), and sales departments." Built in `ORG.md`. |
 | 2026-11-03 | **The vehicles.** "The company makes 6 different vehicles, 3 are specific vehicles, each with a variation model." Built in `ORG.md`. |
 | 2026-11-03 | **Voice, second pass.** "Make the narrative a bit more realistically human." Section 7 rewritten with three samples. |
-| open | The plant's name. `Tamarack Motor Works` is a placeholder until the author replaces it. |
-| open | Every name in `ORG.md`, the vehicle names (Drayman, Hauler, Surveyor) and the work-content table are the agent's first cut, not yet confirmed. |
+| 2026-11-03 | **The name.** "The name is Northern Motors." |
+| 2026-11-03 | **The cast and vehicles accepted.** "The names look good." The work-content table stays a first guess until the kill gate and the engine measure it. |
+| 2026-11-03 | **Through to a beta.** "Continue as you see fit. With until you have a testable beta." The agent runs the gates (kill gate, design, engine, calibration) without stopping for sign-off at each, and reports every gate's numbers with the beta. The author's verdict at calibration happens on the beta itself. |
 
 ---
 
@@ -49,7 +50,7 @@ conversation something real to talk about.
 
 ## 2. The world: one plant, shared by every track
 
-**Tamarack Motor Works** (placeholder name). Ninety-two people, fifty-one of
+**Northern Motors**. Ninety-two people, fifty-one of
 them in production. It builds three vehicle lines, each with a variant (a work
 truck, a van, a 4x4 field vehicle), from raw steel to drive-away, about six
 vehicles a week when everything works. The full organisation, the named cast,

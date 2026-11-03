@@ -100,19 +100,20 @@ Google Doc copies of the same things.
 | 2026-11-03 | The organisation: "Make a complete org chart, with a CEO, a COO, a product manager (on the engineer side), also include service, engineer (design, manufacturing, software), and sales departments." Built in `ORG.md`. |
 | 2026-11-03 | The vehicles: "The company makes 6 different vehicles, 3 are specific vehicles, each with a variation model." Built in `ORG.md`. |
 | 2026-11-03 | Voice, second pass: "Make the narrative a bit more realistically human." `PLAN.md` section 7 rewritten with three samples. |
+| 2026-11-03 | The name: "The name is Northern Motors." The cast and vehicles: "The names look good." |
+| 2026-11-03 | Through to a beta: "Continue as you see fit. With until you have a testable beta." The agent runs the gates without stopping for sign-off and reports each gate's numbers with the beta. |
 
 Decisions the agent made and the author has not yet confirmed or struck: the
-placeholder plant name Tamarack Motor Works; every person's name in `ORG.md`;
-the vehicle names (Drayman, Hauler, Surveyor) and the work-content table; the
-player runs welding first; the extra pipeline-gap modules (Nobody upstairs,
-Acting supervisor, The empty chair); the three voice samples in `PLAN.md`
-section 7.
+work-content table in `ORG.md`; the player runs welding first; the extra
+pipeline-gap modules (Nobody upstairs, Acting supervisor, The empty chair);
+the three voice samples in `PLAN.md` section 7. Everything decided while
+building the beta is in `DESIGN.md`'s decisions log.
 
 ## 6. The design in brief
 
 Detail is in `PLAN.md`; this is the shape.
 
-- **The world.** Tamarack Motor Works, ninety-two people, three vehicle lines
+- **The world.** Northern Motors, ninety-two people, three vehicle lines
   with a variant each (Drayman work truck, Hauler van, Surveyor 4x4), six
   vehicles a week. Seven production departments in flow order: fabrication,
   machining, welding, paint, electrical, interior, assembly, under a plant

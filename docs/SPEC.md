@@ -5,7 +5,7 @@ is built. Numbers here are first guesses and become parameters of the prototype.
 
 ## Setting
 
-Tamarack Motor Works (placeholder name), ninety-two people, builds three
+Northern Motors, ninety-two people, builds three
 vehicle lines with a variant each (a work truck, a van, a 4x4 field vehicle)
 from raw steel to drive-away. Seven production departments in flow order:
 fabrication, machining, welding, paint, electrical, interior, assembly. Tires
