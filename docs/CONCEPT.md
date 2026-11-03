@@ -248,8 +248,18 @@ everything is urgent nothing is strategic; 3 Structure protects good people;
 ## 10. Status and the exact next steps
 
 **Done (2026-11-03):** the design plan, the organisation and product line,
-the Supervisor spec, this document. The repository is `HeirsOfRuin/Shift` on
-GitHub, private, branch `main`. The Game-Workshop backlog entry points here.
+the Supervisor spec, the kill gate (`KILLGATE.md`, passed), the stage 3 design
+(`DESIGN.md`), and beta 1 of the Supervisor track: engine, eight modules,
+narrator, bots, tests, screens, pixel bay, published as a private artifact
+(`BETA.md` has the link and the test guide). The repository is
+`HeirsOfRuin/Shift` on GitHub, private, branch `main`. The Game-Workshop
+backlog entry points here.
+
+**The next step is the author's**, not the agent's: play the beta and give a
+verdict on voice, look, length and which scenarios feel fake. Then frame,
+build, measure and republish each change (the workshop's feature loop), and
+then the pilot. The ordered list below is the original plan; steps 1 to 5 are
+done.
 
 **Next, in order, with the workshop's gates:**
 1. The author approves `SPEC.md` or marks it up.
@@ -267,8 +277,8 @@ GitHub, private, branch `main`. The Game-Workshop backlog entry points here.
    look and length; then the full Supervisor track; then the pilot.
 
 **Do not:**
-- Start the engine or any art before the kill gate passes and the author has
-  seen its numbers.
+- Change a module's mechanics without re-running `npm run gate` and putting
+  the numbers in the commit and the decisions log.
 - Put any LBA item text, the scoring workbook, or anything identifying the
   author's employer into this repository's content. Design references only.
 - Name a real person. The plant, crew and scenarios are fiction.

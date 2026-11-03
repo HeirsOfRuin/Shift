@@ -28,6 +28,7 @@ let modal = null;
 let pending = null;          // an in-page confirmation: { act, text, yes }
 let codeBox = null;          // 'load' | 'export' | null
 let banner = null;
+let routineOpen = false;     // the standing week, folded to one line unless opened
 let busy = false;
 let install = null;
 
@@ -156,9 +157,18 @@ function hoursPanel(hr) {
 
 function ticket(c) {
   if (c.kind === 'routine') {
+    const skipped = c.items.filter((it) => plan.skip.includes(it.id));
+    const hours = c.items.filter((it) => !plan.skip.includes(it.id)).reduce((a, it) => a + it.hours, 0);
+    const sum = skipped.length ? `${c.items.length - skipped.length} of ${c.items.length} done, ${h(hours)}. Skipping: ${skipped.map((it) => it.label.toLowerCase()).join(', ')}.` : `All ${c.items.length} done, ${h(hours)}.`;
+    if (!routineOpen) {
+      return `<article class="ticket"><div class="kind"><span class="label">Standing week</span></div><h3>${esc(c.title)}</h3><p class="body">${esc(sum)}</p>
+        ${c.gone.length ? `<p class="soft">Kev does these now: ${esc(c.gone.join(', '))}.</p>` : ''}
+        <button class="btn" data-act="routine-open">Skip something this week</button></article>`;
+    }
     return `<article class="ticket"><div class="kind"><span class="label">Standing week</span></div><h3>${esc(c.title)}</h3><p class="body">${esc(c.body)}</p>
       <div class="checklist">${c.items.map((it) => { const on = !plan.skip.includes(it.id); return `<button class="check ${on ? 'on' : 'off'}" data-skip="${it.id}" aria-pressed="${on}"><span class="box"></span><span>${esc(it.label)}<span class="why">${esc(it.why)}</span></span><span class="h">${on ? h(it.hours) : 'skipped'}</span></button>`; }).join('')}</div>
-      ${c.gone.length ? `<p class="soft">Kev does these now: ${esc(c.gone.join(', '))}.</p>` : ''}</article>`;
+      ${c.gone.length ? `<p class="soft">Kev does these now: ${esc(c.gone.join(', '))}.</p>` : ''}
+      <button class="btn quiet" data-act="routine-close">Fold it away</button></article>`;
   }
   const pick = plan.picks[c.id] ?? c.pick;
   let kind = 'Your time';
@@ -337,6 +347,8 @@ function act(t) {
     }
     case 'copy': copy(app.querySelector(`#${t.dataset.target}`)?.value || '', app.querySelector(`#${t.dataset.target}`)); return;
     case 'install': install?.(); return;
+    case 'routine-open': routineOpen = true; return;
+    case 'routine-close': routineOpen = false; return;
   }
 }
 
@@ -363,7 +375,7 @@ app.addEventListener('click', (e) => {
     else if (t.dataset.action === 'run') run();
     else if (t.dataset.opt) { plan.picks[t.dataset.card] = t.dataset.opt; keepScroll = true; }
     else if (t.dataset.skip) { const id = t.dataset.skip; plan.skip = plan.skip.includes(id) ? plan.skip.filter((x) => x !== id) : [...plan.skip, id]; keepScroll = true; }
-    else act(t);
+    else { act(t); if (t.dataset.act?.startsWith('routine-')) keepScroll = true; }
     const y = scrollY;
     render();
     if (keepScroll) scrollTo(0, y);

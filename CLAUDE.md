@@ -10,8 +10,9 @@
   Read `game-building/SKILL.md` before writing game logic. Follow its stages
   and gates: spec, kill gate, design doc, engine, calibration, slice, feature
   loop. Skipping a stage is allowed; skipping it silently is not.
-- No engine and no art before the kill gate (`prototypes/killgate/`) passes
-  and the author has seen its numbers.
+- The kill gate passed and the beta is built (`docs/BETA.md`). Every change to
+  a module's mechanics re-runs `npm run gate`; every commit runs
+  `npm run check` first.
 - Content is fiction. No real person, no real order, nothing that identifies
   the author's employer, and no text from the author's assessment item bank in
   this repository.

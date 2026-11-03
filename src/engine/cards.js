@@ -1,9 +1,11 @@
 // Monday's inbox. Built once per week from state, so the cards (and their text)
 // are part of the save and cannot change if the page reloads.
 //
-// Order: your standing week (routine), the problems you know about (the
-// module's main problem first), the module's own cards for this week, a few
-// requests, an hour with someone, weld coverage, the floor walk. Every option
+// Order: the problems you know about (the module's main problem first), the
+// module's own cards for this week, a few requests, your standing week
+// (routine), an hour with someone, weld coverage, the floor walk. The problem
+// comes first because it is what the week is about (the beta's first look:
+// six routine items above it pushed it off the screen). Every option
 // says what it costs; "leave it" is always there and costs nothing now.
 
 import { CONFIG as C } from '../data/config.data.js';
@@ -14,7 +16,7 @@ import { active } from './derive.js';
 
 export function buildCards(s, module) {
   const cards = [];
-  cards.push({
+  const routine = ({
     id: 'routine', kind: 'routine', title: say(s, 'card.routine.title'), body: say(s, 'card.routine.body'),
     items: C.routine.filter((it) => !s.dept.routineGone.includes(it.id)).map((it) => ({ id: it.id, label: it.label, hours: it.hours, why: it.why })),
     gone: s.dept.routineGone.map((id) => C.routine.find((it) => it.id === id)?.label).filter(Boolean),
@@ -42,6 +44,8 @@ export function buildCards(s, module) {
       cards.push(scriptCard(s, def));
     }
   }
+
+  cards.push(routine);
 
   if (!s.monday.away) {
     const learners = s.crew.filter((c) => active(c) && !c.lead && c.skill < 0.75);

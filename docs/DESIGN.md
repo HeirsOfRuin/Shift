@@ -14,6 +14,7 @@ differs from the plan above it, section 12 wins.
 | 2026-11-03 | **Shape B, not C.** `PLAN.md` said shape C (Vite, Preact, TS, YAML). The kill gate showed Shift is a simulation with written event cards, not a scene graph: the engine is the product and content hangs off it. Shape B runs the engine in Node with no build for the bots and tests, has no dependencies, and bundles to one HTML file, which is what a phone beta needs (it can be opened from a link or a downloads folder). Content lives in logic-free `src/data/*.data.js` tables. If the text volume outgrows JS tables, YAML can be added later without touching the engine. |
 | 2026-11-03 | **The kill gate's mechanics carry into the engine unchanged in shape:** interruptions that grow with open problems; a passing cause per problem type; cover stories; fixes that work most of the time; noticing (timecards, QC, the floor walk, escalation); tolerance that spreads; the main-problem win; the price of holding the line. |
 | 2026-11-03 | **Five measurement bots** (firefighter, documenter, coach, ignorer, balanced) play every module; a module ships only if it passes the kill gate's five conditions. |
+| 2026-11-03 | **The problem comes first in the inbox.** The first look at the built week screen (390 px) had the six standing items above the module's problem; the problem now leads and the standing week folds to one line. Module gate re-run: identical numbers. |
 | 2026-11-03 | **The Pages workflow runs by hand only.** On every push it would build, test and then fail at the deploy step, because Pages is off for a private repository; that is a red run and an email per push. Switch `push:` back on when Pages is on. The beta ships as one file instead. |
 | 2026-11-03 | **Beta unlocks.** Modules unlock on coach sign-off, as planned; the beta adds a menu switch that opens every module, so the author can test any of them (the workshop checklist's "sandbox start to reach new content fast"). |
 
@@ -190,6 +191,192 @@ per seed, as in the kill gate.
 | Phone legibility of pixel art | Whole-number scale, contact sheet, smoke screenshots looked at |
 | A beta that only the author can judge | The beta report says what was measured and what was not; the pilot questions stand |
 
-## 12. As built
+## 12. As built (beta 1, 2026-11-03)
 
-Filled in when the beta ships.
+Where this section differs from the plan above it, this section wins.
+
+**What exists.** The Supervisor track: eight modules, eight problem types,
+seventeen scripted cards, eleven requests, 343 text keys (458 lines, about
+11,400 words with the module text), seven crew and a named cast of eleven.
+About 3,600 lines of engine, data, UI and bots. Shape B as planned, bundled to
+one file (257 KB) and an installable site. Published as a private artifact for
+the beta (`BETA.md`).
+
+**Differences from the plan.**
+- The week's inbox leads with the module's problem, then requests, then the
+  standing week folded to one line. The first look at the built screen had six
+  routine items above the problem, which pushed it below the fold on a phone.
+- Web fonts (Big Shoulders Display, Atkinson Hyperlegible, IBM Plex Mono) with
+  system fallbacks, instead of system fonts only: the published page allows
+  Google Fonts, and offline play falls back cleanly.
+- Both themes: dark first (a lit bay at shift start) and a concrete-daylight
+  light theme, every colour a token. The pixel bay keeps its own palette in
+  both.
+- No `prompt()`, `confirm()` or `print()`: the host refuses them. Confirmations
+  happen on the page; the debrief copies as text.
+- *Pulled off the floor* needed a stronger absence than planned (run 1 of the
+  module gate: the styles barely differed and doing nothing won 57%). While you
+  are away the floor slows unless Kev is ready, his strain grows with what you
+  did not hand over, the background problem lands the week you leave, and "Kev
+  buckled" is its own failure.
+- The firefighter bot covers when the forecast is under demand plus about a
+  body (it had stopped covering once the forecast read 6.5 at full strength,
+  and so stopped being the style that ships the most).
+
+**Instruments.**
+
+| Tool | Result |
+|---|---|
+| `node --test` (16 tests) | All pass: modules end and the clock moves; record hours equal the plan screen's; no NaN; the gone stay gone; Friday's number is the record's; same seed, same module; the profile stays on 0 to 25; no hidden cause on screen before it is told; no raw token anywhere across every module and bot; every text key exists; the v1 save fixture plays on; save codes round-trip; modules open in order |
+| `sim/gate.js --runs=100` | All eight modules pass the five conditions (tables below) |
+| `tools/check-bundle.mjs` | The single file plays six weeks from `file://`; the site installs, its worker activates with the build id, and it plays a week offline |
+| `tools/smoke.mjs` | Four weeks through the UI at 390 px, every tab renders, no overflow, no raw tokens, the save survives a reload |
+| Screenshots | Looked at in both themes: title, track, brief, week, Friday, end, debrief |
+
+**What the instruments found and fixed.**
+- A two-derivations bug (F1): Friday rounded the raw number while the record
+  kept a rounded one, so 6.45 bodies read as 6 on Friday and 7 later. One
+  derivation now (`record.bodies`).
+- The scaffold's bundler dropped every re-exported name, so the engine's facade
+  bundled to an empty object: the source build worked and the single file did
+  not. Fixed here and in the workshop kit.
+- The scaffold's bundle check clicked only the first start step, so a game
+  with a three-click start never reached a turn offline. Fixed here and in the
+  kit.
+
+**Known gaps carried forward.** In `BETA.md`: two modules separate the styles
+weakly (*The week*, *Pulled off the floor*); every number is a first guess;
+text repeats on replays; the subdomain mapping awaits the author; saves are
+per device; sign-off is honour system; one track of six.
+
+### The module gate, 100 seeds per style
+
+### The week (`the-week`), 100 seeds per style
+
+| Style | Win | Schedule | Kept everyone | Problem settled | Paint starved | Bottleneck | Shipped / asked | Hours a week | Morale | Trust | Practice score |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| firefighter | 70% ±5 | 87% ±3 | 70% ±5 | 87% ±3 | 8% ±3 | 2% ±1 | 107% | 48.9 | 0.67 | 0.55 | 8 |
+| documenter | 77% ±4 | 85% ±4 | 77% ±4 | 86% ±3 | 18% ±4 | 0% ±1 | 102% | 40.1 | 0.66 | 0.54 | 15 |
+| coach | 73% ±4 | 78% ±4 | 73% ±4 | 79% ±4 | 25% ±4 | 0% ±1 | 100% | 41.8 | 0.70 | 0.58 | 55 |
+| ignorer | 15% ±4 | 31% ±5 | 15% ±4 | 15% ±4 | 81% ±4 | 0% ±1 | 93% | 39.3 | 0.67 | 0.52 | 0 |
+| balanced | 88% ±3 | 93% ±3 | 90% ±3 | 98% ±1 | 6% ±2 | 0% ±1 | 104% | 43.1 | 0.70 | 0.61 | 63 |
+
+- PASS styles diverge (spread 73 points)
+- PASS no style best on every axis
+- PASS balanced wins most, not all (88% ±3, want 50-90%)
+- PASS ignoring loses most, not all (15% ±4, want 3-40%)
+- PASS nothing beats balanced beyond the noise (best other: none)
+
+### The late one (`late-one`), 100 seeds per style
+
+| Style | Win | Schedule | Kept everyone | Problem settled | Paint starved | Bottleneck | Shipped / asked | Hours a week | Morale | Trust | Practice score |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| firefighter | 26% ±4 | 94% ±2 | 75% ±4 | 32% ±5 | 5% ±2 | 3% ±2 | 107% | 48.5 | 0.67 | 0.52 | 0 |
+| documenter | 45% ±5 | 50% ±5 | 48% ±5 | 58% ±5 | 30% ±5 | 0% ±1 | 96% | 40.2 | 0.64 | 0.51 | 2 |
+| coach | 61% ±5 | 92% ±3 | 86% ±3 | 73% ±4 | 7% ±3 | 0% ±1 | 102% | 42.1 | 0.68 | 0.61 | 61 |
+| ignorer | 23% ±4 | 75% ±4 | 61% ±5 | 32% ±5 | 21% ±4 | 0% ±1 | 98% | 39.6 | 0.64 | 0.53 | 0 |
+| balanced | 83% ±4 | 95% ±2 | 83% ±4 | 100% ±1 | 8% ±3 | 0% ±1 | 103% | 41.7 | 0.69 | 0.59 | 62 |
+
+- PASS styles diverge (spread 60 points)
+- PASS no style best on every axis
+- PASS balanced wins most, not all (83% ±4, want 50-90%)
+- PASS ignoring loses most, not all (23% ±4, want 3-40%)
+- PASS nothing beats balanced beyond the noise (best other: none)
+
+### The loop (`loop`), 100 seeds per style
+
+| Style | Win | Schedule | Kept everyone | Problem settled | Paint starved | Bottleneck | Shipped / asked | Hours a week | Morale | Trust | Practice score |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| firefighter | 0% ±1 | 90% ±3 | 37% ±5 | 0% ±1 | 9% ±3 | 3% ±2 | 106% | 48.9 | 0.63 | 0.49 | 0 |
+| documenter | 0% ±1 | 83% ±4 | 41% ±5 | 0% ±1 | 13% ±3 | 0% ±1 | 100% | 40.0 | 0.60 | 0.47 | 4 |
+| coach | 60% ±5 | 89% ±3 | 80% ±4 | 68% ±5 | 11% ±3 | 0% ±1 | 102% | 42.3 | 0.68 | 0.60 | 57 |
+| ignorer | 12% ±3 | 58% ±5 | 42% ±5 | 16% ±4 | 46% ±5 | 0% ±1 | 97% | 39.2 | 0.62 | 0.52 | 0 |
+| balanced | 82% ±4 | 91% ±3 | 82% ±4 | 97% ±2 | 9% ±3 | 0% ±1 | 103% | 41.9 | 0.69 | 0.58 | 60 |
+
+- PASS styles diverge (spread 82 points)
+- PASS no style best on every axis
+- PASS balanced wins most, not all (82% ±4, want 50-90%)
+- PASS ignoring loses most, not all (12% ±3, want 3-40%)
+- PASS nothing beats balanced beyond the noise (best other: none)
+
+### Firefighting (`firefighting`), 100 seeds per style
+
+| Style | Win | Schedule | Kept everyone | Problem settled | Paint starved | Bottleneck | Shipped / asked | Hours a week | Morale | Trust | Practice score |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| firefighter | 13% ±3 | 86% ±3 | 62% ±5 | 16% ±4 | 18% ±4 | 20% ±4 | 106% | 52.3 | 0.67 | 0.52 | 0 |
+| documenter | 38% ±5 | 94% ±2 | 72% ±4 | 50% ±5 | 9% ±3 | 0% ±1 | 103% | 40.9 | 0.65 | 0.51 | 1 |
+| coach | 86% ±3 | 94% ±2 | 86% ±3 | 99% ±1 | 7% ±3 | 0% ±1 | 103% | 42.2 | 0.69 | 0.58 | 61 |
+| ignorer | 11% ±3 | 91% ±3 | 66% ±5 | 16% ±4 | 8% ±3 | 0% ±1 | 102% | 41.8 | 0.65 | 0.52 | 0 |
+| balanced | 85% ±4 | 94% ±2 | 85% ±4 | 99% ±1 | 7% ±3 | 0% ±1 | 104% | 42.5 | 0.69 | 0.58 | 59 |
+
+- PASS styles diverge (spread 75 points)
+- PASS no style best on every axis
+- PASS balanced wins most, not all (85% ±4, want 50-90%)
+- PASS ignoring loses most, not all (11% ±3, want 3-40%)
+- PASS nothing beats balanced beyond the noise (best other: coach)
+
+### Pulled off the floor (`pulled`), 100 seeds per style
+
+| Style | Win | Schedule | Kept everyone | Problem settled | Paint starved | Bottleneck | Shipped / asked | Hours a week | Morale | Trust | Practice score |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| firefighter | 64% ±5 | 92% ±3 | 81% ±4 | 68% ±5 | 7% ±3 | 0% ±1 | 104% | 44.0 | 0.68 | 0.53 | 0 |
+| documenter | 62% ±5 | 89% ±3 | 65% ±5 | 67% ±5 | 8% ±3 | 0% ±1 | 100% | 38.6 | 0.65 | 0.51 | 2 |
+| coach | 83% ±4 | 94% ±2 | 87% ±3 | 87% ±3 | 7% ±3 | 0% ±1 | 103% | 36.7 | 0.70 | 0.56 | 70 |
+| ignorer | 45% ±5 | 85% ±4 | 55% ±5 | 52% ±5 | 8% ±3 | 0% ±1 | 99% | 38.3 | 0.66 | 0.53 | 0 |
+| balanced | 83% ±4 | 94% ±2 | 86% ±3 | 87% ±3 | 7% ±3 | 0% ±1 | 104% | 36.9 | 0.70 | 0.56 | 70 |
+
+- PASS styles diverge (spread 38 points)
+- PASS no style best on every axis
+- PASS balanced wins most, not all (83% ±4, want 50-90%)
+- PASS ignoring loses most, not all (45% ±5, want 3-40%)
+- PASS nothing beats balanced beyond the noise (best other: coach)
+
+### Nobody upstairs (`upstairs`), 100 seeds per style
+
+| Style | Win | Schedule | Kept everyone | Problem settled | Paint starved | Bottleneck | Shipped / asked | Hours a week | Morale | Trust | Practice score |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| firefighter | 35% ±5 | 95% ±2 | 80% ±4 | 42% ±5 | 7% ±3 | 0% ±1 | 112% | 47.6 | 0.67 | 0.52 | 0 |
+| documenter | 36% ±5 | 95% ±2 | 81% ±4 | 44% ±5 | 7% ±3 | 0% ±1 | 104% | 40.3 | 0.66 | 0.51 | 15 |
+| coach | 39% ±5 | 94% ±2 | 87% ±3 | 44% ±5 | 7% ±3 | 0% ±1 | 104% | 43.0 | 0.69 | 0.58 | 40 |
+| ignorer | 6% ±2 | 92% ±3 | 74% ±4 | 8% ±3 | 7% ±3 | 0% ±1 | 102% | 40.4 | 0.66 | 0.52 | 25 |
+| balanced | 86% ±3 | 95% ±2 | 86% ±3 | 100% ±1 | 8% ±3 | 0% ±1 | 105% | 42.0 | 0.70 | 0.58 | 58 |
+
+- PASS styles diverge (spread 80 points)
+- PASS no style best on every axis
+- PASS balanced wins most, not all (86% ±3, want 50-90%)
+- PASS ignoring loses most, not all (6% ±2, want 3-40%)
+- PASS nothing beats balanced beyond the noise (best other: none)
+
+### Rush week (`rush`), 100 seeds per style
+
+| Style | Win | Schedule | Kept everyone | Problem settled | Paint starved | Bottleneck | Shipped / asked | Hours a week | Morale | Trust | Practice score |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| firefighter | 0% ±1 | 53% ±5 | 37% ±5 | 0% ±1 | 42% ±5 | 100% ±1 | 91% | 54.4 | 0.58 | 0.52 | 0 |
+| documenter | 53% ±5 | 55% ±5 | 87% ±3 | 87% ±3 | 7% ±3 | 0% ±1 | 89% | 40.8 | 0.67 | 0.51 | 79 |
+| coach | 0% ±1 | 21% ±4 | 52% ±5 | 0% ±1 | 40% ±5 | 0% ±1 | 83% | 40.2 | 0.68 | 0.57 | 29 |
+| ignorer | 12% ±3 | 12% ±3 | 67% ±5 | 67% ±5 | 29% ±5 | 0% ±1 | 83% | 37.4 | 0.68 | 0.52 | 32 |
+| balanced | 77% ±4 | 81% ±4 | 87% ±3 | 87% ±3 | 6% ±2 | 0% ±1 | 92% | 43.7 | 0.65 | 0.58 | 68 |
+
+- PASS styles diverge (spread 77 points)
+- PASS no style best on every axis
+- PASS balanced wins most, not all (77% ±4, want 50-90%)
+- PASS ignoring loses most, not all (12% ±3, want 3-40%)
+- PASS nothing beats balanced beyond the noise (best other: none)
+
+### Across (`across`), 100 seeds per style
+
+| Style | Win | Schedule | Kept everyone | Problem settled | Paint starved | Bottleneck | Shipped / asked | Hours a week | Morale | Trust | Practice score |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| firefighter | 6% ±2 | 93% ±3 | 72% ±4 | 6% ±2 | 10% ±3 | 5% ±2 | 108% | 48.9 | 0.68 | 0.52 | 0 |
+| documenter | 31% ±5 | 93% ±3 | 74% ±4 | 42% ±5 | 8% ±3 | 0% ±1 | 103% | 42.5 | 0.66 | 0.52 | 0 |
+| coach | 59% ±5 | 95% ±2 | 86% ±3 | 65% ±5 | 7% ±3 | 0% ±1 | 103% | 42.8 | 0.69 | 0.58 | 63 |
+| ignorer | 6% ±2 | 92% ±3 | 72% ±4 | 8% ±3 | 8% ±3 | 0% ±1 | 102% | 41.2 | 0.66 | 0.53 | 0 |
+| balanced | 73% ±4 | 94% ±2 | 85% ±4 | 85% ±4 | 7% ±3 | 0% ±1 | 104% | 42.5 | 0.70 | 0.58 | 62 |
+
+- PASS styles diverge (spread 67 points)
+- PASS no style best on every axis
+- PASS balanced wins most, not all (73% ±4, want 50-90%)
+- PASS ignoring loses most, not all (6% ±2, want 3-40%)
+- PASS nothing beats balanced beyond the noise (best other: none)
+
+Module gate: PASS
