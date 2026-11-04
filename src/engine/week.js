@@ -146,7 +146,7 @@ export function advance(prev, plan = {}) {
   };
   const K = kernel(s, r, lines);
   K.sharp = (s.dept.tired || 0) >= C.tiredSlips ? C.tiredOdds : 1;   // run down, fixes work less often
-  s.week_ = { defects: 0, capacity: 0, demand: 0, capacityMul: 1 };
+  s.week_ = { defects: 0, capacity: 0, demand: 0, capacityMul: 1, stationMul: { fit: 1, weld: 1, finish: 1 } };
   const picks = {};
   for (const card of m.cards) {
     if (card.kind === 'routine') continue;
@@ -277,6 +277,9 @@ export function advance(prev, plan = {}) {
   let weldCap = cap('weld') / weldContent + cover * C.coverPerDay + s.week_.capacity;
   let finishCap = cap('finish');
   fitCap *= s.week_.capacityMul; weldCap *= s.week_.capacityMul; finishCap *= s.week_.capacityMul;
+  // a station that is the constraint this week, and any improvement that stuck (Where it waits)
+  const imp = s.dept.improved || {};
+  fitCap *= s.week_.stationMul.fit * (1 + (imp.fit || 0)); weldCap *= s.week_.stationMul.weld * (1 + (imp.weld || 0)); finishCap *= s.week_.stationMul.finish * (1 + (imp.finish || 0));
   const d = s.dept;
   d.fitBuf += fitCap;
   const weldOut = Math.max(0, Math.min(weldCap, d.fitBuf));
@@ -373,7 +376,7 @@ function triage(card, opt) {
 // lateness is accountability, on a hazard it is safety (CATALOGUE.md).
 function areaFor(type) {
   return { late: 'D2', rework: 'D1', load: 'D1', friction: 'D3',
-    hazard: 'C2', recurring: 'B3', escalation: 'E1', standards: 'E2' }[type];
+    hazard: 'C2', recurring: 'B3', escalation: 'E1', standards: 'E2', constraint: 'B1', huddle: 'F1', newhand: 'D4' }[type];
 }
 
 // While you are in the audit room, the floor runs on whatever bench you built.
@@ -460,6 +463,12 @@ function land(s, K, q, lines) {
     lines.push({ kind: 'consequence', text: say(s, 'land.kickbackWar') });
     trace('trace.kickbackWar', {});
   }
+  if (q.kind === 'constraintMoves') {
+    const next = { fit: 'finish', finish: 'weld', weld: 'fit' }[q.data.from];
+    const p = spawn(s, 'constraint', [], { source: 'moved', causes: { [next]: 1 } });
+    p.seen = false;
+    lines.push({ kind: 'consequence', text: say(s, 'land.constraintMoved', { from: q.data.from }) });
+  }
   if (q.kind === 'effects') {
     applyEffects(K, q.data.effects || [], {});
     if (q.data.line) lines.push({ kind: 'consequence', text: fill(s, q.data.line, {}) });
@@ -485,11 +494,11 @@ export function newModule(moduleId, seed) {
   const s = {
     v: 1, seed: seed >>> 0, moduleId, week: 1, weeks: module.weeks, over: false, outcome: null,
     setup: structuredClone(module.setup || {}),
-    crew: CREW.map((c) => ({ ...structuredClone(c), status: 'active', daysOut: 0, lateness: 0, defectAdd: 0, stress: 0, carryOut: 0, lowMorale: 0, leaving: false, cramped: false })),
+    crew: crewFor(module).map((c) => ({ ...structuredClone(c), status: 'active', daysOut: 0, lateness: 0, defectAdd: 0, stress: 0, carryOut: 0, lowMorale: 0, leaving: false, cramped: false })),
     dept: {
       fitBuf: 1.5, weldBuf: 0.5, shipped: 0, demanded: 0, escapes: 0, rework: 0,
       standard: C.standardHome, bench: 0.3, managerTrust: 0.6, peerTrust: 0.5, safetyDebt: 0, fixtureFixed: false, escapeAdd: 0,
-      overStreak: 0, bottleneck: false, tired: 0, floorExtra: [], starvedStreak: 0, starved: false, lost: [], surprise: false, flags: {}, routineGone: [], usedCards: [],
+      overStreak: 0, bottleneck: false, tired: 0, floorExtra: [], starvedStreak: 0, starved: false, lost: [], surprise: false, flags: {}, routineGone: [], usedCards: [], improved: {},
     },
     problems: [], queue: [], nextId: 1, script: script.filter(Boolean),
     history: [], decisions: [], trace: [], monday: null,
@@ -498,6 +507,14 @@ export function newModule(moduleId, seed) {
   if (module.setup?.dept) Object.assign(s.dept, module.setup.dept);
   startWeek(s);
   return s;
+}
+
+/** The crew for a module: the bay's seven, with one swapped out if the module
+ *  says so (The new hand: Lyle out on leave, Sam in his spot). */
+export function crewFor(module) {
+  const swap = module.setup?.swap;
+  if (!swap) return CREW;
+  return CREW.map((c) => (c.id === swap.out ? { ...swap.in, station: swap.in.station || c.station, slot: swap.in.slot ?? c.slot } : c));
 }
 
 function biggest(items) {

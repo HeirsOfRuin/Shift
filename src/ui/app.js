@@ -160,15 +160,15 @@ function briefScreen() {
     <section><p class="label">What this module trains</p>${b.focus.map((f) => `<p><strong>${esc(f.label)}.</strong> ${esc(f.about)}</p>`).join('')}</section>
     <section><p class="label">To get through it</p><p>${esc(b.goal)}</p></section>
     <section><p class="label">Ways it goes wrong</p><ul class="notes">${b.lose.map((l) => `<li>${esc(l)}</li>`).join('')}</ul></section>
-    <section><p class="label">Your crew</p><div class="people">${crewStrip().map((c) => `<div class="person"><canvas data-portrait="${c.id}" aria-hidden="true"></canvas><div class="body"><span class="name">${esc(c.name)}</span><span class="soft">${esc(c.station)}${c.lead ? ' &middot; lead' : ''}</span><span>${esc(c.about)}</span></div></div>`).join('')}</div></section>
+    <section><p class="label">Your crew</p><div class="people">${crewStrip(briefId).map((c) => `<div class="person"><canvas data-portrait="${c.id}" aria-hidden="true"></canvas><div class="body"><span class="name">${esc(c.name)}</span><span class="soft">${esc(c.station)}${c.lead ? ' &middot; lead' : ''}</span><span>${esc(c.about)}</span></div></div>`).join('')}</div></section>
     ${other ? `<p class="warn">Starting this ends your run of ${esc(MODULES[other.moduleId].title)} in week ${other.week}. It will not count as played.</p>` : ''}
     <button class="btn primary block" data-act="start-module" data-id="${b.id}">Start Monday</button>
   </main>`;
 }
 
 // ================================================================ the week
-const CUE = { deadline: 'Request &middot; deadline', people: 'Request &middot; one of yours', safety: 'Safety', optional: 'Request', pressure: 'Request &middot; pressure', develop: 'Before you go', shortcut: 'Shortcut offered', overtime: 'Overtime', yours: 'A decision', notYours: 'A decision', plain: 'Request' };
-const TYPE = { late: 'Lateness', rework: 'Rework', load: 'Carrying too much', friction: 'Friction', hazard: 'Safety', recurring: 'The same fire', escalation: 'A decision', standards: 'Two standards' };
+const CUE = { huddle: 'At the huddle', deadline: 'Request &middot; deadline', people: 'Request &middot; one of yours', safety: 'Safety', optional: 'Request', pressure: 'Request &middot; pressure', develop: 'Before you go', shortcut: 'Shortcut offered', overtime: 'Overtime', yours: 'A decision', notYours: 'A decision', plain: 'Request' };
+const TYPE = { late: 'Lateness', rework: 'Rework', load: 'Carrying too much', friction: 'Friction', hazard: 'Safety', recurring: 'The same fire', escalation: 'A decision', standards: 'Two standards', constraint: 'Where it waits', huddle: 'The huddle', newhand: 'The new hand' };
 
 function weekScreen() {
   const v = weekView(save.run, plan);
@@ -368,7 +368,7 @@ function mountArt() {
     const cap = cv.parentElement.querySelector('[data-caption]');
     mountBay(cv, data, (p) => { if (cap) cap.textContent = p ? p.caption : 'Nobody there. Tap a person.'; });
   }
-  const crew = [...crewStrip()];
+  const crew = [...crewStrip(screen === 'brief' ? briefId : save?.run?.moduleId)];
   for (const cv of app.querySelectorAll('canvas[data-portrait]')) {
     const c = crew.find((x) => x.id === cv.dataset.portrait);
     if (c) drawPortrait(cv, c.look, c.lead);

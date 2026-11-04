@@ -15,7 +15,8 @@ const CEILING = { firefighter: 60, documenter: 46, coach: 48, ignorer: 45, balan
 const PROBLEM = {
   firefighter(c) {
     return { late: 'remind', rework: 'fixYourself', load: 'carry', friction: 'warning', hazard: c.waiting ? 'leave' : 'workOrder',
-      recurring: 'fixYourself', escalation: 'decide', standards: 'matchThem' }[c.type];
+      recurring: 'fixYourself', escalation: 'decide', standards: 'matchThem',
+      constraint: c.ruledOut.includes('weld') ? 'improveFit' : 'improveWeld', huddle: 'shutDown', newhand: 'fixHis' }[c.type];
   },
   documenter(c) {
     if (c.type === 'late' || c.type === 'rework') return c.weeks % 2 === 0 ? 'document' : 'leave';
@@ -25,6 +26,9 @@ const PROBLEM = {
     if (c.type === 'recurring') return c.waiting || c.ruledOut.length ? 'leave' : 'workOrder';
     if (c.type === 'escalation') return c.waiting ? 'leave' : 'askRuss';
     if (c.type === 'standards') return 'complain';
+    if (c.type === 'constraint') return c.weeks === 0 ? 'askCrew' : c.ruledOut.includes('weld') ? 'leave' : 'improveWeld';
+    if (c.type === 'huddle') return 'parkingLot';
+    if (c.type === 'newhand') return c.weeks === 0 ? 'sheet' : c.weeks >= 2 && !c.tried.includes('document') ? 'document' : 'leave';
     return 'leave';
   },
   coach(c) {
@@ -38,6 +42,10 @@ const PROBLEM = {
       case 'recurring': return !t ? 'investigate' : t === 'setup' ? 'standardWork' : t === 'steel' ? 'raiseFab' : t === 'pin' && !c.waiting ? 'workOrder' : 'leave';
       case 'escalation': return !t ? 'check' : c.waiting ? 'leave' : 'askRuss';
       case 'standards': return t === 'spec' ? 'writeStandard' : 'talkPeer';
+      // the coach trusts people: asks the crew, improves what they say
+      case 'constraint': return !c.tried.includes('askCrew') ? 'askCrew' : c.ruledOut.includes('weld') ? 'leave' : 'improveWeld';
+      case 'huddle': return !t ? 'talk' : { habit: 'parkingLot', parts: 'fixParts', unheard: 'giveFloor', newRoute: 'talk' }[t];
+      case 'newhand': return !t ? 'watch' : { untaught: 'teach', afraid: 'pair', rushed: 'slowDown', settling: 'watch' }[t];
     }
     return 'leave';
   },
@@ -86,6 +94,15 @@ const PROBLEM = {
       case 'standards':
         if (!t) return 'talkPeer';
         return { spec: 'writeStandard', pressure: 'handoff', unaware: 'showHer', newHire: 'leave' }[t];
+      case 'constraint':
+        if (!t) return 'look';
+        return { fit: 'improveFit', weld: 'improveWeld', finish: 'improveFinish', mix: 'leave' }[t];
+      case 'huddle':
+        if (!t) return 'talk';
+        return { habit: 'parkingLot', parts: 'fixParts', unheard: 'giveFloor', newRoute: 'leave' }[t];
+      case 'newhand':
+        if (!t) return 'watch';
+        return { untaught: 'teach', afraid: 'pair', rushed: 'slowDown', settling: 'leave' }[t];
     }
     return 'leave';
   },
@@ -99,24 +116,28 @@ function scripted(policy, card, v) {
   switch (policy) {
     case 'ignorer': return fallback;
     case 'firefighter':
+      if (cue === 'huddle') return by('allow') ?? fallback;
       if (cue === 'deadline' || cue === 'pressure') return by('do') ?? fallback;
       if (cue === 'shortcut') return by('allow') ?? fallback;
       if (cue === 'overtime') return by('overtime') ?? fallback;
       if (cue === 'yours' || cue === 'notYours') return by('decide') ?? fallback;
       return by('keep') ?? by('skip') ?? fallback;
     case 'documenter':
+      if (cue === 'huddle') return by('hold') ?? fallback;
       if (cue === 'deadline' || cue === 'safety') return by('do') ?? fallback;
       if (cue === 'shortcut') return by('hold') ?? fallback;
       if (cue === 'yours' || cue === 'notYours') return by('ask') ?? fallback;
       if (cue === 'develop') return by('keep') ?? fallback;
       return by('skip') ?? by('no') ?? fallback;
     case 'coach':
+      if (cue === 'huddle') return by('hold') ?? fallback;
       if (cue === 'people' || cue === 'safety') return by('do') ?? fallback;
       if (cue === 'develop') return by('delegate') ?? fallback;
       if (cue === 'shortcut') return (card.who.length ? by('allow') : by('hold')) ?? fallback;
       if (cue === 'yours' || cue === 'notYours') return by('ask') ?? fallback;
       return by('skip') ?? by('no') ?? fallback;
     case 'balanced':
+      if (cue === 'huddle') return by('hold') ?? fallback;
       if (['deadline', 'people', 'safety', 'pressure'].includes(cue)) return by('do') ?? fallback;
       if (cue === 'develop') return by('delegate') ?? fallback;
       if (cue === 'shortcut') return by('hold') ?? fallback;

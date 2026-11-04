@@ -7,7 +7,7 @@ import { MODULES, TRACK } from '../data/modules.data.js';
 import { STATIONS, CREW, CAST, PLANT, CAST_ABOUT } from '../data/crew.data.js';
 import { AREAS, FAMILIES, SELF_LIMIT } from '../data/focus.data.js';
 import { SEATS, DEPARTMENTS, GROUPS, WRITTEN_BAY } from '../data/departments.data.js';
-import { hoursFor } from './week.js';
+import { hoursFor, crewFor } from './week.js';
 import { unlocked, order } from './state.js';
 import { pathFor } from './path.js';
 import { moodWord, standardWord, trustWord, active } from './derive.js';
@@ -160,8 +160,9 @@ export function crewView(s) {
 export { MODULES, TRACK };
 
 /** The crew as the brief shows them: name, station, a line about each. */
-export function crewStrip() {
-  return CREW.map((c) => ({ id: c.id, name: c.name, station: STATIONS[c.station].label, about: c.about, look: c.look, lead: !!c.lead }));
+export function crewStrip(moduleId = null) {
+  const crew = moduleId && MODULES[moduleId] ? crewFor(MODULES[moduleId]) : CREW;
+  return crew.map((c) => ({ id: c.id, name: c.name, station: STATIONS[c.station].label, about: c.about, look: c.look, lead: !!c.lead }));
 }
 
 /** Who is who: the plant, the vehicles, and the people beyond the bay. With a

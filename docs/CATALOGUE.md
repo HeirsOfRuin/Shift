@@ -44,7 +44,7 @@ copy. If they disagree, the data file wins and this page is stale.
 | A3 | Planning and capacity | Reads the forecast before committing; covers a gap that is coming; gives the scheduler honest numbers | small | (scored in every module, unrated) |
 | A4 | Delegation | Sees what only they are holding; hands over a real piece of the job; does not take it back at the first wobble | ready | Pulled off the floor |
 | **B. Flow and systems** | | | | |
-| B1 | Finding the bottleneck | Looks at where work waits; spends improvement hours on the constraint; rechecks when it moves | small | none yet: *Where it waits* |
+| B1 | Finding the bottleneck | Looks at where work waits; spends improvement hours on the constraint; rechecks when it moves | ready | Where it waits |
 | B2 | Lean tools | Picks the tool that fits; builds it with the crew; sets up the audit that keeps it alive | new | none yet: *It looked great for a week* |
 | B3 | Root-cause problem solving | Investigates before fixing; fixes the cause, not the symptom; changes course when a fix does not hold | ready | Firefighting |
 | B4 | Metrics and data | Reads leading signals; spots a measure being gamed; changes the measure, not just the people | new | none yet: *The number on the board* |
@@ -56,13 +56,13 @@ copy. If they disagree, the data file wins and this page is stale.
 | D1 | Coaching and development | Coaches early, at the bench; asks before acting on someone; fits the help to the reason | ready | Pulled off the floor |
 | D2 | Accountability | Finds out why before acting; fits the response to the cause; holds the line when it is a choice | ready | The late one |
 | D3 | Conflict | Hears both sides first; fixes the work or the gap, not the flare; sets out how people treat each other when that is the problem | ready | The loop |
-| D4 | Training and onboarding | Answers a new hand at the bench; teaches the reason; checks understanding | small | none yet: *The new hand* |
+| D4 | Training and onboarding | Answers a new hand at the bench; teaches the reason; checks understanding | ready | The new hand |
 | **E. Up and across** | | | | |
 | E1 | Leading up and decision rights | Finds out whose call it is; makes the calls that are theirs; uses the chain | ready | Nobody upstairs |
 | E2 | Working across | Goes across before going up; fixes the handoff, not the blame; agrees one standard at the interface | ready | Across |
 | E3 | Leading change | Explains the why before the what; involves the sceptics; keeps the change alive | new | none yet: *Nobody asked for this* |
 | **F. Meetings and self** | | | | |
-| F1 | Running a huddle | Starts on time; every action gets an owner; handles the derailer | new | none yet: *Monday, 7:00* |
+| F1 | Running a huddle | Starts on time; every action gets an owner; handles the derailer | ready | Monday, 7:00 |
 | F2 | Self-management under pressure | Notices own load and pulls back; does not grind past useful; recovers the week | ready | (scored in every module, unrated) |
 
 "Engine" says whether the current engine can run a module on the area today
@@ -108,7 +108,10 @@ Both are the scoring telling the truth about that style, not a scoring fault.
 
 ## The next modules, in order
 
-From `REVIEW.md` section 5.2, confirmed by the author: *Where it waits* (B1),
-*Monday, 7:00* (F1), *The new hand* (D4). Then *It looked great for a week*
-(B2), *The near miss* (C2), *The number on the board* (B4), *Nobody asked for
-this* (E3).
+*Where it waits* (B1), *Monday, 7:00* (F1) and *The new hand* (D4) were built
+2026-11-04 (`FRAME-three-modules.md`). Next, after the three seats
+(`FRAME-departments.md`): *The other side* (E2, from the author's note the same
+day: "forcing some people to see the other departments pov from time to time
+would actually be a really good training tool": a week in the paint seat,
+receiving what welding sends), then *It looked great for a week* (B2), *The
+near miss* (C2), *The number on the board* (B4), *Nobody asked for this* (E3).

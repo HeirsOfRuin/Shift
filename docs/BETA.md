@@ -1,10 +1,21 @@
-# Shift beta 3: the Supervisor track, with a profile
+# Shift beta 4: eleven modules, a profile, a path
 
-Published 2026-11-04 as a private page, the same link as betas 1 and 2:
+Published 2026-11-04 as a private page, the same link as every beta:
 **https://claude.ai/artifact/4c5QqYTmZdn5iKcutCPZJx**
 (only the author can open it until he shares it from the page's Share menu).
 Rebuild with `npm run build` and republish `dist/shift.embed.html` to the same
 link. The build id is baked in, so an installed copy picks the new one up.
+
+**What changed in beta 4 (2026-11-04, later the same day):** three new modules
+for the topics the brief named and nothing covered. *Where it waits*: paint is
+short, everyone says body weld, and only a morning in the aisle tells you
+where the work stops; fix it and the constraint moves. *Monday, 7:00*: the
+five-minute huddle runs fifteen, mostly through Brent, and why he does it is
+the hidden cause; six huddle moments around it (the late one at seven, a
+problem that needs an owner, the silent one, Dana's add-on, the dead board,
+a safety item raised standing up). *The new hand*: Sam starts Monday in
+Lyle's spot and three brackets are in the scrap bin by Wednesday. Eleven
+modules now; the path orders them from your profile.
 
 **What changed in beta 3 (2026-11-04):** the scoring is no longer the LBA's
 four domains. Each module names one or two focus areas from Shift's own
@@ -16,6 +27,14 @@ module is still played in the welding bay; a brief for anyone else says so.
 
 **What changed in beta 2 (2026-11-03):** pressure from open problems, fatigue,
 a People tab, and old saves carried forward.
+
+## How to test beta 4
+
+Play one of the three new modules, whichever your profile puts first. The
+question for each: does the thing it is about feel like the thing it is
+about? In *Where it waits*, did you look before you spent the hours? In
+*Monday, 7:00*, did you ask Brent? In *The new hand*, did you sit with Sam?
+And the one that matters most: which of the three would your leads believe?
 
 ## How to test beta 3
 
@@ -85,6 +104,9 @@ bots, 100 seeds per style (`node sim/gate.js --runs=100`; full tables in
 | Nobody upstairs | 86% ±3 | 39% ±5 | 36% ±5 | 35% ±5 | 6% ±2 |
 | Rush week | 77% ±4 | 0% ±1 | 53% ±5 | 0% ±1 | 12% ±3 |
 | Across | 73% ±4 | 59% ±5 | 31% ±5 | 6% ±2 | 6% ±2 |
+| Where it waits | 87% ±3 | 42% ±5 | 40% ±5 | 63% ±5 | 15% ±4 |
+| Monday, 7:00 | 76% ±4 | 75% ±4 | 35% ±5 | 7% ±3 | 7% ±3 |
+| The new hand | 74% ±4 | 73% ±4 | 10% ±3 | 15% ±4 | 14% ±3 |
 
 The bots are disciplined diagnosticians with no hunches. A person will notice
 later, believe more stories and cover more; expect to win less often than the

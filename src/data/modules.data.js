@@ -111,7 +111,7 @@ export const TRACK = {
   id: 'supervisor',
   title: 'Supervisor track',
   intro: "You run the welding department at Northern Motors: seven people, three stations, and a paint department that wants six bodies a week. Each module is a few weeks of that job. Nobody tells you the right answer, because there usually isn't one; there is what you knew, what you did, and what it did.",
-  modules: ['the-week', 'late-one', 'loop', 'firefighting', 'pulled', 'upstairs', 'rush', 'across'],
+  modules: ['the-week', 'late-one', 'loop', 'firefighting', 'pulled', 'upstairs', 'rush', 'across', 'waits', 'monday', 'newhand'],
 };
 
 export const MODULES = {
@@ -444,6 +444,133 @@ export const MODULES = {
         'Who is the peer you have never sat down with, and what is the first thing you would put on the table?',
       ],
       commitment: 'One peer I will sit down with, and the one thing we need to agree on:',
+    },
+  },
+
+  // -------------------------------------------------------------------- 9 (beta 4)
+  waits: {
+    title: 'Where it waits', focus: ['B1'], handbook: '1: Firefighting is a leadership failure, not a badge of honour', weeks: 8, goal: 'main',
+    teaches: 'Finding the station that limits everything, and only fixing that one',
+    brief: [
+      "Paint has been getting five bodies a week against the six it asks for, and it has been that way long enough that everyone has stopped asking why. They know why. It's body weld. Brent says it, Dana says it, Theresa says it with the sigh she keeps for welding.",
+      "Dana has told you to put real hours into fixing it this month, and she's told Russ you will. The hours are yours to spend: on fit-up, on the booths, on finish. Four hours of improvement buys about ten percent at whichever station you give it to.",
+      'Nobody has stood in the aisle for a morning and watched where the work actually stops. The number does not say. The opinions do not count.',
+    ],
+    goalText: 'Paint fed for eight weeks with the real constraint found and fixed, not the loudest one, and nobody lost.',
+    lose: ['Paint short two weeks running', 'Losing a person', 'Three weeks over 55 hours'],
+    setup: {},
+    main: { type: 'constraint', who: [], seen: true, week: 1 },
+    second: { weeks: [4, 6], not: [] },
+    cards: [],
+    pool: { perWeek: [0, 1], cards: pool('vendorDemo', 'townHall', 'jessForecast', 'supplierCall', 'danaPage') },
+    debrief: {
+      questions: [
+        'Where did you put your first four improvement hours, and what did you know when you put them there?',
+        'What did a morning of watching tell you that the Friday number could not?',
+        'If you fixed the constraint and it moved: how did you find out, and how long did that take?',
+        'On your real floor, which station does everyone say is the bottleneck? When did anyone last watch where the work waits?',
+        'What would you improve tomorrow if you had four hours, and how sure are you that it is the constraint?',
+      ],
+      commitment: 'One morning this month I will spend watching where the work waits, and what I will do with what I see:',
+    },
+  },
+
+  // -------------------------------------------------------------------- 10 (beta 4)
+  monday: {
+    title: 'Monday, 7:00', focus: ['F1'], handbook: '2: When everything is urgent, nothing is strategic', weeks: 8, goal: 'main',
+    teaches: 'Five minutes, every action with an owner, and the derailer handled without losing the room',
+    brief: [
+      "The huddle is at seven, at the board by fit-up, five minutes. That was the idea. For about a month it has been fifteen, and most of the extra is Brent: the brackets, the forklift route, the brackets again. By ten past, Lyle is looking at his boots and Joel is looking at Lyle.",
+      "It isn't a disaster. The day just starts late and a bit sour, every day, and the board hasn't been touched since the audit. Dana has started saying 'your huddle' in a tone.",
+      'Nobody is going to tell you why Brent does it. You could ask him.',
+    ],
+    goalText: 'The huddle back to five minutes for a reason that holds, the crew still here, and paint fed for eight weeks.',
+    lose: ['Paint short two weeks running', 'Losing a person', 'Three weeks over 55 hours'],
+    setup: {},
+    main: { type: 'huddle', who: [], seen: true, week: 1 },
+    second: { weeks: [4, 6], not: ['friction'], avoid: ['brent'] },
+    cards: [
+      { id: 'ontime', week: 1, cue: 'huddle', who: 'tyler', title: "{c} isn't at the board at seven",
+        body: "Seven o'clock and six people at the board. {c} is in the lot, finishing something on his phone. Everyone can see him through the door.",
+        options: [
+          { id: 'start', label: 'Start without him', hours: 0, kind: 'hold', effects: [{ morale: -0.02, who: 'tyler' }], score: [['F1', 2, 'Started on time']] },
+          { id: 'wait', label: 'Wait for him', hours: 0, kind: 'allow', effects: [{ morale: -0.01, who: 'all' }, { line: "You waited. {c} came in at four past. The huddle started at five past and ran accordingly." }], score: [['F1', -1, 'Waited for the late one']] },
+        ] },
+      { id: 'owner', week: 2, cue: 'huddle', who: 'donna', title: '{c} raises the gap gauge at the huddle',
+        body: "{c} says the gap gauge on finish checks is reading different from the one at the booths, and has been for a week. Four people have an opinion about it, standing there.",
+        options: [
+          { id: 'own', label: 'Give it an owner and a time: Donna, by lunch, tell me what she finds', hours: 0.25, kind: 'hold', effects: [{ line: '{c} came back at lunch: the booth gauge had been dropped. Val swapped it that afternoon.' }], score: [['F1', 2, 'Gave it an owner and a time']] },
+          { id: 'solve', label: 'Sort it out right there, standing up', hours: 1.5, kind: 'allow', effects: [{ morale: -0.02, who: 'all' }, { line: 'You sorted the gauge standing at the board. It took twenty-five minutes and seven people.' }], score: [['F1', -1, 'Solved it standing up, with everyone watching']] },
+          { id: 'note', label: 'Note it and move on', hours: 0, kind: 'skip', effects: [{ queue: { weeks: 2, effects: [{ defects: 0.6 }], line: "The gap gauge thing never got an owner. Two bodies went to paint a hair out and came back." }, because: 'A problem raised at the huddle got a note instead of an owner' }], score: [['F1', -1, 'Noted it and moved on; nobody owned it']] },
+        ] },
+      { id: 'silent', week: 3, cue: 'huddle', who: 'lyle', title: "{c} hasn't said a word in a huddle in a month",
+        body: "{c} stands at the back and says nothing, every morning. He's the best jig man in the plant. You could ask him for one thing, by name.",
+        options: [
+          { id: 'ask', label: 'Ask him, by name, for one thing', hours: 0.25, kind: 'hold', effects: [{ trust: 0.06, who: 'lyle' }, { line: "{c}, asked by name, said the locating pins on table two have been loose for a month. He'd been waiting for someone to ask." }], score: [['F1', 2, 'Asked the quiet one, by name']] },
+          { id: 'leave', label: 'Let him be; some people are quiet', hours: 0, kind: 'skip', effects: [{ queue: { weeks: 3, effects: [{ capacity: -0.5 }], line: "Table two's locating pins let go on Wednesday. Lyle had known for a month. Nobody asked." }, because: 'The quiet one was never asked' }] },
+        ] },
+      { id: 'dana', week: 4, cue: 'huddle', title: 'Dana wants a quality review in the huddle',
+        body: "Dana would like fifteen minutes of quality numbers added to the huddle, daily, 'while everyone's there anyway.' She has the slides ready.",
+        options: [
+          { id: 'no', label: 'Keep the huddle five minutes; offer her Thursday afternoon instead', hours: 0.5, kind: 'hold', effects: [{ managerTrust: -0.02 }, { line: "Dana took Thursday afternoon, after a pause you could hear." }], score: [['F1', 2, 'Kept the huddle a huddle']] },
+          { id: 'yes', label: 'Add it; she is the manager', hours: 0, kind: 'allow', effects: [{ managerTrust: 0.02 }, { floorLoad: { label: 'The twenty-minute huddle, every day', hours: 2, weeks: 4 } }, { morale: -0.03, who: 'all' }], score: [['F1', -1, 'Let the huddle become a meeting']] },
+        ] },
+      { id: 'board', week: 5, cue: 'huddle', title: "The board hasn't been updated since the audit",
+        body: "The board by fit-up still shows March. The huddle happens in front of it and nobody looks at it, which is fair.",
+        options: [
+          { id: 'fix', label: 'Put the board back in the huddle: yesterday, today, one problem', hours: 1, kind: 'hold', effects: [{ capacity: 0.2 }, { line: 'The board shows this week now. Marisol pointed at it on Wednesday without being asked.' }], score: [['F1', 2, 'Ran the huddle from the board, not from memory']] },
+          { id: 'leave', label: 'Leave it; the huddle works without it', hours: 0, kind: 'skip' },
+        ] },
+      { id: 'safetyRaised', week: 6, cue: 'huddle', who: 'joel', title: '{c} mentions the crane hook, at the huddle, quietly',
+        body: "{c} says, not quite to anyone, that the crane hook latch is sticking. It's seven-oh-three and there are four other things on the board.",
+        options: [
+          { id: 'park', label: 'Stop the huddle: Kev tags the crane now, the rest of the board waits', hours: 0.25, kind: 'hold', effects: [{ safetyDebt: -0.01 }, { trust: 0.05, who: 'joel' }, { line: 'Kev red-tagged the crane at 7:05. Maintenance had the latch sorted by ten.' }], score: [['C2', 2, 'Stopped the huddle for a safety item'], ['F1', 2, 'Gave the safety item an owner before anything else']] },
+          { id: 'after', label: 'Finish the board, then deal with it', hours: 0.5, kind: 'allow', effects: [{ safetyDebt: 0.01 }, { line: 'The crane got looked at after the huddle. Nobody used it in between, probably.' }], score: [['C2', 0, 'Dealt with a safety item after the board']] },
+          { id: 'list', label: 'Add it to the list', hours: 0, kind: 'skip', effects: [{ safetyDebt: 0.03 }, { trust: -0.05, who: 'joel' }], score: [['C2', -1, 'Put a sticking crane latch on a list']] },
+        ] },
+    ],
+    pool: { perWeek: [0, 1], cards: pool('vendorDemo', 'townHall', 'supplierCall', 'jessForecast') },
+    debrief: {
+      questions: [
+        'What did Brent tell you when you asked him away from the board? Would you have guessed it?',
+        'Which things raised at the huddle got an owner and a time? Which got solved standing up, and what did that cost the other six people?',
+        'Did you ever wait for the late one, or shut the loud one down? What did the crew learn from each?',
+        'On your real floor: how long does your huddle run, and who talks? Who never does?',
+        'What is the one rule you would hold for your huddle, in words the crew would recognise?',
+      ],
+      commitment: 'One rule for my huddle I will hold every morning this month, and how the crew will know:',
+    },
+  },
+
+  // -------------------------------------------------------------------- 11 (beta 4)
+  newhand: {
+    title: 'The new hand', focus: ['D4'], handbook: '6: Leaders build leaders, not just output', weeks: 8, goal: 'main',
+    teaches: 'Teaching the task and the reason, and checking it landed',
+    brief: [
+      "Lyle is on parental leave until the summer, and Sam started Monday in his spot at fit-up. Sam is twenty-three, came off a farm shop where he welded everything that broke, and has good hands. Nobody doubts the hands.",
+      "By Wednesday three brackets were in the scrap bin and Kev had quietly redone a jig before the booths saw it. Sam hasn't asked anyone anything. New people don't, mostly, and the ones who leave in the first ninety days are the ones nobody sat with.",
+      'You have eight weeks. The scrap bin is not the problem; it is where the problem shows.',
+    ],
+    goalText: 'Sam still here and making brackets that go straight to the booths, for a reason you can name; nobody lost; paint fed for eight weeks.',
+    lose: ['Paint short two weeks running', 'Losing a person, Sam included', 'Three weeks over 55 hours'],
+    setup: {
+      swap: { out: 'lyle', in: { id: 'sam', name: 'Sam', full: 'Sam Toews', pronoun: 'he', skill: 0.3, morale: 0.7, trust: 0.45,
+        look: { skin: 0, hair: 'messy', hairColour: 2, beard: false, build: 'lean' },
+        about: 'Fit-up. Started Monday, in Lyle\'s spot while Lyle is on leave. Off a farm shop; good hands, no idea where anything is, and not asking.' } },
+    },
+    main: { type: 'newhand', who: ['sam'], seen: true, week: 1 },
+    second: { weeks: [4, 6], not: ['rework'], avoid: ['lyle', 'sam'] },
+    cards: [],
+    pool: { perWeek: [0, 1], cards: pool('vendorDemo', 'townHall', 'joelGauge', 'jessForecast', 'eyewash') },
+    debrief: {
+      questions: [
+        'What did an hour at the table tell you about Sam that the scrap bin could not?',
+        'If you taught him: did you teach the steps or the reasons? How did you check it landed?',
+        'What did Sam see you do with his first mistakes, and what did that teach him about the next ones?',
+        'On your real floor: who sat with the last new hire in their first week? For how long?',
+        'What would you want someone to have told you in your first week, that nobody did?',
+      ],
+      commitment: 'What the next new hire on my floor gets in their first week, and who sits with them:',
     },
   },
 };

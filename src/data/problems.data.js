@@ -118,6 +118,51 @@ export const PROBLEMS = {
       matchThem: { label: 'Tell the crew to send whatever paint will take', hours: 0, kind: 'soft' },
     },
   },
+  // ---- beta 4: Where it waits (B1)
+  constraint: {
+    label: 'Where it waits',
+    causes: { fit: 0.3, weld: 0.25, finish: 0.25, mix: 0.2 },
+    passing: 'mix',
+    stories: {},
+    actions: {
+      look: { label: 'Spend a morning watching where work waits', hours: 2, kind: 'ask' },
+      improveFit: { label: 'Put improvement hours into fit-up: a second jig set up and the rack sorted', hours: 4, kind: 'fix', fits: ['fit'] },
+      improveWeld: { label: 'Put improvement hours into body weld: fixtures, wire feed, a spare stinger', hours: 4, kind: 'fix', fits: ['weld'] },
+      improveFinish: { label: 'Put improvement hours into finish: a second inspection bench', hours: 4, kind: 'fix', fits: ['finish'] },
+      askCrew: { label: 'Ask the crew where the problem is', hours: 0.5, kind: 'soft' },
+    },
+  },
+  // ---- beta 4: Monday, 7:00 (F1)
+  huddle: {
+    label: 'The huddle',
+    causes: { habit: 0.3, parts: 0.3, unheard: 0.25, newRoute: 0.15 },
+    passing: 'newRoute',
+    stories: { parts: { habit: 0.3 } },
+    actions: {
+      talk: { label: 'Catch Brent after the huddle and ask what is going on', hours: 0.5, kind: 'ask' },
+      parkingLot: { label: 'Put up a parking lot and hold the five minutes', hours: 1, kind: 'fix', fits: ['habit'] },
+      fixParts: { label: 'Take the parts problem to Raymond, and say so at the huddle', hours: 1, kind: 'fix', fits: ['parts'] },
+      giveFloor: { label: 'Give Brent the first minute, every day, to raise what he has', hours: 0.5, kind: 'fix', fits: ['unheard'] },
+      shutDown: { label: 'Tell him to take it offline', hours: 0.25, kind: 'soft' },
+      letRun: { label: 'Let it run; people need to vent', hours: 0, kind: 'yourself' },
+    },
+  },
+  // ---- beta 4: The new hand (D4)
+  newhand: {
+    label: 'The new hand',
+    causes: { untaught: 0.35, afraid: 0.3, rushed: 0.15, settling: 0.2 },
+    passing: 'settling',
+    stories: { afraid: { untaught: 0.4 } },
+    actions: {
+      watch: { label: 'Sit with {a.him} at the table for an hour and watch', hours: 1, kind: 'ask' },
+      teach: { label: 'Teach {a.him} the job and why it is done that way', hours: 2, kind: 'fix', fits: ['untaught'] },
+      pair: { label: 'Pair {a.him} with Kev for the week, and tell Kev why', hours: 0.5, kind: 'fix', fits: ['afraid'] },
+      slowDown: { label: 'Take the rack off {a.him}: speed comes later', hours: 0.5, kind: 'fix', fits: ['rushed'] },
+      sheet: { label: 'Hand {a.him} the fit-up sheet and the drawing', hours: 0.25, kind: 'soft' },
+      fixHis: { label: 'Fix {a.his} brackets yourself after hours', hours: 2, kind: 'yourself' },
+      document: { label: 'Write up the scrapped brackets', hours: 1, kind: 'hold' },
+    },
+  },
 };
 
 // Where a problem of each type can land, when a module draws one at random.

@@ -459,6 +459,182 @@ export const TYPES = {
       return [];
     },
   },
+
+  // ------------------------------------------------------------- where it waits (beta 4)
+  // One station is the constraint and the player cannot see which from the
+  // Friday number. Improving any other station raises a number that does not
+  // matter. When the constraint is fixed it moves to the next station; the
+  // player who looked once has to look again.
+  constraint: {
+    notice() { return true; },
+    act(K, p, action) {
+      const v = { p };
+      const d = K.s.dept;
+      const station = { improveFit: 'fit', improveWeld: 'weld', improveFinish: 'finish' }[action];
+      switch (action) {
+        case 'look': told(p); K.line('told', `constraint.told.${p.told}`, v); return;
+        case 'askCrew': K.line('result', 'constraint.askCrew', v); return;
+        case 'improveFit': case 'improveWeld': case 'improveFinish':
+          d.improved[station] = Math.min(0.2, (d.improved[station] || 0) + 0.1);
+          if (p.cause === station) {
+            if (works(K, p, action, 0.85, 0.95)) {
+              K.resolve(p, `constraint.fixed.${station}`, { root: true });
+              // the constraint moves: the next station is now the one that waits
+              if (!p.moved && p.source !== 'moved') { p.moved = true; K.queue(1, 'constraintMoves', { from: station }, { key: 'because.constraintMoved', vars: { from: station } }); }
+            } else K.line('result', `constraint.notYet.${station}`, v);
+          } else {
+            if (!p.ruledOut.includes(station)) p.ruledOut.push(station);
+            K.line('result', `constraint.wrong.${station}`, v);
+          }
+          return;
+      }
+    },
+    week(K, p) {
+      const v = { p };
+      const mul = K.s.week_.stationMul;
+      if (p.cause === 'mix') {
+        if (K.week - p.since >= 3) { K.resolve(p, 'constraint.passed.mix', { settled: true }); return; }
+        mul.weld *= 0.9;
+      } else {
+        mul[p.cause] *= p.source === 'moved' ? 0.86 : { fit: 0.72, weld: 0.78, finish: 0.72 }[p.cause];
+      }
+      p.extraInterrupts = 1;
+      K.line('signal', 'constraint.week', v);
+    },
+    score(p, action) {
+      const station = { improveFit: 'fit', improveWeld: 'weld', improveFinish: 'finish' }[action];
+      if (action === 'look') return p.told ? [] : p.source === 'moved' ? [['B1', 2, 'Looked again when the constraint moved']] : [];
+      if (action === 'askCrew') return [['B1', 0, 'Asked the crew, who all said body weld']];
+      if (station) {
+        if (p.told === station) return [['B1', 2, 'Spent improvement hours on the constraint']];
+        if (p.told) return [['B1', -1, 'Improved a station that was not the constraint']];
+        return [['B1', 0, 'Improved a station on a hunch']];
+      }
+      return [];
+    },
+  },
+
+  // ------------------------------------------------------------- the huddle (beta 4)
+  huddle: {
+    notice() { return true; },
+    act(K, p, action) {
+      const v = { p };
+      const brent = K.person('brent');
+      switch (action) {
+        case 'talk': told(p); if (brent) brent.trust = K.clamp(brent.trust + 0.04); K.line('told', `huddle.told.${p.told}`, v); return;
+        case 'parkingLot':
+          if (p.cause === 'habit' && works(K, p, action, 0.8, 0.9)) K.resolve(p, 'huddle.fixed.parkingLot', { root: true });
+          else if (p.cause === 'newRoute') K.resolve(p, 'huddle.fixed.parkingLotRoute', { settled: true });
+          else K.line('result', p.cause === 'habit' ? 'huddle.parkingLot.notYet' : 'huddle.parkingLot.noHelp', v);
+          return;
+        case 'fixParts':
+          if (p.cause === 'parts' && works(K, p, action, 0.75, 0.9)) { K.s.dept.peerTrust = K.clamp(K.s.dept.peerTrust + 0.04); K.resolve(p, 'huddle.fixed.parts', { root: true }); }
+          else { if (p.cause !== 'parts') { p.ruledOut.push('parts'); K.s.dept.peerTrust = K.clamp(K.s.dept.peerTrust - 0.03); } K.line('result', p.cause === 'parts' ? 'huddle.parts.notYet' : 'huddle.parts.noHelp', v); }
+          return;
+        case 'giveFloor':
+          if (p.cause === 'unheard' && works(K, p, action, 0.8, 0.9)) { if (brent) brent.morale = K.clamp(brent.morale + 0.08); K.resolve(p, 'huddle.fixed.giveFloor', { root: true }); }
+          else if (p.cause === 'habit') { p.severity++; K.line('result', 'huddle.giveFloor.worse', v); }
+          else K.line('result', 'huddle.giveFloor.noHelp', v);
+          return;
+        case 'shutDown':
+          p.state = 'quiet'; p.quietUntil = K.week + 2;
+          if (brent) { brent.trust = K.clamp(brent.trust - 0.08); brent.morale = K.clamp(brent.morale - (p.cause === 'unheard' ? 0.12 : 0.05)); }
+          K.line('result', 'huddle.shutDown', v);
+          return;
+        case 'letRun': p.ranThisWeek = true; K.line('result', 'huddle.letRun', v); return;
+      }
+    },
+    week(K, p) {
+      const v = { p };
+      const brent = K.person('brent');
+      if (p.cause === 'newRoute' && K.week - p.since >= 2 && K.r.people.next() < 0.6) { K.resolve(p, 'huddle.passed.route', { settled: true }); return; }
+      // a huddle that runs long and sideways costs everyone ten minutes a day
+      K.s.week_.capacityMul *= p.ranThisWeek ? 0.95 : 0.97;
+      p.ranThisWeek = false;
+      p.extraInterrupts = 2;
+      for (const c of K.crew()) if (K.active(c) && c.id !== 'brent') c.morale = K.clamp(c.morale - 0.012);
+      if (p.cause === 'unheard' && brent) {
+        brent.morale = K.clamp(brent.morale - 0.03 * p.severity);
+        if (p.neglect >= 3 && !p.quitQueued) { p.quitQueued = true; if (K.r.people.next() < 0.5) K.queue(2 + Math.floor(K.r.people.next() * 3), 'quit', { id: 'brent' }, { key: 'because.unheard', vars: v }); }
+      }
+      if (p.cause === 'parts') K.s.week_.capacityMul *= 0.97;
+      K.line('signal', `huddle.week.${p.severity >= 2 ? 'worse' : 'long'}`, v);
+    },
+    score(p, action) {
+      if (action === 'talk') return [];
+      if (action === 'parkingLot') return p.told === 'habit' ? [['F1', 2, 'Parked it and held the five minutes']] : [['F1', 0, 'Put up a parking lot for a problem that was not a habit']];
+      if (action === 'fixParts') return p.told === 'parts' ? [['F1', 2, 'Took the real problem where it belonged']] : [['F1', 0, 'Chased a parts problem nobody had confirmed']];
+      if (action === 'giveFloor') return p.told === 'unheard' ? [['F1', 2, 'Gave him the floor, first']] : [['F1', 0, 'Gave the floor to someone who already had it']];
+      if (action === 'shutDown') return [['F1', -1, 'Shut him down in front of the crew']];
+      if (action === 'letRun') return [['F1', -1, 'Let the huddle run long']];
+      return [];
+    },
+  },
+
+  // ------------------------------------------------------------- the new hand (beta 4)
+  newhand: {
+    notice() { return true; },
+    act(K, p, action) {
+      const [a] = p.who.map(K.person);
+      const v = { p };
+      const kev = K.person('kev');
+      switch (action) {
+        case 'watch': told(p); a.trust = K.clamp(a.trust + 0.05); K.line('told', `newhand.told.${p.told}`, v); return;
+        case 'teach':
+          p.sessions++; a.trust = K.clamp(a.trust + 0.04);
+          if (p.cause === 'untaught') {
+            a.skill = K.clamp(a.skill + 0.1);
+            if (p.sessions >= 2) K.resolve(p, 'newhand.fixed.taught', { root: true });
+            else K.line('result', 'newhand.teach.first', v);
+          } else if (p.cause === 'settling') { a.skill = K.clamp(a.skill + 0.05); K.line('result', 'newhand.teach.settling', v); }
+          else if (p.cause === 'afraid' && K.r.outcomes.next() < 0.4) { told(p); K.line('told', 'newhand.told.afraid', v); }
+          else K.line('result', 'newhand.teach.noHelp', v);
+          return;
+        case 'pair':
+          if (kev && K.active(kev)) kev.stress += 0.3;
+          if (p.cause === 'afraid' && works(K, p, action, 0.75, 0.9)) { a.morale = K.clamp(a.morale + 0.08); a.skill = K.clamp(a.skill + 0.06); K.resolve(p, 'newhand.fixed.paired', { root: true }); }
+          else if (p.cause === 'untaught') { a.skill = K.clamp(a.skill + 0.03); K.line('result', 'newhand.pair.someHelp', v); }
+          else K.line('result', 'newhand.pair.noHelp', v);
+          return;
+        case 'slowDown':
+          if (p.cause === 'rushed' && works(K, p, action, 0.85, 0.95)) { a.morale = K.clamp(a.morale + 0.08); K.resolve(p, 'newhand.fixed.slowed', { root: true }); }
+          else K.line('result', 'newhand.slowDown.noHelp', v);
+          return;
+        case 'sheet': K.line('result', 'newhand.sheet', v); return;
+        case 'fixHis': p.fixedThisWeek = true; K.line('result', 'newhand.fixHis', v); return;
+        case 'document':
+          a.trust = K.clamp(a.trust - 0.15); a.morale = K.clamp(a.morale - 0.15);
+          if (!p.walkChecked) { p.walkChecked = true; if (K.r.outcomes.next() < 0.3) K.queue(1 + K.r.outcomes.int(2), 'quit', { id: a.id }, { key: 'because.newHandWrittenUp', vars: v }); }
+          K.line('result', 'newhand.document', v);
+          return;
+      }
+    },
+    week(K, p) {
+      const [a] = p.who.map(K.person);
+      const v = { p };
+      if (p.cause === 'settling' && K.week - p.since >= 2 && K.r.people.next() < 0.6) { a.skill = K.clamp(a.skill + 0.1); K.resolve(p, 'newhand.passed.settled', { settled: true }); return; }
+      // scrapped brackets at fit-up, and the ones that get through hidden
+      if (!p.fixedThisWeek) K.s.week_.capacity -= p.cause === 'afraid' ? 0.2 : 0.35;
+      if (p.cause === 'afraid' && !p.fixedThisWeek) K.s.week_.defects += 0.3;
+      p.fixedThisWeek = false;
+      p.extraInterrupts = 1;
+      a.skill = K.clamp(a.skill + (p.cause === 'untaught' ? 0.005 : 0.015));
+      if (p.cause !== 'settling') a.morale = K.clamp(a.morale - 0.03 * p.severity);
+      if (p.neglect >= 3 && !p.quitQueued) { p.quitQueued = true; if (K.r.people.next() < 0.55) K.queue(2 + Math.floor(K.r.people.next() * 3), 'quit', { id: a.id }, { key: 'because.newHandAlone', vars: v }); }
+      if ((K.week - p.since) % 3 === 2) p.severity++;
+      K.line('signal', `newhand.week.${p.severity >= 2 ? 'worse' : 'quiet'}`, v);
+    },
+    score(p, action) {
+      if (action === 'watch') return p.told ? [['D4', 1, 'Sat with him again']] : [];
+      if (action === 'teach') return p.told === 'untaught' ? (p.sessions >= 1 ? [['D4', 2, 'Checked that it landed before moving on']] : [['D4', 2, 'Taught the reason, not just the steps']]) : [['D4', 0, 'Taught a job for a reason nobody gave']];
+      if (action === 'pair') return p.told === 'afraid' ? [['D4', 2, 'Paired him with someone he could ask']] : [['D4', 0, 'Paired him up without knowing why']];
+      if (action === 'slowDown') return p.told === 'rushed' ? [['D4', 2, 'Took the pressure off a new hand']] : [['D4', 0, 'Slowed down a man who was not rushing']];
+      if (action === 'sheet') return [['D4', 0, 'Handed him a sheet instead of a person']];
+      if (action === 'fixHis') return [['D4', -1, "Fixed the new hand's work for him"]];
+      if (action === 'document') return [['D4', -1, 'Wrote up a man in his first month']];
+      return [];
+    },
+  },
 };
 
 export function actionsFor(type) { return PROBLEMS[type].actions; }
