@@ -241,6 +241,21 @@ export const PROBLEMS = {
       signs: { label: 'New labels and a memo', hours: 0.5, kind: 'soft' },
     },
   },
+  // ---- beta 11: Round two (B7): the flow rounds, from the plane exercise
+  flow: {
+    label: 'The flow rounds',
+    causes: { batch: 0.27, push: 0.27, late: 0.26, fine: 0.2 },
+    passing: 'fine',
+    // a pile of WIP is ambiguous: the first read of a round is sometimes the wrong rule
+    stories: { batch: { push: 0.2 }, push: { batch: 0.2 }, late: { batch: 0.2 } },
+    actions: {
+      readRound: { label: 'Read the round: where WIP piles, where defects are found', hours: 2, kind: 'ask' },
+      batchOne: { label: 'Batch of one: each set goes on as soon as it is done', hours: 2, kind: 'fix', fits: ['batch'], needs: 'supervisor' },
+      pull: { label: 'Two-slot rack: fit-up builds only into an empty slot', hours: 2, kind: 'fix', fits: ['push'], needs: 'supervisor' },
+      checkSource: { label: 'Each station checks its own before passing it on', hours: 2, kind: 'fix', fits: ['late'], needs: 'supervisor' },
+      all: { label: 'Change all three rules this week', hours: 5, kind: 'yourself', needs: 'supervisor' },
+    },
+  },
 };
 
 // Where a problem of each type can land, when a module draws one at random.

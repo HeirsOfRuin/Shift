@@ -111,6 +111,7 @@ function problemCard(s, p) {
     told: p.told, tried: [...p.tried], failed: Object.keys(p.fails), failedTwice: Object.keys(p.fails).filter((k) => p.fails[k] >= 2),
     sessions: p.sessions, ruledOut: [...p.ruledOut], waiting: !!(p.order || p.russDue || p.engDue || p.aroundDue), pending: !!p.pending,
     lean: s.dept.lean === null || s.dept.lean === undefined ? null : { owner: !!s.dept.leanOwner, audit: !!s.dept.flags?.leanAudit, with: !!s.dept.leanWith },
+    flow: s.dept.flow ? { ...s.dept.flow, held: p.held || 0, changedAgo: p.changedAt ? s.week - p.changedAt : null } : null,
     options: [
       ...Object.entries(def.actions).filter(([, a]) => !(s.seat === 'lead' && a.needs)).map(([id, a]) => ({ id, label: fill(s, a.label, { p }), hours: a.hours, kind: a.kind, fits: a.fits || [] })),
       // a lead hand's one move for what needs the supervisor's signature

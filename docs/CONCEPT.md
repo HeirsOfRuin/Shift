@@ -110,6 +110,7 @@ Google Doc copies of the same things.
 | 2026-11-04 | Lean tools and a standing rule: "Keep going with the lean tools module, kill gate first. I want every module for the weld department view point well developed and and clear in its purpose." Built as beta 9: `KILLGATE-lean.md`, the module *It looked great for a week*, and a one-sentence purpose on every module, shown on the brief and the track. |
 | 2026-11-04 | Testers: "help me set this up so I can send the link to my leads to play test this and get their thoughts on it". Beta 9 adds *Your thoughts, for the coach* (a send when the page is open on claude.ai and the viewer is signed in; copy-as-text always), a card for testers on the title screen, and `PLAYTEST.md`, the note to send with the link. The page declares the shared store with suggestion-box rules: each tester writes their own, only the owner reads. |
 | 2026-11-04 | First playtest of the whole: "Getting into it, it is very reading heavy... I think more readability, visualization, concise wording, etc would help the flow." Beta 10 is the readability pass (`FRAME-readability.md`): measured at 390 px, the profile went from 8.1 screens to 2.7, the track from 8.9 to 2.6, the brief from 3.1 to 1.3, a week from 5.0 to 3.2; chips, folds, meters, a paint chart, 39 option labels shortened. The engine and the voice did not change. |
+| 2026-11-04 | The plane exercise: "It'd be really nice to have some sort of inspiration from the Lego Plane lean exercise". Built as beta 11: a kill gate first (`KILLGATE-flow.md`), a new catalogue area (B7 Flow) and the module *Round two*, with a round-results board on the week screen. The exercise's brand and pieces stay out of the content: in the game it is Priya's flow rounds in the welding bay. |
 | 2026-11-04 | The order of build, and a new module idea: "1 and then 2. keep this project moving. I think forcing some people to see the other departments pov from time to time would actually be a really good training tool as well!" The three new modules first (built the same day as beta 4: *Where it waits*, *Monday, 7:00*, *The new hand*), then the three seats. The other-department point of view goes in the catalogue as a module (*The other side*), not as a gap. |
 
 Decisions the agent made and the author has not yet confirmed or struck: the
@@ -255,6 +256,11 @@ everything is urgent nothing is strategic; 3 Structure protects good people;
   API key, no server.
 
 ## 10. Status and the exact next steps
+
+**Update (2026-11-04, beta 11):** *Round two*, from the plane exercise:
+the bay run as rounds with three rules (batch, push or pull, where you
+check), the numbers on a board every Friday, one rule at a time. Seventeen
+modules, 24 focus areas. **Next:** the author's and the leads' notes.
 
 **Update (2026-11-04, beta 10):** the readability pass from the author's
 first note on the whole ("very reading heavy"). Screens cut to a third of

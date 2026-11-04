@@ -913,6 +913,58 @@ export const TYPES = {
       return [];
     },
   },
+
+  // ------------------------------------------------------------- the flow rounds (beta 11)
+  // dept.flow holds the three rules. A change costs a learning dip (applied in
+  // week.js), may slide back by Friday, and settles the problem only after the
+  // fitting rule has held two rounds.
+  flow: {
+    notice() { return true; },
+    act(K, p, action) {
+      const v = { p };
+      const d = K.s.dept;
+      const set = (rule, to) => { if (d.flow[rule] === to) return false; d.flow[rule] = to; d.flowChanged.push(rule); p.changedAt = K.week; return true; };
+      switch (action) {
+        case 'readRound':
+          if (!p.told) { told(p); K.line('told', `flow.told.${p.told}`, v); return; }
+          // a second read after a change that did not move the number corrects a misread
+          if (p.told !== p.cause) { p.told = p.cause; p.reread = true; K.line('told', 'flow.reread', v); K.line('told', `flow.told.${p.told}`, v); return; }
+          K.line('result', 'flow.read.same', v);
+          return;
+        case 'batchOne': K.line('result', set('batch', 1) ? 'flow.set.batch' : 'flow.set.already', v); return;
+        case 'pull': K.line('result', set('pull', true) ? 'flow.set.pull' : 'flow.set.already', v); return;
+        case 'checkSource': K.line('result', set('check', 'source') ? 'flow.set.check' : 'flow.set.already', v); return;
+        case 'all': { const n = [set('batch', 1), set('pull', true), set('check', 'source')].filter(Boolean).length; K.line('result', n ? 'flow.set.all' : 'flow.set.already', v); return; }
+      }
+    },
+    week(K, p) {
+      const v = { p };
+      const d = K.s.dept;
+      const mul = K.s.week_.stationMul;
+      const fitting = { batch: d.flow.batch === 1, push: d.flow.pull, late: d.flow.check === 'source', fine: true }[p.cause];
+      if (p.cause === 'fine' && K.week - p.since >= 3) { K.resolve(p, 'flow.passed.fine', { settled: true }); return; }
+      // what the cause costs while its rule is the old way
+      if (p.cause === 'batch' && d.flow.batch !== 1) K.s.week_.defects += 0.8;
+      if (p.cause === 'push' && !d.flow.pull) mul.weld *= 0.82;
+      if (p.cause === 'late' && d.flow.check !== 'source') { mul.finish *= 0.85; K.s.week_.defects += 0.3; }
+      p.extraInterrupts = 1;
+      if (fitting && p.cause !== 'fine') {
+        p.held = (p.held || 0) + 1;
+        if (p.held >= 2) { K.resolve(p, `flow.fixed.${p.cause}`, { root: true }); return; }
+        K.line('signal', 'flow.holding', v);
+        return;
+      }
+      p.held = 0;
+      K.line('signal', 'flow.week', v);
+    },
+    score(p, action) {
+      const rule = { batchOne: 'batch', pull: 'push', checkSource: 'late' }[action];
+      if (action === 'readRound') return !p.told ? [['B7', 2, 'Read the round before changing a rule']] : p.changedAt ? [['B7', 2, 'Read the next round to see if the change took']] : [['B7', 0, 'Read the round again with nothing changed']];
+      if (rule) return p.told === rule ? [['B7', 2, 'Changed one rule: the one the round pointed at']] : p.told ? [['B7', -1, 'Changed a rule the round did not point at']] : [['B7', 0, 'Changed a rule before reading a round']];
+      if (action === 'all') return [['B7', -1, 'Changed everything at once: no way to tell what worked']];
+      return [];
+    },
+  },
 };
 
 export function actionsFor(type) { return PROBLEMS[type].actions; }

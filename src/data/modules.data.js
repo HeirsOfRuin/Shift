@@ -140,7 +140,7 @@ export const TRACK = {
   intro: "You run welding at Northern Motors: seven people, three stations, a paint department that wants six bodies a week. Each module is a few weeks of that job. Nobody tells you the right answer; there is what you knew, what you did, and what it did.",
   introManager: "You're the operations manager for the Metal side at Northern Motors: fabrication, machining, welding and paint. Kev runs welding. Everything on his floor reaches you through him, and your four moves are to ask him, tell him, go down yourself, or leave it with him. What he can do without you at the end is the number that matters.",
   introLead: "You're the lead hand in welding at Northern Motors: fit-up is your table, six people ask you first, and Kev, who had your job until spring, is the supervisor. Every hour you lead comes off the table. Nobody tells you the right answer; there is what you knew, what you did, what you took to Kev, and what it did.",
-  modules: ['the-week', 'late-one', 'loop', 'firefighting', 'pulled', 'upstairs', 'rush', 'across', 'waits', 'monday', 'newhand', 'otherside', 'customers', 'sayitonce', 'system', 'greatweek'],
+  modules: ['the-week', 'late-one', 'loop', 'firefighting', 'pulled', 'upstairs', 'rush', 'across', 'waits', 'monday', 'newhand', 'otherside', 'customers', 'sayitonce', 'system', 'greatweek', 'roundtwo'],
 };
 
 export const MODULES = {
@@ -838,6 +838,50 @@ export const MODULES = {
         'When the next event is proposed, what will you ask for before the tape goes down?',
       ],
       commitment: 'One improvement on my floor I will give an owner and an audit this month, and the first Friday it will be checked:',
+    },
+  },
+
+  // -------------------------------------------------------------------- 17 (beta 11)
+  // Inspired by the plane exercise lean trainers run in rounds (KILLGATE-flow.md).
+  roundtwo: {
+    title: 'Round two', focus: ['B7'], seats: ['supervisor', 'lead'], notManager: 'the rules in it are changed at the rack', handbook: '1: Firefighting is a leadership failure, not a badge of honour', weeks: 8, goal: 'main',
+    teaches: 'Flow: batch size, push or pull, where you check, one rule at a time',
+    purpose: 'To run the bay as rounds, the way the plane exercise does: change one rule, read the numbers on Friday, and learn which rule was holding the line back.',
+    leadBrief: "You're the lead hand, and the rack is beside your table. The rules are Kev's to change; what you see on Friday is yours to bring him.",
+    brief: [
+      "Priya ran the toy-plane exercise at the CI conference last month: build the same plane in rounds, change one rule a round, put the numbers on a flip chart. She wants to run the welding bay the same way for eight weeks. Same bay, same crew. Each Friday is a round. The board by fit-up gets the numbers.",
+      "The bay runs the old way: fit-up builds a full rack of six before it moves, pushes everything it makes down the line, and finish checks it all at the end. Paint gets about five. Everyone has a theory.",
+      'There are three rules you could change. Change all three and you will never know which one it was.',
+    ],
+    goalText: 'The rule that was holding the line back found and changed, still in place at the end; paint fed; nobody lost.',
+    lose: ['Paint short two weeks running', 'Losing a person', 'Three weeks over 55 hours'],
+    setup: { flow: { batch: 6, pull: false, check: 'end' } },
+    main: { type: 'flow', who: [], seen: true, week: 1 },
+    second: { weeks: [4, 6], not: [] },
+    cards: [
+      { id: 'flipchart', week: 1, cue: 'pressure', title: 'Priya wants the numbers on the board',
+        body: "Priya has taped a sheet to the board by fit-up: round, bodies, work waiting, days from cut to paint, defects found at finish. She'd like the crew to fill it in on Fridays. Brent has already asked what it's for.",
+        options: [
+          { id: 'crew', label: 'The crew fills it in; you explain it at the huddle', hours: 0.5, kind: 'do', effects: [{ morale: 0.02, who: 'all' }, { line: "The crew filled in round one themselves. Lyle wrote the WIP column in pencil and then in pen." }], score: [['B7', 1, 'Put the round numbers where the crew could see them']] },
+          { id: 'you', label: 'You fill it in Friday afternoons', hours: 0.25, kind: 'skip', effects: [{ line: 'You filled in the sheet. Nobody else read it.' }] },
+        ] },
+      { id: 'rushround', week: 4, cue: 'pressure', title: "Jess wants a body extra this round",
+        body: "Jess has a Drayman pulled forward. She would like an extra body this round, and she would like to know why the bay can't just go back to big batches for a week to get it.",
+        options: [
+          { id: 'hold', label: 'Keep the rules; give Jess an honest number', hours: 0.5, kind: 'do', effects: [{ line: "Jess got the honest number and moved the Drayman a week. The rules held." }], score: [['B7', 2, 'Held the rules through a rush round']] },
+          { id: 'revert', label: 'Go back to the old way for a week', hours: 0, kind: 'skip', effects: [{ capacity: 0.4 }, { flag: 'flowReverted' }, { line: "The bay went back to full racks for the week. The extra body went out. So did the round's lesson." }], score: [['B7', -1, 'Went back to the old rules for one round']] },
+        ] },
+    ],
+    pool: { perWeek: [0, 1], cards: pool('vendorDemo', 'townHall', 'supplierCall', 'danaPage', 'eyewash') },
+    debrief: {
+      questions: [
+        'What did round one\'s numbers say before you changed anything? Where did the work wait, and where were the defects found?',
+        'Which rule did you change first, and what did the next round say about it? Did you ever change one that the round had not pointed at?',
+        'If you changed several at once: which one did it? How do you know?',
+        'On your real floor: how big is a batch, who decides when work moves, and where is it checked? Which of those has nobody chosen on purpose?',
+        'What would round one look like on your floor, and who would fill in the board?',
+      ],
+      commitment: 'One rule on my floor I will change for a month, the number I will watch, and when I will read it:',
     },
   },
 };

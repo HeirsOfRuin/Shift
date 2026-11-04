@@ -116,6 +116,7 @@ export function weekView(s, plan = {}) {
     cards: s.over ? [] : m.cards,
     paint: { lastShipped: last?.bodies ?? null, lastAsked: last?.asked ?? null, shipped: Math.round(s.dept.shipped), asked: s.dept.demanded, thisWeek: m?.demand, forecast: m?.forecast },
     dept: { standard: standardWord(s.dept.standard), streak: s.dept.overStreak, supCap: s.seat === 'manager' ? capWord(s.dept.supCap) : null, supCapN: s.seat === 'manager' ? s.dept.supCap : null, lean: s.dept.lean ?? null },
+    flow: s.dept.flow ? { rules: { ...s.dept.flow }, rounds: s.history.map((r) => ({ week: r.week, bodies: r.bodies, asked: r.asked, wip: r.wip, lead: r.bodies ? Math.round((r.wip / r.bodies) * 5 * 10) / 10 : null, late: r.found, changed: r.changed || [], slid: r.slid || [] })) } : null,
     floor: floorView(s),
     crew: crewView(s),
     history: s.history,

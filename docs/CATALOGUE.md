@@ -38,7 +38,7 @@ copy. If they disagree, the data file wins and this page is stale.
 
 Twenty areas on the morning of 2026-11-04; B5, B6 and E4 added the same
 evening from the author's note on internal customers, hidden rework and the
-ERP (`FRAME-three-more.md`). Twenty-three now.
+ERP (`FRAME-three-more.md`). Twenty-three after that; B7 Flow added later the same day from the author's note on the plane exercise (`KILLGATE-flow.md`). Twenty-four now.
 
 | Id | Area | The moves | Engine | Modules |
 |---|---|---|---|---|
@@ -52,6 +52,7 @@ ERP (`FRAME-three-more.md`). Twenty-three now.
 | B2 | Lean tools | Picks the tool that fits; builds it with the crew; sets up the audit that keeps it alive | ready | It looked great for a week |
 | B3 | Root-cause problem solving | Investigates before fixing; fixes the cause, not the symptom; changes course when a fix does not hold | ready | Firefighting |
 | B4 | Metrics and data | Reads leading signals; spots a measure being gamed; changes the measure, not just the people | new | none yet: *The number on the board* |
+| B7 | Flow | Reads a round before changing a rule; changes one rule at a time and reads the next round; shrinks the batch, pulls instead of pushing, checks at the source | ready | Round two |
 | B5 | Hidden rework | Counts the rework nobody counts; puts the answer where they would find it; does not do the rework faster | ready | Say it once |
 | B6 | The system | Traces a job past the screen they use; fixes the entry where it happens, not the report; does not keep a second system | ready | What the system sees |
 | **C. Quality and safety** | | | | |
@@ -122,7 +123,8 @@ Both are the scoring telling the truth about that style, not a scoring fault.
 actually be a really good training tool"; `FRAME-other-side.md`), then *Who
 you work for* (E4), *Say it once* (B5) and *What the system sees* (B6) from the
 author's note the same evening (`FRAME-three-more.md`), then *It looked great
-for a week* (B2, kill gate first: `KILLGATE-lean.md`). Next: *The near miss*
+for a week* (B2, kill gate first: `KILLGATE-lean.md`), then *Round two* (B7,
+from the plane exercise, kill gate first: `KILLGATE-flow.md`). Next: *The near miss*
 (C2), *The number on the board* (B4), *Nobody asked for this* (E3).
 
 Every module carries a one-sentence `purpose`, shown on its brief and on the

@@ -1,10 +1,18 @@
-# Shift beta 10: sixteen modules, three seats, and a third of the scrolling
+# Shift beta 11: seventeen modules, three seats, and the flow rounds
 
 Published 2026-11-04 as a private page, the same link as every beta:
 **https://claude.ai/artifact/4c5QqYTmZdn5iKcutCPZJx**
 (only the author can open it until he shares it from the page's Share menu).
 Rebuild with `npm run build` and republish `dist/shift.embed.html` to the same
 link. The build id is baked in, so an installed copy picks the new one up.
+
+**What changed in beta 11 (2026-11-04):** *Round two*, from the plane
+exercise. Priya runs the bay as rounds: three rules (rack of six or batch of
+one; push or a two-slot pull rack; check at the end or at each station), and
+the board by fit-up gets the numbers every Friday: bodies, work waiting,
+days from cut to paint, defects found late, what changed. Change one rule
+and read the next round, or change all three and find out why the exercise
+says not to.
 
 **What changed in beta 10 (2026-11-04):** the readability pass, from your
 note that it was reading heavy. The profile is chips. The track shows the

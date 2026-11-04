@@ -38,6 +38,10 @@ export const CONFIG = {
     { id: 'oneOnOne', label: 'Half an hour with Kev', hours: 0.5, why: "His time, not yours: what he is working on and what he needs. Skip it and he stops bringing you things.", seats: ['manager'] },
     { id: 'russ', label: "Russ's Friday numbers", hours: 1, why: 'Four departments on one page. Skip it and Russ walks down to get them.', seats: ['manager'] },
   ],
+  // Flow rounds (KILLGATE-flow.md): the learning dip for rules changed in one
+  // week (then the carry into the next), the chance a change slides back by
+  // Friday, the pull rack's size, rework per defect when each station checks.
+  flow: { dip: [1, 0.9, 0.78, 0.66], dipNext: [1, 1, 0.92, 0.82], slide: 0.2, pullRack: 2, reworkSource: 0.15 },
   // Lean tools (KILLGATE-lean.md): how an improvement decays a week without an
   // owner, with one, and what an audit does. `lost` is the floor hours it
   // costs when fully dead.

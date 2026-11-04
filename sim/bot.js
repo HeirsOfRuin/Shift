@@ -17,7 +17,7 @@ const PROBLEM = {
     return { late: 'remind', rework: 'fixYourself', load: 'carry', friction: 'warning', hazard: c.waiting ? 'leave' : 'workOrder',
       recurring: 'fixYourself', escalation: 'decide', standards: 'matchThem',
       constraint: c.ruledOut.includes('weld') ? 'improveFit' : 'improveWeld', huddle: 'shutDown', newhand: 'fixHis', otherside: 'fixInPaint',
-      customer: 'pushMore', infowork: 'faster', erp: 'ownSheet', lean: 'redoFor' }[c.type];
+      customer: 'pushMore', infowork: 'faster', erp: 'ownSheet', lean: 'redoFor', flow: 'leave' }[c.type];
   },
   documenter(c) {
     if (c.type === 'late' || c.type === 'rework') return c.weeks % 2 === 0 ? 'document' : 'leave';
@@ -35,6 +35,8 @@ const PROBLEM = {
     if (c.type === 'infowork') return c.tried.includes('memo') ? (c.tried.includes('board') ? 'leave' : 'board') : 'memo';
     if (c.type === 'erp') return c.tried.includes('blame') ? 'leave' : 'blame';
     if (c.type === 'lean') return c.tried.includes('signs') ? (c.tried.includes('audit') ? 'leave' : 'audit') : 'signs';
+    // the documenter checks quality: inspection at each station, whatever the round says
+    if (c.type === 'flow') return c.flow.check === 'source' ? 'leave' : 'checkSource';
     return 'leave';
   },
   coach(c) {
@@ -60,6 +62,8 @@ const PROBLEM = {
       case 'erp': return !t ? 'trace' : { lateEntries: 'clockNow', wrongOps: 'fixOps', noIssue: 'issueMaterial', upgrade: 'trace' }[t];
       // the coach re-does it with the crew first and asks second
       case 'lean': return c.pending ? (!c.lean.audit ? 'audit' : 'leave') : !t ? (c.tried.includes('redoWith') ? 'ask' : 'redoWith') : { noOwner: 'owners', noAudit: 'audit', forThem: 'redoWith', moveIn: 'leave' }[t];
+      // the coach asks the crew what they think and changes everything they suggest
+      case 'flow': return c.tried.includes('all') ? 'leave' : 'all';
     }
     return 'leave';
   },
@@ -130,6 +134,16 @@ const PROBLEM = {
       case 'erp':
         if (!t) return 'trace';
         return { lateEntries: 'clockNow', wrongOps: 'fixOps', noIssue: 'issueMaterial', upgrade: 'leave' }[t];
+      case 'flow': {
+        // read a round; change the one rule it points at; read the next round if the change did not hold
+        if (!t) return 'readRound';
+        if (t === 'fine') return 'leave';
+        const rule = { batch: 'batchOne', push: 'pull', late: 'checkSource' }[t];
+        const set = { batchOne: c.flow.batch === 1, pull: c.flow.pull, checkSource: c.flow.check === 'source' }[rule];
+        if (!set) return rule;
+        if (c.flow.changedAgo >= 2 && c.flow.held === 0 && !c.tried.includes('readRound2')) return 'readRound';
+        return 'leave';
+      }
       case 'lean':
         // the fix is settling: add what keeps it alive
         if (c.pending) return !c.lean.owner ? 'owners' : !c.lean.audit ? 'audit' : 'leave';

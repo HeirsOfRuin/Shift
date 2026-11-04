@@ -239,7 +239,8 @@ export function advance(prev, plan = {}) {
       const before = p.state;
       for (const [sub, pts, note] of TYPES[p.type].score(p, opt.id)) K.score(p, sub, pts, note);
       TYPES[p.type].act(K, p, opt.id);
-      if (p.state === before && before === 'active' && ['fix', 'hold'].includes(opt.kind)) p.fails[opt.id] = (p.fails[opt.id] || 0) + 1;
+      // a fix that needs rounds to show (the flow rules, a pending fix) is not a failure the week it is made
+      if (p.state === before && before === 'active' && ['fix', 'hold'].includes(opt.kind) && !p.pending && p.type !== 'flow') p.fails[opt.id] = (p.fails[opt.id] || 0) + 1;
       continue;
     }
     if (card.kind === 'cover') { cover = Number(opt.days || 0); continue; }
@@ -294,6 +295,13 @@ export function advance(prev, plan = {}) {
   if (r.events.chance(C.changeChance)) { s.week_.defects += 0.5; lines.push({ kind: 'event', text: say(s, 'floor.change') }); }
   if (s.dept.surprise) { s.week_.demand += 1; s.dept.surprise = false; lines.push({ kind: 'event', text: say(s, 'floor.surprise') }); }
 
+  // the flow rounds: rules changed this week cost a learning dip, compounding when several change at once
+  if (s.dept.flow) {
+    const n = Math.min(3, s.dept.flowChanged.length);
+    s.week_.capacityMul *= C.flow.dip[n] * (s.dept.flowDipNext || 1);
+    s.dept.flowDipNext = C.flow.dipNext[n];
+  }
+
   // 5. problems run their week (in the manager's seat, the supervisor acts first)
   if (s.seat === 'manager') supervisorActs(s, K, r, lines);
   for (const p of s.problems) {
@@ -325,7 +333,7 @@ export function advance(prev, plan = {}) {
   const d = s.dept;
   d.fitBuf += fitCap;
   const weldOut = Math.max(0, Math.min(weldCap, d.fitBuf));
-  d.fitBuf = Math.min(d.fitBuf - weldOut, C.fitRack);
+  d.fitBuf = Math.min(d.fitBuf - weldOut, d.flow?.pull ? C.flow.pullRack : C.fitRack);
   const welders = s.crew.filter((c) => c.station === 'weld' && active(c));
   const wsum = welders.reduce((a, c) => a + capacity(c), 0) || 1;
   const standardDrag = Math.max(0, C.standardHome - d.standard);
@@ -335,7 +343,7 @@ export function advance(prev, plan = {}) {
   const escapes = defects * Math.min(0.9, (C.escapeShare + (d.escapeAdd || 0) + (skip.includes('paint') ? 0.1 : 0)) * (donnaIn ? 1 : 1.6));
   const found = defects - escapes;
   d.weldBuf += weldOut;
-  const shipped = Math.max(0, Math.min(Math.max(0, finishCap - found * C.reworkCost), d.weldBuf));
+  const shipped = Math.max(0, Math.min(Math.max(0, finishCap - found * (d.flow?.check === 'source' ? C.flow.reworkSource : C.reworkCost)), d.weldBuf));
   d.weldBuf -= shipped;
   const asked = m.demand + s.week_.demand;
   d.shipped += shipped; d.demanded += asked;
@@ -391,11 +399,18 @@ export function advance(prev, plan = {}) {
   const record = {
     week: s.week, hours, interrupts: m.interrupts, meetings: m.meetings, shipped: round1(shipped), bodies, asked,
     found: round1(found), escapes: round1(escapes), cover, walk, skip,
+    ...(d.flow ? { wip: round1(d.fitBuf + d.weldBuf), rules: { ...d.flow }, changed: [...d.flowChanged] } : {}),
     lines: [{ kind: 'number', text: say(s, bodies >= asked ? 'friday.met' : 'friday.short', { n: bodies, asked }) }, ...lines,
       { kind: 'number', text: say(s, hours > C.bottleneckAt ? 'friday.hours.bottleneck' : hours > C.tiredAt ? 'friday.hours.long' : hours > C.hoursCeiling ? 'friday.hours.over' : 'friday.hours.ok', { n: Math.round(hours) }) },
       ...(hours > C.hoursCeiling ? [{ kind: 'number', text: say(s, 'friday.why', { n: Math.round(m.interrupts), item: biggest(m.floorItems) }) }] : [])],
   };
   s.history.push(record);
+  // a change the crew has not taken slides back to the old way by Friday, now and then
+  if (d.flow && d.flowChanged.length) {
+    record.slid = [];
+    for (const rule of d.flowChanged) if (r.events.next() < C.flow.slide) { d.flow[rule] = { batch: 6, pull: false, check: 'end' }[rule]; record.slid.push(rule); record.lines.push({ kind: 'consequence', text: say(s, `flow.slid.${rule}`) }); }
+    d.flowChanged = [];
+  }
   delete s.week_;
   s.week++;
   if (s.week > s.weeks || d.starved) { s.over = true; s.outcome = judge(s); }
@@ -419,7 +434,7 @@ function triage(card, opt) {
 function areaFor(type, kind = null) {
   if (type === 'otherside' && ['fix', 'hold', 'yourself', 'soft'].includes(kind)) return 'C3';
   return { late: 'D2', rework: 'D1', load: 'D1', friction: 'D3',
-    hazard: 'C2', recurring: 'B3', escalation: 'E1', standards: 'E2', constraint: 'B1', huddle: 'F1', newhand: 'D4', otherside: 'E2', customer: 'E4', infowork: 'B5', erp: 'B6', lean: 'B2' }[type];
+    hazard: 'C2', recurring: 'B3', escalation: 'E1', standards: 'E2', constraint: 'B1', huddle: 'F1', newhand: 'D4', otherside: 'E2', customer: 'E4', infowork: 'B5', erp: 'B6', lean: 'B2', flow: 'B7' }[type];
 }
 
 // ---------------------------------------------------------------- the manager's seat
@@ -661,6 +676,7 @@ export function newModule(moduleId, seed, seat = 'supervisor', opts = {}) {
       overStreak: 0, bottleneck: false, tired: 0, floorExtra: [], starvedStreak: 0, starved: false, lost: [], surprise: false, flags: {}, routineGone: [], usedCards: [], improved: {},
       supCap: seat === 'manager' ? C.manager.supCap : null,
       lean: module.setup?.lean ?? null, leanOwner: false, leanWith: false, auditedThisWeek: false,
+      flow: module.setup?.flow ? { ...module.setup.flow } : null, flowChanged: [], flowDipNext: 1,
     },
     problems: [], queue: [], nextId: 1, script: script.filter(Boolean),
     history: [], decisions: [], trace: [], monday: null,

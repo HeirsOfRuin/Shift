@@ -173,7 +173,7 @@ function briefScreen() {
 
 // ================================================================ the week
 const CUE = { huddle: 'At the huddle', deadline: 'Request &middot; deadline', people: 'Request &middot; one of yours', safety: 'Safety', optional: 'Request', pressure: 'Request &middot; pressure', develop: 'Before you go', shortcut: 'Shortcut offered', overtime: 'Overtime', yours: 'A decision', notYours: 'A decision', plain: 'Request' };
-const TYPE = { late: 'Lateness', rework: 'Rework', load: 'Carrying too much', friction: 'Friction', hazard: 'Safety', recurring: 'The same fire', escalation: 'A decision', standards: 'Two standards', constraint: 'Where it waits', huddle: 'The huddle', newhand: 'The new hand', otherside: 'From the other side', customer: 'Internal customer', infowork: 'Hidden rework', erp: 'The system', lean: 'The 5S event' };
+const TYPE = { late: 'Lateness', rework: 'Rework', load: 'Carrying too much', friction: 'Friction', hazard: 'Safety', recurring: 'The same fire', escalation: 'A decision', standards: 'Two standards', constraint: 'Where it waits', huddle: 'The huddle', newhand: 'The new hand', otherside: 'From the other side', customer: 'Internal customer', infowork: 'Hidden rework', erp: 'The system', lean: 'The 5S event', flow: 'Flow rounds' };
 
 function weekScreen() {
   const v = weekView(save.run, plan);
@@ -192,7 +192,8 @@ function weekTab(v) {
   if (v.managerAway) out.push('<p class="banner info">Dana is away. Russ is covering her departments as well as his own.</p>');
   if (v.covering) out.push(`<p class="banner info">${esc(v.covering)}</p>`);
   out.push(`<div class="bay"><div class="legend"><span>Fit-up</span><span>Body weld</span><span>Finish</span><span>Paint</span></div><canvas data-bay="week" aria-label="The welding bay this week"></canvas><p class="caption" data-caption>Tap someone to see how they look from across the bay.</p></div>`);
-  if (v.history.length) out.push(spark(v.history, v.weeks));
+  if (v.flow) out.push(roundBoard(v.flow));
+  else if (v.history.length) out.push(spark(v.history, v.weeks));
   if (v.dept.supCapN !== null && v.dept.supCapN !== undefined) out.push(meter('Kev runs his floor', v.dept.supCapN, v.dept.supCap));
   if (v.dept.lean !== null && v.dept.lean !== undefined) out.push(meter('The 5S event, still standing', v.dept.lean, `${Math.round(v.dept.lean * 100)}%`));
   if (!save.track.seen?.howto) out.push(howTo());
@@ -208,6 +209,18 @@ function howTo() {
   return `<article class="ticket"><div class="kind"><span class="label">How a week works</span></div><h3>Forty hours. The floor takes most of them.</h3>
     <p class="body">Pick what to do on each ticket; the bar shows your hours. Over forty costs you. Nobody tells you the cause of a problem: ask, watch, act, read Friday.</p>
     <button class="btn" data-act="howto-done">Got it</button></article>`;
+}
+
+/** The flow rounds' board: the flip chart from the plane exercise. One row a
+ *  round; the rules now; what changed when. */
+function roundBoard(f) {
+  const rule = { batch: (r) => (r.batch === 1 ? 'Batch of one' : 'Rack of six'), pull: (r) => (r.pull ? 'Pull: two-slot rack' : 'Push'), check: (r) => (r.check === 'source' ? 'Check at each station' : 'Check at the end') };
+  const name = { batch: 'batch', pull: 'pull', check: 'check' };
+  const rows = f.rounds.map((r) => `<tr><td>${r.week}</td><td class="${r.bodies >= r.asked ? 'ok' : 'short'}">${r.bodies}/${r.asked}</td><td>${r.wip ?? ''}</td><td>${r.lead ?? '&ndash;'}</td><td><span class="latebar" title="Defects found at finish"><span style="width:${Math.min(100, Math.round((r.late || 0) / 1.5 * 100))}%"></span></span></td><td>${esc(r.changed.map((c) => `${name[c]}${r.slid.includes(c) ? ' (slid back)' : ''}`).join(', '))}</td></tr>`).join('');
+  return `<div class="board"><div class="row" style="justify-content:space-between"><span class="label">The board by fit-up</span></div>
+    <div class="chips">${['batch', 'pull', 'check'].map((k) => `<span class="chip rule">${esc(rule[k](f.rules))}</span>`).join('')}</div>
+    ${f.rounds.length ? `<table><thead><tr><th>Round</th><th>Bodies</th><th>Waiting</th><th>Days</th><th>Late</th><th>Changed</th></tr></thead><tbody>${rows}</tbody></table>` : '<p class="soft">Round one runs this week, the old way. Its numbers go up on Friday.</p>'}
+  </div>`;
 }
 
 /** Paint, week by week: what it asked for and what it got. */
