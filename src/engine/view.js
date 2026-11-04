@@ -115,7 +115,7 @@ export function weekView(s, plan = {}) {
     away: m?.away, managerAway: m?.managerAway, covering: s.setup.covering && m?.meetings ? s.setup.covering : '',
     cards: s.over ? [] : m.cards,
     paint: { lastShipped: last?.bodies ?? null, lastAsked: last?.asked ?? null, shipped: Math.round(s.dept.shipped), asked: s.dept.demanded, thisWeek: m?.demand, forecast: m?.forecast },
-    dept: { standard: standardWord(s.dept.standard), streak: s.dept.overStreak, supCap: s.seat === 'manager' ? capWord(s.dept.supCap) : null },
+    dept: { standard: standardWord(s.dept.standard), streak: s.dept.overStreak, supCap: s.seat === 'manager' ? capWord(s.dept.supCap) : null, supCapN: s.seat === 'manager' ? s.dept.supCap : null, lean: s.dept.lean ?? null },
     floor: floorView(s),
     crew: crewView(s),
     history: s.history,

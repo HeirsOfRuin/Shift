@@ -137,7 +137,7 @@ const pool = (...ids) => ids.map((id) => R[id] || M[id]);
 export const TRACK = {
   id: 'supervisor',
   title: 'Supervisor track',
-  intro: "You run the welding department at Northern Motors: seven people, three stations, and a paint department that wants six bodies a week. Each module is a few weeks of that job. Nobody tells you the right answer, because there usually isn't one; there is what you knew, what you did, and what it did.",
+  intro: "You run welding at Northern Motors: seven people, three stations, a paint department that wants six bodies a week. Each module is a few weeks of that job. Nobody tells you the right answer; there is what you knew, what you did, and what it did.",
   introManager: "You're the operations manager for the Metal side at Northern Motors: fabrication, machining, welding and paint. Kev runs welding. Everything on his floor reaches you through him, and your four moves are to ask him, tell him, go down yourself, or leave it with him. What he can do without you at the end is the number that matters.",
   introLead: "You're the lead hand in welding at Northern Motors: fit-up is your table, six people ask you first, and Kev, who had your job until spring, is the supervisor. Every hour you lead comes off the table. Nobody tells you the right answer; there is what you knew, what you did, what you took to Kev, and what it did.",
   modules: ['the-week', 'late-one', 'loop', 'firefighting', 'pulled', 'upstairs', 'rush', 'across', 'waits', 'monday', 'newhand', 'otherside', 'customers', 'sayitonce', 'system', 'greatweek'],

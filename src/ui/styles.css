@@ -236,6 +236,40 @@ section { display: flex; flex-direction: column; gap: 10px; }
 
 .purpose { font-style: italic; color: var(--ink-soft); }
 
+/* readability pass (beta 10): chips, folds, meters, the time strip */
+.chip.pick { min-height: 36px; padding: 8px 12px; font: 600 14px/1.2 var(--body); letter-spacing: 0; text-transform: none; border-radius: 18px; background: transparent; cursor: pointer; }
+.chip.pick.on { border-color: var(--amber); background: var(--amber-soft); color: var(--ink); }
+.chip.pick[disabled] { opacity: 0.4; cursor: not-allowed; }
+.chips.grid { gap: 8px; }
+.notes.small { font-size: 14px; }
+.fold { border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 12px; }
+.fold summary { cursor: pointer; font-weight: 700; }
+.fold > *:not(summary) { margin-top: 10px; }
+.fold.crewfold .people { margin-top: 10px; }
+.prose .fold p + p { margin-top: 10px; }
+.timerow { display: flex; flex-direction: column; gap: 6px; padding: 8px 0; border-top: 1px dotted var(--line); }
+.timerow:first-of-type { border-top: 0; }
+.spark { display: flex; flex-direction: column; gap: 4px; padding: 10px 14px; border-radius: var(--radius); background: var(--panel); border: 1px solid var(--line); }
+.spark svg { display: block; max-width: 100%; height: 56px; }
+.spark .axis { stroke: var(--line); stroke-width: 1; }
+.spark .wk { font: 600 9px var(--mono); fill: var(--ink-faint); text-anchor: middle; }
+.spark .ask { fill: none; stroke: var(--ink-faint); stroke-width: 1; }
+.spark .got { fill: var(--good); }
+.spark .short { fill: var(--tag); }
+.meterline { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; font-size: 14px; }
+.meterline .meter { height: 10px; border-radius: 3px; background: var(--panel-2); overflow: hidden; display: block; }
+.meterline .meter span { display: block; height: 100%; background: var(--arc); }
+.meter3 { grid-column: 1 / -1; display: flex; gap: 4px; }
+.meter3 i { flex: 1; height: 8px; border-radius: 2px; background: var(--panel-2); }
+.meter3.l1 i:nth-child(1) { background: var(--tag); }
+.meter3.l2 i:nth-child(-n+2) { background: var(--amber); }
+.meter3.l3 i { background: var(--good); }
+.prose p { font-size: 16px; }
+.ticket h3 { font-size: 21px; }
+.rung.compact { padding: 8px 14px; }
+.rung.compact h3 { font-size: 18px; }
+.rung.compact .n { font-size: 22px; }
+
 /* the profile and the path */
 .you { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; display: grid; gap: 6px; }
 .you p { margin: 0; }

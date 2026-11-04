@@ -1,10 +1,19 @@
-# Shift beta 9: sixteen modules, three seats, a profile, a path, a way to send thoughts
+# Shift beta 10: sixteen modules, three seats, and a third of the scrolling
 
 Published 2026-11-04 as a private page, the same link as every beta:
 **https://claude.ai/artifact/4c5QqYTmZdn5iKcutCPZJx**
 (only the author can open it until he shares it from the page's Share menu).
 Rebuild with `npm run build` and republish `dist/shift.embed.html` to the same
 link. The build id is baked in, so an installed copy picks the new one up.
+
+**What changed in beta 10 (2026-11-04):** the readability pass, from your
+note that it was reading heavy. The profile is chips. The track shows the
+open modules with their purpose and the locked ones as a line. The brief
+shows its first paragraph and folds the rest. The week has a three-sentence
+explainer, a folded hour list, one card for your own time, a bar chart of
+paint's weeks, and meters where there were sentences. Each read on the end
+report is a three-segment meter. Screens are a third of the height they were
+(`FRAME-readability.md` has the numbers). The game underneath is unchanged.
 
 **What changed in beta 9 (2026-11-04):** *It looked great for a week*: the
 5S event two Fridays on, and why it died. A purpose sentence on every module.
