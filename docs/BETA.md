@@ -1,4 +1,4 @@
-# Shift beta 5: eleven modules, two seats, a profile, a path
+# Shift beta 6: eleven modules, three seats, a profile, a path
 
 Published 2026-11-04 as a private page, the same link as every beta:
 **https://claude.ai/artifact/4c5QqYTmZdn5iKcutCPZJx**
@@ -6,7 +6,16 @@ Published 2026-11-04 as a private page, the same link as every beta:
 Rebuild with `npm run build` and republish `dist/shift.embed.html` to the same
 link. The build id is baked in, so an installed copy picks the new one up.
 
-**What changed in beta 5 (2026-11-04, latest):** the lead hand's seat. Pick
+**What changed in beta 6 (2026-11-04):** the operations manager's seat.
+Pick "Operations manager" on the profile and you are Dana: Kev runs welding
+for you and everything on his floor reaches you through him. On every problem
+you have four moves: ask him what he found and what he'd do, tell him what to
+do, go down and sort it yourself, or leave it with him. He acts every week
+whatever you did, and how well depends on how much deciding you have let him
+do. The week screen says what Kev can carry this week; the end report checks
+he is no worse than you found him. Six modules play from the seat.
+
+**What changed in beta 5 (2026-11-04):** the lead hand's seat. Pick
 "Lead hand" on the profile and you are the new lead at fit-up, in Kev's old
 spot, with Kev as your supervisor. Eight modules play from there. Your hours
 bar shows the table shrinking as you take on tickets; what needs a signature
@@ -37,6 +46,13 @@ module is still played in the welding bay; a brief for anyone else says so.
 
 **What changed in beta 2 (2026-11-03):** pressure from open problems, fatigue,
 a People tab, and old saves carried forward.
+
+## How to test beta 6
+
+Make a profile as the operations manager and play *The late one* or *Where
+it waits*. Two questions: when you asked Kev rather than told him, did it feel
+like a real difference or a label; and did going down to fix it yourself
+tempt you, and what did the report say about it after?
 
 ## How to test beta 5
 

@@ -252,7 +252,14 @@ everything is urgent nothing is strategic; 3 Structure protects good people;
 
 ## 10. Status and the exact next steps
 
-**Update (2026-11-04, latest):** beta 5 adds the lead hand's seat on the
+**Update (2026-11-04, beta 6):** the operations manager's seat
+(`FRAME-seats.md`, `KILLGATE-manager.md`): the player is Dana, Kev runs
+welding, and every problem reaches her through him; her four moves are ask,
+tell, go down, leave; Kev's capability is the resource and the end report
+checks he is no worse than she found him. Six modules play from the seat and
+pass the gate. All three seats are built. **Next:** beta 7, *The other side*.
+
+**Update (2026-11-04, beta 5):** beta 5 adds the lead hand's seat on the
 welding bay (`FRAME-seats.md`): the player works fit-up in Kev's old spot
 with Kev as supervisor; what needs a signature goes to Kev with whatever the
 lead found out; every ticket comes off the table. Eight of eleven modules

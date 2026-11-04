@@ -4,7 +4,7 @@
 import { newModule, advance, TRACK } from '../src/engine/game.js';
 import { decide, POLICIES } from './bot.js';
 
-export const axes = { policy: POLICIES, module: TRACK.modules, seat: ['supervisor', 'lead'] };
+export const axes = { policy: POLICIES, module: TRACK.modules, seat: ['supervisor', 'lead', 'manager'] };
 export const defaults = { policy: 'balanced', module: 'late-one', seat: 'supervisor' };
 
 export function play(seed, opts = {}) {

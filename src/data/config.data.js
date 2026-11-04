@@ -33,7 +33,21 @@ export const CONFIG = {
     { id: 'paint', label: 'Paint handoff', hours: 0.5, why: 'Ten minutes a day at the paint door. Skip it and more of your rework goes over.', seats: ['supervisor', 'lead'] },
     { id: 'huddles', label: 'Morning huddles', hours: 2.5, why: 'Five minutes a day with the crew. Skip them and the day starts without a plan.', seats: ['supervisor', 'lead'] },
     { id: 'handover', label: 'Ten minutes with Kev', hours: 1, why: 'End of each day, at his door. Skip it and he hears about your week from someone else.', seats: ['lead'] },
+    { id: 'meetingRun', label: 'Production meeting: you run it', hours: 2, why: 'Tuesdays, four supervisors and Jess. Skip it and the week gets built on last week.', seats: ['manager'] },
+    { id: 'oneOnOne', label: 'Half an hour with Kev', hours: 0.5, why: "His time, not yours: what he is working on and what he needs. Skip it and he stops bringing you things.", seats: ['manager'] },
+    { id: 'russ', label: "Russ's Friday numbers", hours: 1, why: 'Four departments on one page. Skip it and Russ walks down to get them.', seats: ['manager'] },
   ],
+  // The operations manager's seat: the floor is three other departments, Russ,
+  // and the welding walk-ups that should have gone to Kev (FRAME-seats.md).
+  // Kev starts at 0.25. Left entirely alone he finds out at supCap + foundBonus
+  // a week, picks the right fix at supCap + planBonus, and settles about a
+  // problem in three in eight weeks (the gate's ignorer). At 0.4 he settled
+  // most of them and the seat taught nothing (beta 6, first two runs).
+  manager: { supCap: 0.25, foundBonus: 0.1, planBonus: 0.25, floorLoad: [
+    { id: 'others', label: 'Fabrication, machining and paint: their weeks', hours: 12 },
+    { id: 'upstairs', label: 'Russ, Irene, the front office', hours: 6 },
+    { id: 'walkups', label: 'Welding walk-ups that should have gone to Kev', hours: 3 },
+  ] },
   // The lead hand's seat: the floor is the table. Leading comes off the table
   // unless the lead stays past forty to make it up (FRAME-seats.md).
   lead: { table: 22, floorLoad: [

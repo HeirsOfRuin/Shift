@@ -149,6 +149,15 @@ function scripted(policy, card, v) {
   return fallback;
 }
 
+// The manager's seat: four moves on every problem (KILLGATE-manager.md).
+const MANAGER = {
+  firefighter: () => 'rescue',
+  documenter: () => 'direct',
+  coach: () => 'coach',
+  ignorer: () => 'leave',
+  balanced: (c) => (!c.told ? 'coach' : !c.plan ? (c.weeks >= 3 ? 'direct' : c.cap >= 0.55 ? 'leave' : 'coach') : 'leave'),
+};
+
 export function decide(s, policy) {
   const v = weekView(s, {});
   const ceiling = CEILING[policy];
@@ -156,7 +165,7 @@ export function decide(s, policy) {
   const picks = {};
   const want = [];
   const problems = v.cards.filter((c) => c.kind === 'problem').sort((a, b) => b.main - a.main);
-  for (const c of problems) want.push([c, policy === 'documenter' && c.options.some((o) => o.id === 'takeUp') && !c.tried.includes('takeUp') ? 'takeUp' : PROBLEM[policy](c) || 'leave']);
+  for (const c of problems) want.push([c, s.seat === 'manager' ? MANAGER[policy](c) : policy === 'documenter' && c.options.some((o) => o.id === 'takeUp') && !c.tried.includes('takeUp') ? 'takeUp' : PROBLEM[policy](c) || 'leave']);
   for (const c of v.cards.filter((x) => x.kind === 'script')) want.push([c, scripted(policy, c, v)]);
   const coach = v.cards.find((c) => c.kind === 'coach');
   if (coach && (policy === 'balanced' || policy === 'coach')) {

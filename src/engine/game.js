@@ -5,5 +5,6 @@ export { newSave, setProfile, order, seatFor, supports, startRun, playWeek, endR
 export { newModule, advance, hoursFor, tableFor, routineFor, crewFor } from './week.js';
 export { trackView, briefView, weekView, floorView, crewView, demoFloor, crewStrip, peopleView, profileView, MODULES, TRACK } from './view.js';
 export { pathFor } from './path.js';
+export { SEAT_AREA } from './outcome.js';
 export { AREAS, FAMILIES } from '../data/focus.data.js';
 export { SEATS, DEPARTMENTS, GROUPS, WRITTEN_BAY } from '../data/departments.data.js';

@@ -188,6 +188,7 @@ function weekTab(v) {
   if (v.managerAway) out.push('<p class="banner info">Dana is away. Russ is covering her departments as well as his own.</p>');
   out.push(`<div class="bay"><div class="legend"><span>Fit-up</span><span>Body weld</span><span>Finish</span><span>Paint</span></div><canvas data-bay="week" aria-label="The welding bay this week"></canvas><p class="caption" data-caption>Tap someone to see how they look from across the bay.</p></div>`);
   out.push(`<p class="soft"><span class="label">This module</span><br>${esc(v.module.goal)}</p>`);
+  if (v.dept.supCap) out.push(`<p class="soft"><span class="label">Kev, this week</span><br>${esc(v.dept.supCap)}.</p>`);
   if (!save.track.seen?.howto) out.push(howTo());
   out.push(hoursPanel(v.hours, v.floorItems, v.tired));
   out.push(`<div class="tickets">${v.cards.map(ticket).join('')}</div>`);

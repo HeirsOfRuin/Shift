@@ -11,7 +11,7 @@
 //   12 the record, the end check, and next Monday
 
 import { CONFIG as C } from '../data/config.data.js';
-import { CREW, PLAYER_LEAD, ROLES } from '../data/crew.data.js';
+import { CREW, PLAYER_LEAD, DALE, ROLES } from '../data/crew.data.js';
 import { PROBLEMS, LANDS_ON } from '../data/problems.data.js';
 import { MODULES } from '../data/modules.data.js';
 import { TYPES } from './problems.js';
@@ -73,7 +73,7 @@ export function spawn(s, type, who, { main = false, seen = false, source = 'scri
 // a lead who is out or stretched, and anything you pushed off that came back.
 function interruptions(s) {
   const I = C.interrupts;
-  const items = (s.seat === 'lead' ? C.lead.floorLoad : C.floorLoad).map((f) => ({ label: f.label, hours: f.hours }));
+  const items = (s.seat === 'lead' ? C.lead.floorLoad : s.seat === 'manager' ? C.manager.floorLoad : C.floorLoad).map((f) => ({ label: f.label, hours: f.hours }));
   if (s.seat !== 'lead' && s.dept.bench >= 0.55) items[0] = { label: `${items[0].label} (Kev takes some)`, hours: items[0].hours - 2 };
   let unseen = 0;
   for (const p of s.problems) {
@@ -178,6 +178,8 @@ export function advance(prev, plan = {}) {
   for (const id of skip) {
     if (id === 'meeting' || id === 'handover') s.dept.managerTrust = clamp(s.dept.managerTrust - (m.managerAway ? 0.01 : 0.05));
     if (id === 'handover') K.score(null, 'E1', -1, `Skipped the ten minutes with ${s.roles.sup.name}`);
+    if (id === 'oneOnOne') { s.dept.supCap = clamp(s.dept.supCap - 0.02); K.score(null, 'A4', -1, 'Skipped the half hour with Kev'); }
+    if (id === 'russ') s.dept.managerTrust = clamp(s.dept.managerTrust - 0.05);
     if (id === 'scheduler') s.dept.surprise = true;
     if (id === 'safety') { s.dept.safetyDebt += 0.01; K.score(null, 'C2', -1, 'Let the safety walk go'); }
     if (id === 'timecards') for (const c of s.crew) c.morale = clamp(c.morale - 0.03);
@@ -205,6 +207,7 @@ export function advance(prev, plan = {}) {
         continue;
       }
       p.acted = true;
+      if (s.seat === 'manager') { managerMove(s, K, r, p, opt.id, lines); continue; }
       if (opt.id === 'takeUp') {
         // the lead hand's one move for what is not theirs: take it to the supervisor
         const sup = s.roles.sup;
@@ -285,7 +288,8 @@ export function advance(prev, plan = {}) {
   if (r.events.chance(C.changeChance)) { s.week_.defects += 0.5; lines.push({ kind: 'event', text: say(s, 'floor.change') }); }
   if (s.dept.surprise) { s.week_.demand += 1; s.dept.surprise = false; lines.push({ kind: 'event', text: say(s, 'floor.surprise') }); }
 
-  // 5. problems run their week
+  // 5. problems run their week (in the manager's seat, the supervisor acts first)
+  if (s.seat === 'manager') supervisorActs(s, K, r, lines);
   for (const p of s.problems) {
     if (p.state === 'resolved') continue;
     if (p.state === 'quiet') {
@@ -409,6 +413,100 @@ function triage(card, opt) {
 function areaFor(type) {
   return { late: 'D2', rework: 'D1', load: 'D1', friction: 'D3',
     hazard: 'C2', recurring: 'B3', escalation: 'E1', standards: 'E2', constraint: 'B1', huddle: 'F1', newhand: 'D4' }[type];
+}
+
+// ---------------------------------------------------------------- the manager's seat
+// Every problem reaches Dana through Kev. Her four moves (KILLGATE-manager.md):
+// coach, direct, rescue, leave. Kev then acts every week whatever she did
+// (supervisorActs). Kev's actions run through a muted kernel, because the
+// types' lines are in the player's voice; one line says what he did.
+const fitsFor = (p) => Object.entries(PROBLEMS[p.type].actions).find(([, a]) => p.told && (a.fits || []).includes(p.told));
+const askFor = (p) => Object.entries(PROBLEMS[p.type].actions).find(([, a]) => a.kind === 'ask');
+const guessFor = (p) => Object.entries(PROBLEMS[p.type].actions).find(([, a]) => a.kind === 'fix');
+
+function kevDoes(s, r, p, action) {
+  const K2 = kernel(s, { outcomes: streamFor(s.seed, s.week, `kev${p.id}`), people: streamFor(s.seed, s.week, `kevPeople${p.id}`) }, []);
+  K2.sharp = 1;
+  if (!p.tried.includes(action)) p.tried.push(action);
+  p.tries[action] = (p.tries[action] || 0) + 1;
+  const before = p.state;
+  TYPES[p.type].act(K2, p, action);
+  if (p.state === before && before === 'active' && ['fix', 'hold'].includes(PROBLEMS[p.type].actions[action].kind)) p.fails[action] = (p.fails[action] || 0) + 1;
+  return p.state === 'resolved';
+}
+
+function managerMove(s, K, r, p, move, lines) {
+  const d = s.dept;
+  const kev = s.roles.senior;
+  p.hovered = false;
+  if (move === 'coach') {
+    if (!p.told) {
+      d.supCap = clamp(d.supCap + 0.04);
+      K.score(p, 'A4', 2, 'Asked what he had found before telling him anything');
+      const ask = askFor(p);
+      if (ask) kevDoes(s, r, p, ask[0]);
+      if (p.told) { lines.push({ kind: 'told', text: say(s, 'mgr.coach.found', { p }) }); lines.push({ kind: 'told', text: say(s, `know.${p.type}.${p.told}`, { p }) }); }
+      else lines.push({ kind: 'result', text: say(s, 'mgr.coach.nothingYet', { p }) });
+    } else if (!p.plan) {
+      d.supCap = clamp(d.supCap + 0.04);
+      p.plan = 'his';
+      K.score(p, 'A4', 2, 'Asked for his plan and let it be his');
+      lines.push({ kind: 'result', text: say(s, fitsFor(p) ? 'mgr.coach.plan' : 'mgr.coach.wait', { p }) });
+    } else {
+      d.supCap = clamp(d.supCap - 0.02);
+      p.hovered = true;
+      K.score(p, 'A4', -1, 'Checked in on a plan he already had');
+      lines.push({ kind: 'result', text: say(s, 'mgr.coach.hover', { p }) });
+    }
+  } else if (move === 'direct') {
+    d.supCap = clamp(d.supCap - 0.03);
+    if (p.told) { p.plan = 'yours'; K.score(p, 'A4', 0, 'Told him what to do, and it fitted what he had found'); lines.push({ kind: 'result', text: say(s, 'mgr.direct.told', { p }) }); }
+    else { p.plan = 'guess'; K.score(p, 'A4', -1, 'Told him what to do before either of you knew why'); lines.push({ kind: 'result', text: say(s, 'mgr.direct.guess', { p }) }); }
+  } else if (move === 'rescue') {
+    d.supCap = clamp(d.supCap - 0.06);
+    K.score(p, 'A4', -1, 'Went down and sorted it out yourself');
+    const ask = askFor(p);
+    if (!p.told && ask) kevDoes(s, r, p, ask[0]);
+    const fit = fitsFor(p);
+    const done = fit ? kevDoes(s, r, p, fit[0]) : false;
+    if (done) p.how = say(s, 'mgr.how.rescue', { p });
+    lines.push({ kind: 'result', text: say(s, done ? 'mgr.rescue.done' : fit ? 'mgr.rescue.tried' : 'mgr.rescue.nothing', { p }) });
+    for (const c of s.crew) c.trust = clamp(c.trust - 0.01);
+  }
+}
+
+function supervisorActs(s, K, r, lines) {
+  const d = s.dept;
+  for (const p of s.problems) {
+    if (p.state !== 'active' || !p.seen) continue;
+    const rr = r.people.next();
+    if (p.plan) {
+      const guess = p.plan === 'guess' || p.plan === 'hisGuess';
+      const odds = guess ? 0.3 : p.hovered ? 0.5 : 0.75;
+      const fit = guess ? guessFor(p) : fitsFor(p);
+      if (!fit) { p.acted = true; lines.push({ kind: 'result', text: say(s, 'mgr.kev.waiting', { p }) }); continue; }
+      if (rr < odds) {
+        p.acted = true;
+        const done = kevDoes(s, r, p, fit[0]);
+        if (done) {
+          p.how = say(s, { his: 'mgr.how.his', yours: 'mgr.how.yours', guess: 'mgr.how.yours', hisGuess: 'mgr.how.hisGuess' }[p.plan], { p });
+          if (p.plan === 'his') { d.supCap = clamp(d.supCap + 0.03); K.score(p, 'A4', 1, 'Left it with him, and he had it'); }
+          lines.push({ kind: 'result', text: say(s, 'mgr.kev.settled', { p }) });
+        } else lines.push({ kind: 'result', text: say(s, 'mgr.kev.tried', { p }) });
+      } else if (guess) { lines.push({ kind: 'result', text: say(s, p.plan === 'guess' ? 'mgr.kev.guessFailed' : 'mgr.kev.hisGuessFailed', { p }) }); p.plan = null; p.severity++; }
+    } else if (rr < (p.told ? d.supCap : d.supCap + C.manager.foundBonus)) {
+      p.acted = true;
+      if (!p.told) {
+        const ask = askFor(p);
+        if (ask) kevDoes(s, r, p, ask[0]);
+        if (p.told) { lines.push({ kind: 'told', text: say(s, 'mgr.kev.found', { p }) }); lines.push({ kind: 'told', text: say(s, `know.${p.type}.${p.told}`, { p }) }); }
+      } else {
+        // on his own, his plan is right as often as his capability says; a coached plan is right
+        p.plan = r.people.next() < d.supCap + C.manager.planBonus ? 'his' : 'hisGuess';
+        lines.push({ kind: 'result', text: say(s, p.plan === 'hisGuess' ? 'mgr.kev.guessPlan' : fitsFor(p) ? 'mgr.kev.plan' : 'mgr.kev.waitPlan', { p }) });
+      }
+    }
+  }
 }
 
 // While you are in the audit room, the floor runs on whatever bench you built.
@@ -554,6 +652,7 @@ export function newModule(moduleId, seed, seat = 'supervisor') {
       fitBuf: 1.5, weldBuf: 0.5, shipped: 0, demanded: 0, escapes: 0, rework: 0,
       standard: C.standardHome, bench: 0.3, managerTrust: 0.6, peerTrust: 0.5, safetyDebt: 0, fixtureFixed: false, escapeAdd: 0,
       overStreak: 0, bottleneck: false, tired: 0, floorExtra: [], starvedStreak: 0, starved: false, lost: [], surprise: false, flags: {}, routineGone: [], usedCards: [], improved: {},
+      supCap: seat === 'manager' ? C.manager.supCap : null,
     },
     problems: [], queue: [], nextId: 1, script: script.filter(Boolean),
     history: [], decisions: [], trace: [], monday: null,
@@ -568,7 +667,7 @@ export function newModule(moduleId, seed, seat = 'supervisor') {
  *  says so (The new hand: Lyle out on leave, Sam in his spot). */
 export function crewFor(module, seat = 'supervisor') {
   const swap = module.setup?.swap;
-  let crew = seat === 'lead' ? CREW.map((c) => (c.id === 'kev' ? PLAYER_LEAD : c)) : CREW;
+  let crew = seat === 'lead' ? CREW.map((c) => (c.id === 'kev' ? PLAYER_LEAD : c)) : seat === 'manager' ? CREW.map((c) => (c.id === 'kev' ? DALE : c)) : CREW;
   if (swap) crew = crew.map((c) => (c.id === swap.out ? { ...swap.in, station: swap.in.station || c.station, slot: swap.in.slot ?? c.slot } : c));
   return crew;
 }

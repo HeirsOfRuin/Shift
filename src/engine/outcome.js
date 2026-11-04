@@ -12,6 +12,10 @@
 import { CONFIG as C } from '../data/config.data.js';
 import { MODULES } from '../data/modules.data.js';
 import { AREAS, READ } from '../data/focus.data.js';
+
+// The seat's own area, read beside the module's when the run touched it: a
+// lead hand on what they took up, a manager on how she worked through Kev.
+export const SEAT_AREA = { lead: 'E1', manager: 'A4' };
 import { say } from './text.js';
 import { active, person } from './derive.js';
 
@@ -46,6 +50,7 @@ export function judge(s) {
     { id: 'problem', ok: problemOk, label: problemText },
     { id: 'you', ok: !d.bottleneck, label: say(s, d.bottleneck ? 'end.check.you.no' : 'end.check.you.ok') },
   ];
+  if (s.seat === 'manager') checks.push({ id: 'kev', ok: d.supCap >= C.manager.supCap - 0.05, label: say(s, d.supCap >= C.manager.supCap - 0.05 ? 'end.check.kev.ok' : 'end.check.kev.no') });
   if (d.starved) checks.unshift({ id: 'starved', ok: false, label: say(s, 'end.check.starved', { n: s.week - 1 }) });
   const win = checks.every((c) => c.ok);
   const carried = s.problems.filter((p) => !p.main && p.state !== 'resolved').map((p) => say(s, `carried.${p.type}`, { p }));
@@ -71,8 +76,9 @@ export function readArea(decisions, area) {
 export function profile(s) {
   // the seat's own area reads beside the module's: a lead hand is always also
   // being read on what they took up and what they kept (FRAME-seats.md)
-  const seatArea = s.seat === 'lead' && !MODULES[s.moduleId].focus.includes('E1') && s.decisions.some((d) => d.area === 'E1');
-  const focus = [...MODULES[s.moduleId].focus, ...(seatArea ? ['E1'] : [])];
+  const own = SEAT_AREA[s.seat];
+  const seatArea = own && !MODULES[s.moduleId].focus.includes(own) && s.decisions.some((d) => d.area === own);
+  const focus = [...MODULES[s.moduleId].focus, ...(seatArea ? [own] : [])];
   const outside = [...new Set(s.decisions.map((d) => d.area))].filter((a) => AREAS[a] && !focus.includes(a));
   return {
     label: 'Practice, not assessment',

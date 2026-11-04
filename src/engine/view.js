@@ -9,6 +9,7 @@ import { AREAS, FAMILIES, SELF_LIMIT } from '../data/focus.data.js';
 import { SEATS, DEPARTMENTS, GROUPS, WRITTEN_BAY } from '../data/departments.data.js';
 import { hoursFor, tableFor, routineFor, crewFor } from './week.js';
 import { unlocked, order, seatFor, supports } from './state.js';
+import { SEAT_AREA } from './outcome.js';
 import { pathFor } from './path.js';
 import { moodWord, standardWord, trustWord, active } from './derive.js';
 import { say } from './text.js';
@@ -17,9 +18,9 @@ export function trackView(save) {
   const ids = order(save);
   const path = save.profile ? pathFor(save.profile) : null;
   const seat = seatFor(save.profile);
-  const notHere = TRACK.modules.filter((id) => !supports(id, seat)).map((id) => ({ id, title: MODULES[id].title, teaches: MODULES[id].teaches, focus: MODULES[id].focus.map((a) => AREAS[a].label), why: `Written for the supervisor's seat only: ${MODULES[id].onlySupervisor || 'it is the supervisor\'s job by its nature'}.` }));
+  const notHere = TRACK.modules.filter((id) => !supports(id, seat)).map((id) => ({ id, title: MODULES[id].title, teaches: MODULES[id].teaches, focus: MODULES[id].focus.map((a) => AREAS[a].label), why: seat === 'manager' ? `Not written for the manager's seat: ${MODULES[id].notManager || 'it is a supervisor\'s week by its nature'}.` : `Written for the supervisor's seat only: ${MODULES[id].onlySupervisor || 'it is the supervisor\'s job by its nature'}.` }));
   return {
-    id: TRACK.id, title: TRACK.title, intro: seat === 'lead' ? TRACK.introLead : TRACK.intro, openAll: save.track.openAll,
+    id: TRACK.id, title: TRACK.title, intro: seat === 'lead' ? TRACK.introLead : seat === 'manager' ? TRACK.introManager : TRACK.intro, openAll: save.track.openAll,
     you: whoView(save.profile), seat, notHere,
     modules: ids.map((id, i) => {
       const m = MODULES[id];
@@ -40,14 +41,15 @@ export function trackView(save) {
 export function briefView(id, profile = null) {
   const m = MODULES[id];
   const seat = seatFor(profile);
-  const lead = seat === 'lead';
-  const focus = [...m.focus, ...(lead && !m.focus.includes('E1') ? ['E1'] : [])];
+  const own = SEAT_AREA[seat];
+  const focus = [...m.focus, ...(own && !m.focus.includes(own) ? [own] : [])];
+  const seatBrief = seat === 'lead' ? m.leadBrief : seat === 'manager' ? m.managerBrief : null;
   return {
-    id, title: m.title, teaches: m.teaches, handbook: m.handbook, weeks: m.weeks, brief: lead && m.leadBrief ? [m.leadBrief, ...m.brief] : m.brief, goal: m.goalText, lose: m.lose,
+    id, title: m.title, teaches: m.teaches, handbook: m.handbook, weeks: m.weeks, brief: seatBrief ? [seatBrief, ...m.brief] : m.brief, goal: m.goalText, lose: seat === 'manager' ? [...m.lose, 'Kev less able to run his floor than when you started'] : m.lose,
     focus: focus.map((a) => ({ id: a, label: AREAS[a].label, about: AREAS[a].about, moves: AREAS[a].moves, seatArea: !m.focus.includes(a) })),
-    seatAreaNote: lead && !m.focus.includes('E1') ? 'Read when something in the run needs Kev\'s signature: what you took up, and what you brought with it.' : '',
+    seatAreaNote: own && !m.focus.includes(own) ? (seat === 'lead' ? 'Read when something in the run needs Kev\'s signature: what you took up, and what you brought with it.' : 'Read on how you worked through Kev: what you asked, what you told him, what you went down and did yourself.') : '',
     seat: seatNote(profile),
-    playedAs: lead ? 'the lead hand, at fit-up, with Kev as your supervisor' : 'the welding supervisor',
+    playedAs: seat === 'lead' ? 'the lead hand, at fit-up, with Kev as your supervisor' : seat === 'manager' ? 'the operations manager, with Kev running welding for you' : 'the welding supervisor',
   };
 }
 
@@ -60,8 +62,8 @@ function seatNote(profile) {
   const seat = SEATS[profile.seat];
   const where = profile.department === WRITTEN_BAY ? '' : ` You run ${dept.name}; this module is written in the welding bay, two doors down, and the lessons travel.`;
   if (profile.seat === 'lead') return `You play this as the welding lead hand: at the table, with Kev as your supervisor, and nothing that needs his signature in your hands.${where}`;
-  if (profile.seat === 'supervisor') return where.trim();
-  return `This module puts you in the welding supervisor's chair.${where} The operations manager's seat is framed and not built yet; until it is, you play the supervisor and the debrief asks what carries up to yours.`;
+  if (profile.seat === 'manager') return `You play this as the operations manager: everything on the welding floor reaches you through Kev, and your four moves are to ask him, tell him, go down yourself, or leave it with him.${where}`;
+  return where.trim();
 }
 
 /** The profile as the screens show it. */
@@ -106,11 +108,11 @@ export function weekView(s, plan = {}) {
     week: Math.min(s.week, s.weeks), weeks: s.weeks, over: s.over, outcome: s.outcome,
     floorItems: s.over ? [] : m.floorItems,
     tired: s.dept.tired >= C.tiredHome ? 'Run down: it is starting to show at home' : s.dept.tired >= C.tiredSlips ? 'Running down: your fixes land less often until you get a few normal weeks' : s.dept.tired > 0 ? 'A little tired from last week' : '',
-    hours: { total: hours, floor: s.over ? 0 : m.interrupts, floorLabel: s.seat === 'lead' ? 'The table and the floor' : 'The floor', table: s.over ? null : tableFor(s, plan), meetings: s.over ? 0 : m.meetings, routine: routineHours, chosen: Math.max(0, hours - (m?.interrupts || 0) - (m?.meetings || 0) - routineHours), ceiling: C.hoursCeiling, tired: C.tiredAt, bottleneck: C.bottleneckAt, limit },
+    hours: { total: hours, floor: s.over ? 0 : m.interrupts, floorLabel: s.seat === 'lead' ? 'The table and the floor' : s.seat === 'manager' ? 'The other departments and the floor' : 'The floor', table: s.over ? null : tableFor(s, plan), meetings: s.over ? 0 : m.meetings, routine: routineHours, chosen: Math.max(0, hours - (m?.interrupts || 0) - (m?.meetings || 0) - routineHours), ceiling: C.hoursCeiling, tired: C.tiredAt, bottleneck: C.bottleneckAt, limit },
     away: m?.away, managerAway: m?.managerAway,
     cards: s.over ? [] : m.cards,
     paint: { lastShipped: last?.bodies ?? null, lastAsked: last?.asked ?? null, shipped: Math.round(s.dept.shipped), asked: s.dept.demanded, thisWeek: m?.demand, forecast: m?.forecast },
-    dept: { standard: standardWord(s.dept.standard), streak: s.dept.overStreak },
+    dept: { standard: standardWord(s.dept.standard), streak: s.dept.overStreak, supCap: s.seat === 'manager' ? capWord(s.dept.supCap) : null },
     floor: floorView(s),
     crew: crewView(s),
     history: s.history,
@@ -150,6 +152,14 @@ export function demoFloor() {
     people: CREW.map((c) => ({ id: c.id, name: c.name, station: c.station, slot: c.slot, look: c.look, state: 'working', lead: !!c.lead, caption: captionFor(c, 'working') })),
     flags: { haze: false, boothShut: false },
   };
+}
+
+/** A word for how far Kev can run his floor without you (the manager's seat). */
+function capWord(x) {
+  if (x >= 0.7) return 'runs his floor; you hear about it after';
+  if (x >= 0.5) return 'decides most of it; brings you the rest';
+  if (x >= 0.35) return 'brings you most of it';
+  return 'waits to be told';
 }
 
 export function crewView(s) {

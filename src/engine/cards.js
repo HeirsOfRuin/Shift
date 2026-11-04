@@ -11,7 +11,7 @@
 import { CONFIG as C } from '../data/config.data.js';
 import { PROBLEMS } from '../data/problems.data.js';
 import { streamFor } from './rng.js';
-import { say, fill } from './text.js';
+import { say, fill, hasText } from './text.js';
 import { active, routineFor } from './derive.js';
 
 export function buildCards(s, module) {
@@ -28,6 +28,7 @@ export function buildCards(s, module) {
 
   const seat = s.seat || 'supervisor';
   const forSeat = (def) => (def.seats || ['supervisor', 'lead']).includes(seat);
+  const manager = seat === 'manager';
   for (const def of module.cards || []) {
     if (def.week !== s.week || !forSeat(def)) continue;
     if (def.ifFlag && !s.dept.flags[def.ifFlag]) continue;
@@ -50,7 +51,7 @@ export function buildCards(s, module) {
   cards.push(routine);
 
   if (!s.monday.away) {
-    const learners = s.crew.filter((c) => active(c) && !c.lead && c.skill < 0.75);
+    const learners = manager ? [] : s.crew.filter((c) => active(c) && !c.lead && c.skill < 0.75);
     if (learners.length) {
       cards.push({
         id: 'coach', kind: 'coach', title: say(s, 'card.coach.title'), body: say(s, 'card.coach.body'),
@@ -59,7 +60,7 @@ export function buildCards(s, module) {
         pick: 'none',
       });
     }
-    cards.push({
+    if (!manager) cards.push({
       id: 'cover', kind: 'cover', title: say(s, 'card.cover.title'),
       body: say(s, s.monday.forecast >= s.monday.demand ? 'card.cover.body.enough' : 'card.cover.body.short', { weld: s.monday.forecast, demand: s.monday.demand }),
       options: [0, 1, 2, 3].slice(0, C.coverMax + 1).map((d) => ({ id: `d${d}`, days: d, label: say(s, `card.cover.d${d}`), hours: d * 8, kind: d ? 'cover' : 'leave' })),
@@ -83,6 +84,24 @@ function problemCard(s, p) {
     if (p.fails[id]) know.push(fill(s, `Tried: ${def.actions[id].label.charAt(0).toLowerCase()}${def.actions[id].label.slice(1)}. It has not held.`, { p }));
   }
   if (p.ruledOut.length) know.push(say(s, `know.${p.type}.ruledOut`, { p, n: p.ruledOut.length }));
+  if (s.seat === 'manager') {
+    // the manager's four moves on anything that reaches her through Kev
+    if (p.plan) know.push(say(s, { his: 'know.mgr.planHis', yours: 'know.mgr.planYours', guess: 'know.mgr.planGuess', hisGuess: 'know.mgr.planHisGuess' }[p.plan], { p }));
+    return {
+      id: `p${p.id}`, kind: 'problem', problem: p.id, type: p.type, main: p.main, who: p.who,
+      title: say(s, `card.${p.type}.title`, { p }),
+      body: fresh && hasText(`card.${p.type}.body.manager`) ? say(s, `card.${p.type}.body.manager`, { p }) : say(s, `card.${p.type}.body.${fresh ? 'new' : p.severity >= 2 ? 'worse' : 'open'}`, { p }),
+      know, weeks: s.week - (p.seenWeek ?? s.week),
+      told: p.told, plan: p.plan || null, cap: s.dept.supCap, tried: [...p.tried], failed: Object.keys(p.fails), failedTwice: [], sessions: p.sessions, ruledOut: [...p.ruledOut], waiting: false,
+      options: [
+        { id: 'coach', label: say(s, p.told ? (p.plan ? 'option.mgr.coach.again' : 'option.mgr.coach.plan') : 'option.mgr.coach'), hours: 1, kind: 'ask', fits: [] },
+        { id: 'direct', label: say(s, 'option.mgr.direct'), hours: 0.5, kind: 'direct', fits: [] },
+        { id: 'rescue', label: say(s, 'option.mgr.rescue'), hours: 2.5, kind: 'yourself', fits: [] },
+        { id: 'leave', label: say(s, 'option.mgr.leave'), hours: 0, kind: 'leave', fits: [] },
+      ],
+      pick: 'leave',
+    };
+  }
   return {
     id: `p${p.id}`, kind: 'problem', problem: p.id, type: p.type, main: p.main, who: p.who,
     title: say(s, `card.${p.type}.title`, { p }),

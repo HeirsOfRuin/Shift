@@ -58,19 +58,69 @@ is about leaving Kev in charge; Nobody upstairs is a supervisor's decision
 rights; Across is supervisor to supervisor). The track says so on the rung
 instead of hiding them.
 
-## The operations manager's seat (not built; framed)
+## The operations manager's seat (built, beta 6)
 
-The manager runs supervisors, not crews. Every problem on the welding floor
-reaches Dana through the welding supervisor, and Dana's options are: coach
-the supervisor to handle it (slow, and the supervisor grows), tell them
-exactly what to do (fast, and they stop deciding), go down and fix it herself
-(fastest, and the supervisor learns that she will), or leave it with them.
-The scarce resource is the supervisor's capability (`PLAN.md`, the Manager
-track: "which grows only when you stop solving their problems"), and that is
-a new quantity with its own dynamics: it needs a numbers-only kill gate
-before content, as the first loop did. It is the next frame, not this one.
-Until it is built, a manager profile plays the supervisor's chair and the
-brief says so.
+**The world.** The player is Dana, Operations Manager for the Metal side.
+Kev runs welding; Dale Harder took the lead job at fit-up when Kev went up.
+Russ is above her. Nothing on the welding floor is hers to touch directly:
+it reaches her through Kev.
+
+**The loop.** Proven first as numbers (`KILLGATE-manager.md`). On every
+problem the manager has four moves: *ask Kev what he has found and what he
+would do* (1 h: he finds out, or forms a plan; capability +0.04; asking about
+a plan he already has is hovering, -0.02, and he waits to be told that
+week), *tell Kev what to do* (0.5 h: it is his plan now, right if the cause is
+known and a guess if not; -0.03), *go down and sort it out yourself* (2.5 h:
+it gets sorted; -0.06; the crew's trust in Kev slips), or *leave it with Kev*
+(0 h). Then Kev acts every week whatever she did: with a plan he does it (75%
+a week; 50% if hovered over; 30% on a guess) and gains +0.03 when it was his
+own; without one he finds out at capability + 0.1 a week, and picks a fix
+that is right at capability + 0.25, or a guess. Kev starts at 0.25.
+
+**Hours.** The floor is three other departments (12 h), Russ and the front
+office (6 h) and welding walk-ups that should have gone to Kev (3 h). The
+standing week: the production meeting she runs, half an hour with Kev (skip
+it and he stops bringing her things), Russ's Friday numbers. No booth to
+weld, no hour with a welder; the floor walk stays.
+
+**The win** adds a check: Kev no less able to run his floor than when she
+started. **The read** adds A4 *Delegation* beside the module's focus when she
+touched it: asked before telling, let the plan be his, checked in on a plan
+he already had, told him before either knew why, went down herself, left it
+with him and he had it.
+
+**Which modules.** Six: The late one, The loop, Firefighting, Where it waits,
+The new hand, Across (both departments are hers). The other five are a
+supervisor's week by their nature and the track says why.
+
+Numbers, module gate at 100 seeds per style, manager seat:
+
+| Module, manager seat | Balanced | Coach | Documenter | Firefighter | Doing nothing |
+|---|---|---|---|---|---|
+| The late one | 69% ±5 | 67% ±5 | 3% ±2 | 0% ±1 | 39% ±5 |
+| The loop | 70% ±5 | 70% ±5 | 0% ±1 | 0% ±1 | 40% ±5 |
+| Firefighting | 85% ±4 | 84% ±4 | 0% ±1 | 0% ±1 | 38% ±5 |
+| Across | 74% ±4 | 74% ±4 | 3% ±2 | 0% ±1 | 39% ±5 |
+| Where it waits | 86% ±3 | 86% ±3 | 0% ±1 | 0% ±1 | 37% ±5 |
+| The new hand | 73% ±4 | 71% ±5 | 0% ±1 | 0% ±1 | 34% ±5 |
+
+What the build taught:
+
+- **A supervisor at 0.40 settles two problems in eight weeks on his own.**
+  The kill gate needed five problems to make leaving lose; the engine's
+  modules have two, and the first run had the ignorer winning 55 to 76% on
+  every module: the seat taught nothing. Capability now starts at 0.25.
+- **Finding out is not deciding.** At 0.30 the ignorer still won about half.
+  The chain find-plan-do was too forgiving because every plan was the right
+  one. Now a plan Kev makes alone is right at capability + 0.25; a coached
+  plan is right. That is the seat's lesson made measurable: the half hour
+  where you ask what he found is where the plan gets right.
+- **The coach bot ties balanced on wins and ends with a less capable Kev**
+  because it keeps checking in on plans he already has.
+- **The firefighter and the director win nothing.** Rescuing every problem
+  settles it and leaves Kev at 0.05; telling him what to do before either of
+  them knows why makes it worse half the time. Both fail the "Kev no worse"
+  check on every seed, which is the check the seat exists for.
 
 ## What will be measured
 

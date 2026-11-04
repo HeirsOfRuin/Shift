@@ -40,7 +40,7 @@ const R = {
     ],
   },
   townHall: {
-    id: 'townHall', cue: 'optional', title: "Irene's town hall",
+    id: 'townHall', cue: 'optional', seats: ['supervisor', 'lead', 'manager'], title: "Irene's town hall",
     body: "The COO is doing a town hall in the lunchroom Thursday, an hour. Attendance is 'encouraged', which everyone reads differently.",
     options: [
       { id: 'do', label: 'Go', hours: 1, kind: 'do', effects: [{ managerTrust: 0.02 }] },
@@ -104,13 +104,41 @@ const R = {
     ],
   },
 };
-const pool = (...ids) => ids.map((id) => R[id]);
+// The operations manager's inbox (seats: manager).
+const M = {
+  russPage: {
+    id: 'russPage', cue: 'deadline', seats: ['manager'], title: 'Russ wants a page on welding overtime',
+    body: "Irene asked Russ why welding overtime went up last quarter, so Russ is asking you. One page by Thursday, and he'd like it to say something.",
+    options: [
+      { id: 'do', label: 'Write it, with Kev\'s numbers', hours: 1.5, kind: 'do', effects: [{ managerTrust: 0.05 }] },
+      { id: 'skip', label: 'Tell him next week', hours: 0, kind: 'skip', effects: [{ managerTrust: -0.06 }, { floorLoad: { label: 'Russ asking about the overtime page, again', hours: 1, weeks: 2 } }] },
+    ],
+  },
+  halBorrow: {
+    id: 'halBorrow', cue: 'pressure', seats: ['manager'], title: 'Hal wants to borrow a welder',
+    body: "Hal is short in assembly this week and wants one of Kev's welders for three days. He asked you, not Kev, which is how Hal asks.",
+    options: [
+      { id: 'do', label: 'Lend one, and tell Kev before Hal does', hours: 0.5, kind: 'do', effects: [{ capacity: -0.6 }, { peerTrust: 0.05 }] },
+      { id: 'skip', label: 'Not this week', hours: 0, kind: 'skip', effects: [{ peerTrust: -0.05 }] },
+    ],
+  },
+  coreyDate: {
+    id: 'coreyDate', cue: 'deadline', seats: ['manager'], title: 'Corey wants a date for the county',
+    body: "Corey has the county on the phone and wants a delivery date for two Rescues. He would like the date he already told them. An honest one takes an hour with Jess and Kev.",
+    options: [
+      { id: 'do', label: 'Give him the honest date', hours: 1, kind: 'do', effects: [{ line: 'Corey took the honest date badly and the customer took it fine.' }] },
+      { id: 'skip', label: 'Give him the date he wants', hours: 0, kind: 'skip', effects: [{ demand: 1, inWeeks: 2 }, { line: "Corey's date went to the county. In two weeks paint will want an extra body for it." }] },
+    ],
+  },
+};
+const pool = (...ids) => ids.map((id) => R[id] || M[id]);
 
 // ---------------------------------------------------------------- the track
 export const TRACK = {
   id: 'supervisor',
   title: 'Supervisor track',
   intro: "You run the welding department at Northern Motors: seven people, three stations, and a paint department that wants six bodies a week. Each module is a few weeks of that job. Nobody tells you the right answer, because there usually isn't one; there is what you knew, what you did, and what it did.",
+  introManager: "You're the operations manager for the Metal side at Northern Motors: fabrication, machining, welding and paint. Kev runs welding. Everything on his floor reaches you through him, and your four moves are to ask him, tell him, go down yourself, or leave it with him. What he can do without you at the end is the number that matters.",
   introLead: "You're the lead hand in welding at Northern Motors: fit-up is your table, six people ask you first, and Kev, who had your job until spring, is the supervisor. Every hour you lead comes off the table. Nobody tells you the right answer; there is what you knew, what you did, what you took to Kev, and what it did.",
   modules: ['the-week', 'late-one', 'loop', 'firefighting', 'pulled', 'upstairs', 'rush', 'across', 'waits', 'monday', 'newhand'],
 };
@@ -118,7 +146,7 @@ export const TRACK = {
 export const MODULES = {
   // -------------------------------------------------------------------- 1
   'the-week': {
-    title: 'The week', focus: ['A1', 'A2'], seats: ['supervisor', 'lead'],
+    title: 'The week', focus: ['A1', 'A2'], seats: ['supervisor', 'lead'], notManager: "the inbox in it is a supervisor's",
     leadBrief: "Kev got the supervisor's job in the spring and you got his: lead hand, fit-up, and the first person everyone asks. The inbox is smaller than Kev's and it still does not fit beside twenty-four hours at the table.", handbook: '2: When everything is urgent, nothing is strategic', weeks: 6, goal: 'main',
     teaches: 'Time, priorities, and what you refuse',
     brief: [
@@ -147,7 +175,8 @@ export const MODULES = {
 
   // -------------------------------------------------------------------- 2
   'late-one': {
-    title: 'The late one', focus: ['D2'], seats: ['supervisor', 'lead'],
+    title: 'The late one', focus: ['D2'], seats: ['supervisor', 'lead', 'manager'],
+    managerBrief: "You're the operations manager. Kev runs welding now, and Brent's late mornings came up at Tuesday's production meeting, from Theresa, not from Kev. Kev had noticed. He hadn't decided what to do, and he was hoping you wouldn't ask.",
     leadBrief: "You're the lead hand now; Kev is the supervisor. Brent is late and you can see it, and the crew can see you seeing it. Whatever the discipline steps are, they are Kev's to take. What you bring him is yours.", handbook: '7: Culture is what you tolerate under pressure', weeks: 8, goal: 'main',
     teaches: 'Accountability that fits the reason',
     brief: [
@@ -161,7 +190,7 @@ export const MODULES = {
     main: { type: 'late', who: ['brent'], seen: true, week: 1 },
     second: { weeks: [3, 5], not: ['late'] },
     cards: [],
-    pool: { perWeek: [0, 1], cards: pool('vendorDemo', 'townHall', 'joelGauge', 'jessForecast', 'supplierCall', 'paintCall') },
+    pool: { perWeek: [0, 1], cards: pool('vendorDemo', 'townHall', 'joelGauge', 'jessForecast', 'supplierCall', 'paintCall', 'russPage', 'halBorrow') },
     debrief: {
       questions: [
         'What did Brent tell you, and when? What would you have needed to see to know whether it was true?',
@@ -176,7 +205,8 @@ export const MODULES = {
 
   // -------------------------------------------------------------------- 3
   loop: {
-    title: 'The loop', focus: ['D3'], seats: ['supervisor', 'lead'],
+    title: 'The loop', focus: ['D3'], seats: ['supervisor', 'lead', 'manager'],
+    managerBrief: "You're the operations manager. The thing between Marisol and Donna is Kev's to settle, and he has mentioned it to you twice in the voice people use when they want someone else to settle it.",
     leadBrief: "You're the lead hand; Kev is the supervisor and he's in the office more than on the floor. The thing between Marisol and Donna happens three metres from your table, every day, and nobody has told Kev about it.", handbook: '7: Culture is what you tolerate under pressure', weeks: 8, goal: 'main',
     teaches: 'Conflict that keeps coming back',
     brief: [
@@ -190,7 +220,7 @@ export const MODULES = {
     main: { type: 'friction', who: ['marisol', 'donna'], seen: true, week: 1 },
     second: { weeks: [3, 5], not: ['friction'] },
     cards: [],
-    pool: { perWeek: [0, 1], cards: pool('vendorDemo', 'townHall', 'kevVacation', 'jessForecast', 'supplierCall', 'eyewash') },
+    pool: { perWeek: [0, 1], cards: pool('vendorDemo', 'townHall', 'kevVacation', 'jessForecast', 'supplierCall', 'eyewash', 'russPage', 'coreyDate') },
     debrief: {
       questions: [
         'What did each of them tell you? Where did their stories agree?',
@@ -205,7 +235,8 @@ export const MODULES = {
 
   // -------------------------------------------------------------------- 4
   firefighting: {
-    title: 'Firefighting', focus: ['B3'], seats: ['supervisor', 'lead'],
+    title: 'Firefighting', focus: ['B3'], seats: ['supervisor', 'lead', 'manager'],
+    managerBrief: "You're the operations manager. Kev re-squares that jig himself every week and is a little proud of it. You could re-square it yourself, faster. You were the welding supervisor once.",
     leadBrief: "You're the lead hand, and the jig is yours to re-square; Kev used to do it and now he asks you to. He means it as a compliment.", handbook: '1: Firefighting is a leadership failure, not a badge of honour', weeks: 8, goal: 'main',
     teaches: 'Fixing the fire, or the thing that keeps lighting it',
     brief: [
@@ -219,7 +250,7 @@ export const MODULES = {
     main: { type: 'recurring', who: ['marisol'], seen: true, week: 1 },
     second: { weeks: [3, 5], not: ['rework'] },
     cards: [],
-    pool: { perWeek: [0, 1], cards: pool('vendorDemo', 'joelGauge', 'kevVacation', 'jessForecast', 'paintCall', 'danaPage') },
+    pool: { perWeek: [0, 1], cards: pool('vendorDemo', 'joelGauge', 'kevVacation', 'jessForecast', 'paintCall', 'danaPage', 'halBorrow', 'coreyDate') },
     debrief: {
       questions: [
         'How many times did you fix the jig yourself before you went after why it moved?',
@@ -234,7 +265,7 @@ export const MODULES = {
 
   // -------------------------------------------------------------------- 5
   pulled: {
-    title: 'Pulled off the floor', focus: ['A4', 'D1'], seats: ['supervisor'], onlySupervisor: 'it is about leaving the lead in charge', handbook: '6: Leaders build leaders, not just output', weeks: 8, goal: 'held',
+    title: 'Pulled off the floor', focus: ['A4', 'D1'], seats: ['supervisor'], onlySupervisor: 'it is about leaving the lead in charge', notManager: 'it is about a supervisor leaving his lead in charge', handbook: '6: Leaders build leaders, not just output', weeks: 8, goal: 'held',
     teaches: 'The bench: what you built before you left',
     brief: [
       'The customer audit is in three weeks, and Dana has put you on the team. For weeks three, four and five you will be in a room with a binder and an auditor most of every day. You will see the floor at lunch, if you eat lunch.',
@@ -293,7 +324,7 @@ export const MODULES = {
 
   // -------------------------------------------------------------------- 6
   upstairs: {
-    title: 'Nobody upstairs', focus: ['E1'], seats: ['supervisor'], onlySupervisor: "the decisions in it are a supervisor's", handbook: '4: Ownership without authority creates friction; 8: Leading up', weeks: 8, goal: 'main',
+    title: 'Nobody upstairs', focus: ['E1'], seats: ['supervisor'], onlySupervisor: "the decisions in it are a supervisor's", notManager: 'you are the one who is away in it', handbook: '4: Ownership without authority creates friction; 8: Leading up', weeks: 8, goal: 'main',
     teaches: 'Decision rights: what is yours, and what is not',
     brief: [
       'Dana is off for five weeks: a knee, done properly this time. Russ is covering her departments on top of his own, which means Russ is covering nothing very closely.',
@@ -342,7 +373,7 @@ export const MODULES = {
 
   // -------------------------------------------------------------------- 7
   rush: {
-    title: 'Rush week', focus: ['C1'], seats: ['supervisor', 'lead'],
+    title: 'Rush week', focus: ['C1'], seats: ['supervisor', 'lead'], notManager: 'the shortcuts in it are offered at the booth',
     leadBrief: "You're the lead hand. The shortcuts get offered to you first, at the table, in the tone of people doing you a favour. Saturdays are Kev's to approve; what slides on a Tuesday afternoon is yours.", handbook: '7: Culture is what you tolerate under pressure', weeks: 8, goal: 'standard',
     teaches: 'Holding the standard when the number is short',
     brief: [
@@ -427,7 +458,8 @@ export const MODULES = {
 
   // -------------------------------------------------------------------- 8
   across: {
-    title: 'Across', focus: ['E2'], seats: ['supervisor'], onlySupervisor: 'it is supervisor to supervisor', handbook: '8: Leading at every level: horizontally', weeks: 8, goal: 'main',
+    title: 'Across', focus: ['E2'], seats: ['supervisor', 'manager'], onlySupervisor: 'it is supervisor to supervisor',
+    managerBrief: "You're the operations manager, and both departments are yours: Kev's welding and Theresa's paint. Two of your supervisors keep two standards and neither has sat down with the other, because there has always been you between them, and you have always sorted it.", handbook: '8: Leading at every level: horizontally', weeks: 8, goal: 'main',
     teaches: 'Peers: going across before going up',
     brief: [
       "Paint kicks back your bodies for spatter. Some days. On other days the same spatter sails through. Your crew has noticed which days are which, and they've started sending the marginal ones when Theresa's on the line and holding them when her lead is.",
@@ -440,7 +472,7 @@ export const MODULES = {
     main: { type: 'standards', who: [], seen: true, week: 1 },
     second: { weeks: [3, 5], not: [] },
     cards: [],
-    pool: { perWeek: [0, 1], cards: pool('vendorDemo', 'townHall', 'joelGauge', 'jessForecast', 'danaPage') },
+    pool: { perWeek: [0, 1], cards: pool('vendorDemo', 'townHall', 'joelGauge', 'jessForecast', 'danaPage', 'russPage', 'halBorrow') },
     debrief: {
       questions: [
         'Did you talk to Theresa before you talked to Dana? What did each conversation get you?',
@@ -455,7 +487,8 @@ export const MODULES = {
 
   // -------------------------------------------------------------------- 9 (beta 4)
   waits: {
-    title: 'Where it waits', focus: ['B1'], seats: ['supervisor', 'lead'],
+    title: 'Where it waits', focus: ['B1'], seats: ['supervisor', 'lead', 'manager'],
+    managerBrief: "You're the operations manager, and paint being short is your number as much as Kev's. Russ has asked twice. Everyone upstairs says body weld, and Kev says it too, and nobody has stood in the aisle.",
     leadBrief: "You're the lead hand. Kev has told you to put real hours into fixing it and that he'll back whatever you find, which is generous, and means the hours come off your table.", handbook: '1: Firefighting is a leadership failure, not a badge of honour', weeks: 8, goal: 'main',
     teaches: 'Finding the station that limits everything, and only fixing that one',
     brief: [
@@ -469,7 +502,7 @@ export const MODULES = {
     main: { type: 'constraint', who: [], seen: true, week: 1 },
     second: { weeks: [4, 6], not: [] },
     cards: [],
-    pool: { perWeek: [0, 1], cards: pool('vendorDemo', 'townHall', 'jessForecast', 'supplierCall', 'danaPage') },
+    pool: { perWeek: [0, 1], cards: pool('vendorDemo', 'townHall', 'jessForecast', 'supplierCall', 'danaPage', 'russPage', 'halBorrow') },
     debrief: {
       questions: [
         'Where did you put your first four improvement hours, and what did you know when you put them there?',
@@ -484,7 +517,7 @@ export const MODULES = {
 
   // -------------------------------------------------------------------- 10 (beta 4)
   monday: {
-    title: 'Monday, 7:00', focus: ['F1'], seats: ['supervisor', 'lead'],
+    title: 'Monday, 7:00', focus: ['F1'], seats: ['supervisor', 'lead'], notManager: "the huddle is Kev's to run",
     leadBrief: "You're the lead hand, and the huddle is yours: Kev handed it over in the spring and stands at the back when he's there at all.", handbook: '2: When everything is urgent, nothing is strategic', weeks: 8, goal: 'main',
     teaches: 'Five minutes, every action with an owner, and the derailer handled without losing the room',
     brief: [
@@ -552,7 +585,8 @@ export const MODULES = {
 
   // -------------------------------------------------------------------- 11 (beta 4)
   newhand: {
-    title: 'The new hand', focus: ['D4'], seats: ['supervisor', 'lead'],
+    title: 'The new hand', focus: ['D4'], seats: ['supervisor', 'lead', 'manager'],
+    managerBrief: "You're the operations manager. Sam is Kev's hire, in Lyle's spot, and the scrap bin is Kev's to notice. You walked past it on Wednesday and he hadn't.",
     leadBrief: "You're the lead hand, and Sam is at the table beside you all day. Kev asked you to 'keep an eye on him', which is what supervisors say when they mean train him.", handbook: '6: Leaders build leaders, not just output', weeks: 8, goal: 'main',
     teaches: 'Teaching the task and the reason, and checking it landed',
     brief: [
@@ -570,7 +604,7 @@ export const MODULES = {
     main: { type: 'newhand', who: ['sam'], seen: true, week: 1 },
     second: { weeks: [4, 6], not: ['rework'], avoid: ['lyle', 'sam'] },
     cards: [],
-    pool: { perWeek: [0, 1], cards: pool('vendorDemo', 'townHall', 'joelGauge', 'jessForecast', 'eyewash') },
+    pool: { perWeek: [0, 1], cards: pool('vendorDemo', 'townHall', 'joelGauge', 'jessForecast', 'eyewash', 'russPage', 'coreyDate') },
     debrief: {
       questions: [
         'What did an hour at the table tell you about Sam that the scrap bin could not?',

@@ -82,8 +82,9 @@ test('the practice read covers only the module\'s focus areas, gives no overall 
     const p = s.outcome.profile;
     assert.match(p.label, /Practice/);
     assert.equal(p.overall, undefined);
-    const seatArea = r.seat === 'lead' && !MODULES[r.module].focus.includes('E1') && s.decisions.some((d) => d.area === 'E1');
-    assert.deepEqual(p.focus.map((f) => f.id), [...MODULES[r.module].focus, ...(seatArea ? ['E1'] : [])], 'the module\'s focus, plus the seat\'s own area when a lead hand took something up');
+    const own = { lead: 'E1', manager: 'A4' }[r.seat];
+    const seatArea = own && !MODULES[r.module].focus.includes(own) && s.decisions.some((d) => d.area === own);
+    assert.deepEqual(p.focus.map((f) => f.id), [...MODULES[r.module].focus, ...(seatArea ? [own] : [])], 'the module\'s focus, plus the seat\'s own area when the run touched it');
     for (const f of p.focus) {
       assert.ok(['solid', 'getting', 'notyet', 'thin'].includes(f.read.id), f.read.id);
       if (f.n < 3) assert.equal(f.read.id, 'thin', `${r.module}: a read from ${f.n} decisions`);
@@ -98,11 +99,13 @@ test('the lead hand cannot do what needs the supervisor, and the supervisor neve
       for (const card of weekView(before, {}).cards.filter((c) => c.kind === 'problem')) {
         const ids = card.options.map((o) => o.id);
         if (r.seat === 'lead') { assert.ok(!ids.includes('document') && !ids.includes('accommodate') && !ids.includes('timeOff'), `${r.module}: a lead can ${ids}`); }
+        else if (r.seat === 'manager') assert.deepEqual(ids, ['coach', 'direct', 'rescue', 'leave'], `${r.module}: a manager's four moves`);
         else assert.ok(!ids.includes('takeUp'), `${r.module}: the supervisor can take it up`);
       }
     });
   }
   assert.throws(() => newModule('pulled', 1, 'lead'), /not written for the lead seat/);
+  assert.throws(() => newModule('rush', 1, 'manager'), /not written for the manager seat/);
 });
 
 test('every scored decision names a focus area the catalogue has', () => {

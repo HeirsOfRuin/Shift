@@ -37,7 +37,16 @@ export const PLAYER_LEAD = { id: 'you', name: 'You', full: 'You', pronoun: 'he',
 export const ROLES = {
   supervisor: { sup: { name: 'Dana', full: 'Dana Fiorino', pronoun: 'she' }, senior: { name: 'Kev', full: 'Kev Dueck', pronoun: 'he' } },
   lead: { sup: { name: 'Kev', full: 'Kev Dueck', pronoun: 'he' }, senior: { name: 'Lyle', full: 'Lyle Cardinal', pronoun: 'he' } },
+  // the operations manager's seat: the player is Dana; Kev is the welding
+  // supervisor she works through; Russ is above her
+  manager: { sup: { name: 'Russ', full: 'Russ Penner', pronoun: 'he' }, senior: { name: 'Kev', full: 'Kev Dueck', pronoun: 'he' } },
 };
+
+// Fit-up's lead in the seats where Kev is the supervisor and the player is not
+// at the table (the manager's seat).
+export const DALE = { id: 'dale', name: 'Dale', full: 'Dale Harder', pronoun: 'he', station: 'fit', slot: 0, skill: 0.8, morale: 0.7, trust: 0.55, lead: true,
+  look: { skin: 0, hair: 'cap', hairColour: 3, beard: true, build: 'broad' },
+  about: 'Lead hand, fit-up. Took the lead job when Kev went up. Steady, says what he thinks once, quietly.' };
 
 export const STATIONS = {
   fit: { label: 'Fit-up', seats: 2 },

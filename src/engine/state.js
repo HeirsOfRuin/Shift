@@ -43,9 +43,8 @@ export function setProfile(save, p) {
 
 /** The module order for this save: the trainee's path if there is a profile, the
  *  track's written order if not. Unlocking follows it. */
-/** The seat a profile plays in. The manager's seat is framed, not built
- *  (FRAME-seats.md), so a manager plays the supervisor's chair for now. */
-export function seatFor(profile) { return profile?.seat === 'lead' ? 'lead' : 'supervisor'; }
+/** The seat a profile plays in. */
+export function seatFor(profile) { return SEATS[profile?.seat] ? profile.seat : 'supervisor'; }
 export const supports = (id, seat) => (MODULES[id].seats || ['supervisor']).includes(seat);
 
 export function order(save) {
