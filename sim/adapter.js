@@ -40,7 +40,8 @@ export function metrics(s) {
     hours: s.history.reduce((a, r) => a + r.hours, 0) / s.history.length,
     morale: avg((c) => c.morale),
     trust: avg((c) => c.trust),
-    practice: o.profile.overall ?? 0,
+    // share of the module's focus areas that read Solid (0, 0.5 or 1)
+    practice: o.profile.focus.filter((f) => f.read.id === 'solid').length / o.profile.focus.length,
   };
 }
 

@@ -7,27 +7,53 @@
 // play on (test/save-contract.test.js).
 
 import { MODULES, TRACK } from '../data/modules.data.js';
+import { AREAS, SELF_LIMIT } from '../data/focus.data.js';
+import { SEATS, DEPARTMENTS } from '../data/departments.data.js';
 import { newModule, advance as advanceWeek } from './week.js';
+import { pathFor } from './path.js';
 
 export const SAVE_KEY = 'shift.save.v1'; // never rename
-export const SAVE_VERSION = 2;
+export const SAVE_VERSION = 3;
 export const CODE_PREFIX = 'SHFT1.';
 
 export function newSave() {
   return {
     v: SAVE_VERSION,
     track: { id: TRACK.id, openAll: false, modules: Object.fromEntries(TRACK.modules.map((id) => [id, { plays: 0, wins: 0, last: null, debrief: null, signedOff: null }])) },
+    profile: null,
     run: null,
     runs: 0,
   };
 }
 
+/** Set or change the trainee's profile: the seat, the department, the departments
+ *  tied to it, and the self-rated strengths and areas to work on. Validated here
+ *  so the UI cannot store a seat or area the catalogue does not have. */
+export function setProfile(save, p) {
+  if (!SEATS[p.seat]) throw new Error('Pick a seat.');
+  if (!DEPARTMENTS[p.department]) throw new Error('Pick a department.');
+  const areas = (xs, not = []) => [...new Set((xs || []).filter((a) => AREAS[a] && !not.includes(a)))].slice(0, SELF_LIMIT);
+  const strengths = areas(p.strengths);
+  const work = areas(p.work, strengths);
+  const tied = [...new Set((p.tied || []).filter((d) => DEPARTMENTS[d] && d !== p.department))];
+  const s = structuredClone(save);
+  s.profile = { name: String(p.name || '').trim().slice(0, 60), seat: p.seat, department: p.department, tied, strengths, work, since: p.since || s.profile?.since || null };
+  return s;
+}
+
+/** The module order for this save: the trainee's path if there is a profile, the
+ *  track's written order if not. Unlocking follows it. */
+export function order(save) {
+  return save.profile ? pathFor(save.profile).map((x) => x.id) : TRACK.modules;
+}
+
 /** Is a module open to play? The first is; each next one opens on the previous sign-off. */
 export function unlocked(save, id) {
-  const i = TRACK.modules.indexOf(id);
+  const ids = order(save);
+  const i = ids.indexOf(id);
   if (i < 0) return false;
   if (i === 0 || save.track.openAll) return true;
-  return !!save.track.modules[TRACK.modules[i - 1]].signedOff;
+  return !!save.track.modules[ids[i - 1]].signedOff;
 }
 
 export function startRun(save, moduleId, seed) {
@@ -48,7 +74,7 @@ export function playWeek(save, plan) {
     const m = s.track.modules[state.moduleId];
     m.plays += 1;
     if (state.outcome.win) m.wins += 1;
-    m.last = { win: state.outcome.win, week: state.week - 1, seed: state.seed, overall: state.outcome.profile.overall, summary: state.outcome.summary };
+    m.last = { win: state.outcome.win, week: state.week - 1, seed: state.seed, reads: state.outcome.profile.focus.map((f) => ({ id: f.id, read: f.read.label })), summary: state.outcome.summary };
   }
   return { save: s, record };
 }
@@ -88,6 +114,20 @@ export const MIGRATIONS = {
       return run;
     };
     return { ...s, v: 2, run: heal(s.run) };
+  },
+  // Beta 2 to 3: the focus-area catalogue replaces the LBA domains, and the
+  // trainee has a profile. An old run's decisions carry LBA subdomain names
+  // under `sub`; they are kept as-is and read as nothing (no area), which is
+  // honest: the read for that run was never on the new scale. A finished
+  // module's `last.overall` is dropped; its reads were on the old scale too.
+  2: (s) => {
+    const heal = (run) => {
+      if (!run) return run;
+      run.decisions = (run.decisions || []).map((d) => ('area' in d ? d : { ...d, area: null }));
+      return run;
+    };
+    const modules = Object.fromEntries(Object.entries(s.track.modules).map(([id, m]) => [id, { ...m, last: m.last ? { win: m.last.win, week: m.last.week, seed: m.last.seed, reads: [], summary: m.last.summary } : null }]));
+    return { ...s, v: 3, profile: null, track: { ...s.track, modules }, run: heal(s.run) };
   },
 };
 

@@ -83,11 +83,11 @@ export const TYPES = {
       K.line('signal', 'late.week', v);
     },
     score(p, action) {
-      if (action === 'talk') return p.told ? [] : [['Basic Empathy', 2, 'Asked before acting']];
-      if (action === 'document') return p.told === 'attitude' ? [['Accountability Management', 2, 'Held the standard when it was attitude']] : p.told ? [['Basic Empathy', -1, 'Wrote up a reason, not a choice']] : [['Accountability Management', 0, 'Wrote it up before asking']];
-      if (action === 'accommodate') return p.told === 'childcare' ? [['Basic Empathy', 2, 'Fitted the fix to the reason']] : p.told === 'attitude' ? [['Accountability Management', -1, 'Bent the rule for attitude']] : [['Basic Empathy', 1, 'Tried to help']];
-      if (action === 'carpool') return p.told === 'ride' ? [['Basic Empathy', 2, 'Fitted the fix to the reason']] : [['Basic Empathy', 0, 'A fix for a reason nobody gave']];
-      if (action === 'remind') return [['Accountability Management', 0, 'Mentioned it in passing']];
+      if (action === 'talk') return p.told ? [] : [['D2', 2, 'Asked before acting']];
+      if (action === 'document') return p.told === 'attitude' ? [['D2', 2, 'Held the standard when it was attitude']] : p.told ? [['D2', -1, 'Wrote up a reason, not a choice']] : [['D2', 0, 'Wrote it up before asking']];
+      if (action === 'accommodate') return p.told === 'childcare' ? [['D2', 2, 'Fitted the fix to the reason']] : p.told === 'attitude' ? [['D2', -1, 'Bent the rule for attitude']] : [['D2', 1, 'Tried to help']];
+      if (action === 'carpool') return p.told === 'ride' ? [['D2', 2, 'Fitted the fix to the reason']] : [['D2', 0, 'A fix for a reason nobody gave']];
+      if (action === 'remind') return [['D2', 0, 'Mentioned it in passing']];
       return [];
     },
   },
@@ -138,12 +138,12 @@ export const TYPES = {
       K.line('signal', 'rework.week', { p });
     },
     score(p, action) {
-      if (action === 'investigate') return p.told ? [] : [['Early Coaching & Guidance', 2, 'Found out why before fixing it']];
-      if (action === 'coach') return [['Early Coaching & Guidance', p.told === 'untrained' || p.told === 'rushing' || !p.told ? 2 : 1, 'Coached at the booth']];
-      if (action === 'fixYourself') return [['Early Coaching & Guidance', p.firefought++ ? -1 : 0, 'Fixed the welds yourself']];
-      if (action === 'fixFixture') return p.told === 'fixture' ? [['Openness to Improvement', 2, 'Fixed the fixture, not the welder']] : [['Openness to Improvement', 0, 'Rebuilt a fixture nobody said was bad']];
-      if (action === 'document') return [['Accountability Management', p.told === 'rushing' ? 1 : -1, 'Wrote up quality']];
-      if (action === 'correct') return [['Early Coaching & Guidance', 0, 'Told him to tighten up']];
+      if (action === 'investigate') return p.told ? [] : [['D1', 2, 'Found out why before fixing it']];
+      if (action === 'coach') return [['D1', p.told === 'untrained' || p.told === 'rushing' || !p.told ? 2 : 1, 'Coached at the booth']];
+      if (action === 'fixYourself') return [['D1', p.firefought++ ? -1 : 0, 'Fixed the welds yourself']];
+      if (action === 'fixFixture') return p.told === 'fixture' ? [['B3', 2, 'Fixed the fixture, not the welder']] : [['B3', 0, 'Rebuilt a fixture nobody said was bad']];
+      if (action === 'document') return [['D2', p.told === 'rushing' ? 1 : -1, 'Wrote up quality']];
+      if (action === 'correct') return [['D1', 0, 'Told him to tighten up']];
       return [];
     },
   },
@@ -188,10 +188,10 @@ export const TYPES = {
       K.line('signal', `load.week.${a.stress >= 3 ? 'showing' : 'quiet'}`, v);
     },
     score(p, action) {
-      if (action === 'talk') return p.told ? [['Basic Empathy', 1, 'Checked in again']] : [['Basic Empathy', 2, 'Asked before acting']];
-      if (action === 'redistribute') return p.told === 'unowned' ? [['Culture & Organizational Influence', 2, 'Gave the work an owner']] : [['Culture & Organizational Influence', 0, 'Moved work around without knowing why']];
-      if (action === 'timeOff') return p.told === 'personal' ? [['Basic Empathy', 2, 'Fitted the fix to the reason']] : [['Basic Empathy', 0, 'Time off for a reason nobody gave']];
-      if (action === 'carry') return [['Culture & Organizational Influence', -1, 'Took his load yourself']];
+      if (action === 'talk') return p.told ? [['D1', 1, 'Checked in again']] : [['D1', 2, 'Asked before acting']];
+      if (action === 'redistribute') return p.told === 'unowned' ? [['A4', 2, 'Gave the work an owner']] : [['A4', 0, 'Moved work around without knowing why']];
+      if (action === 'timeOff') return p.told === 'personal' ? [['D1', 2, 'Fitted the fix to the reason']] : [['D1', 0, 'Time off for a reason nobody gave']];
+      if (action === 'carry') return [['A4', -1, 'Took his load yourself']];
       return [];
     },
   },
@@ -240,11 +240,11 @@ export const TYPES = {
       K.line('signal', `friction.week.${p.severity >= 2 ? 'loud' : 'quiet'}`, v);
     },
     score(p, action) {
-      if (action === 'separate') return p.told ? [['Recurring Conflict Resolution', 1, 'Listened again']] : [['Recurring Conflict Resolution', 2, 'Heard both sides first']];
-      if (action === 'reset') return p.told === 'workload' ? [['Recurring Conflict Resolution', 2, 'Reset the work, not the people']] : p.told ? [['Recurring Conflict Resolution', 0, 'Reset the work when it was not the work']] : [['Recurring Conflict Resolution', 0, 'Reset before hearing them out']];
-      if (action === 'clarify') return p.told === 'roles' ? [['Recurring Conflict Resolution', 2, 'Gave the gap an owner']] : [['Recurring Conflict Resolution', 0, 'Wrote roles down for a different problem']];
-      if (action === 'expectations') return p.told === 'personal' ? [['Respect & Professionalism', 2, 'Set out how people treat each other']] : [['Respect & Professionalism', 0, 'A talk about conduct for a problem with the work']];
-      if (action === 'warning') return [['Recurring Conflict Resolution', -1, 'Told them to knock it off']];
+      if (action === 'separate') return p.told ? [['D3', 1, 'Listened again']] : [['D3', 2, 'Heard both sides first']];
+      if (action === 'reset') return p.told === 'workload' ? [['D3', 2, 'Reset the work, not the people']] : p.told ? [['D3', 0, 'Reset the work when it was not the work']] : [['D3', 0, 'Reset before hearing them out']];
+      if (action === 'clarify') return p.told === 'roles' ? [['D3', 2, 'Gave the gap an owner']] : [['D3', 0, 'Wrote roles down for a different problem']];
+      if (action === 'expectations') return p.told === 'personal' ? [['D3', 2, 'Set out how people treat each other']] : [['D3', 0, 'A talk about conduct for a problem with the work']];
+      if (action === 'warning') return [['D3', -1, 'Told them to knock it off']];
       return [];
     },
   },
@@ -291,10 +291,10 @@ export const TYPES = {
       K.line('signal', p.exposure >= 2 ? 'hazard.week.bad' : 'hazard.week.mild', v);
     },
     score(p, action) {
-      if (action === 'look') return [['Basic Empathy', 2, 'Went and looked when someone raised safety']];
-      if (action === 'workOrder') return [['Accountability Management', 1, 'Put it in the system']];
-      if (action === 'followUp') return [['Accountability Management', 2, 'Followed it through']];
-      if (action === 'shutBooth' || action === 'moveWelder') return [['Impulse Control', 1, 'Made it safe before it was fixed']];
+      if (action === 'look') return [['C2', 2, 'Went and looked when someone raised safety']];
+      if (action === 'workOrder') return [['C2', 1, 'Put it in the system']];
+      if (action === 'followUp') return [['C2', 2, 'Followed it through']];
+      if (action === 'shutBooth' || action === 'moveWelder') return [['C2', 1, 'Made it safe before it was fixed']];
       return [];
     },
   },
@@ -344,12 +344,12 @@ export const TYPES = {
       K.line('signal', 'recurring.week', v);
     },
     score(p, action) {
-      if (action === 'investigate') return p.told ? [] : [['Openness to Improvement', 2, 'Went after the cause, not the fire']];
-      if (action === 'fixYourself' || action === 'leadFix') return [['Impulse Control', p.firefought++ >= 1 ? -1 : 0, 'Put the fire out again']];
-      if (action === 'workOrder') return [['Openness to Improvement', p.told === 'pin' ? 2 : 0, 'Work order on the pins']];
-      if (action === 'standardWork') return [['Early Coaching & Guidance', p.told === 'setup' ? 2 : 0, 'Wrote the setup down with the crew']];
-      if (action === 'raiseFab') return [['Cross-Functional Awareness', p.told === 'steel' ? 2 : 0, 'Took it across to fabrication']];
-      if (action === 'escalate') return [['Cross-Functional Awareness', -1, 'Went over a peer instead of to him']];
+      if (action === 'investigate') return p.told ? [] : [['B3', 2, 'Went after the cause, not the fire']];
+      if (action === 'fixYourself' || action === 'leadFix') return [['B3', p.firefought++ >= 1 ? -1 : 0, 'Put the fire out again']];
+      if (action === 'workOrder') return [['B3', p.told === 'pin' ? 2 : 0, 'Work order on the pins']];
+      if (action === 'standardWork') return [['B3', p.told === 'setup' ? 2 : 0, 'Wrote the setup down with the crew']];
+      if (action === 'raiseFab') return [['B3', p.told === 'steel' ? 2 : 0, 'Took the cause across to fabrication']];
+      if (action === 'escalate') return [['E2', -1, 'Went over a peer instead of to him']];
       return [];
     },
   },
@@ -394,11 +394,11 @@ export const TYPES = {
       K.line('signal', 'escalation.week', v);
     },
     score(p, action) {
-      if (action === 'check') return p.told ? [] : [['Emotional Awareness', 2, 'Found out whose call it was first']];
-      if (action === 'decide') return p.told === 'yours' ? [['Accountability Management', 2, 'Made the call that was yours']] : p.told ? [['Accountability Management', -1, 'Made a call that was not yours']] : [['Emotional Awareness', -1, 'Decided before knowing whose call it was']];
-      if (action === 'askRuss') return [['Cross-Functional Awareness', p.told === 'signoff' ? 2 : 0, 'Used the chain while Dana was away']];
-      if (action === 'engineering') return [['Cross-Functional Awareness', p.told === 'engineering' ? 2 : 0, 'Sent it to the people who own the drawing']];
-      if (action === 'around') return [['Respect & Professionalism', -1, 'Went around the chain']];
+      if (action === 'check') return p.told ? [] : [['E1', 2, 'Found out whose call it was first']];
+      if (action === 'decide') return p.told === 'yours' ? [['E1', 2, 'Made the call that was yours']] : p.told ? [['E1', -1, 'Made a call that was not yours']] : [['E1', -1, 'Decided before knowing whose call it was']];
+      if (action === 'askRuss') return [['E1', p.told === 'signoff' ? 2 : 0, 'Used the chain while Dana was away']];
+      if (action === 'engineering') return [['E1', p.told === 'engineering' ? 2 : 0, 'Sent it to the people who own the drawing']];
+      if (action === 'around') return [['E1', -1, 'Went around the chain']];
       return [];
     },
   },
@@ -450,12 +450,12 @@ export const TYPES = {
       K.line('signal', 'standards.week', v);
     },
     score(p, action) {
-      if (action === 'talkPeer') return [['Cross-Functional Awareness', 2, 'Went across before going up']];
-      if (action === 'complain') return p.tried.includes('talkPeer') ? [['Cross-Functional Awareness', 0, 'Took it up after trying across']] : [['Peer Conflict Prevention', -1, 'Went up before going across']];
-      if (action === 'writeStandard') return [['Cross-Functional Awareness', p.told === 'spec' ? 2 : 1, 'Wrote one standard for both sides']];
-      if (action === 'handoff') return [['Cross-Functional Awareness', p.told === 'pressure' ? 2 : 0, 'Fixed the handoff']];
-      if (action === 'showHer') return [['Peer Conflict Prevention', p.told === 'unaware' ? 2 : 0, 'Showed her the tickets']];
-      if (action === 'matchThem') return [['Respect & Professionalism', -1, 'Dropped your standard to match']];
+      if (action === 'talkPeer') return [['E2', 2, 'Went across before going up']];
+      if (action === 'complain') return p.tried.includes('talkPeer') ? [['E2', 0, 'Took it up after trying across']] : [['E2', -1, 'Went up before going across']];
+      if (action === 'writeStandard') return [['E2', p.told === 'spec' ? 2 : 1, 'Wrote one standard for both sides']];
+      if (action === 'handoff') return [['E2', p.told === 'pressure' ? 2 : 0, 'Fixed the handoff']];
+      if (action === 'showHer') return [['E2', p.told === 'unaware' ? 2 : 0, 'Showed her the tickets']];
+      if (action === 'matchThem') return [['E2', -1, 'Dropped your standard to match']];
       return [];
     },
   },

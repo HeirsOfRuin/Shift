@@ -11,7 +11,7 @@
 // Shift: the title starts the track, the track opens a brief, the brief starts
 // Monday. One turn is one week: pick nothing (the defaults), run the week, read
 // Friday, close it. The module ends on its end screen (.verdict).
-export const START = ['[data-act="new"]', '[data-act="brief"][data-id="the-week"]', '[data-act="start-module"]'];
+export const START = ['[data-act="new"]', '[data-pick="seat"][data-id="supervisor"]', '[data-pick="department"][data-id="welding"]', '[data-pick="work"][data-id="A1"]', '[data-act="profile-save"]', '[data-act="brief"][data-id="the-week"]', '[data-act="start-module"]'];
 export const CLOCK = '.hud .turn';                    // element whose text is the game clock
 export const END = '.verdict';                        // present when the module has ended
 export const TABS = ['[data-tab="week"]', '[data-tab="crew"]', '[data-tab="log"]', '[data-tab="menu"]'];

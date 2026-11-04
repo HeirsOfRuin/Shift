@@ -2,7 +2,8 @@
 
 - Read `docs/CONCEPT.md` first in every new session. It is the handoff: what
   Shift is, why, the sources, every decision in the author's words, the status
-  and the next step. Then `docs/PLAN.md` (the design) and `docs/SPEC.md` (the
+  and the next step. Then `docs/CATALOGUE.md` (the focus areas every module
+  is tagged to), `docs/PLAN.md` (the design) and `docs/SPEC.md` (the
   Supervisor track). Do not re-derive any of it from chat.
 - This is a training tool with game mechanics, not a video game. Its output is
   practice, never an assessment or a readiness input.

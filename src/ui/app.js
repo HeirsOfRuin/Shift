@@ -10,8 +10,8 @@
 //    confirmation and every copy happens on the page.
 
 import {
-  newSave, startRun, playWeek, saveDebrief, signOff, setOpenAll, SAVE_KEY, serialize, deserialize, toCode, fromCode,
-  trackView, briefView, weekView, demoFloor, crewStrip, peopleView, markSeen, MODULES, TRACK,
+  newSave, setProfile, startRun, playWeek, saveDebrief, signOff, setOpenAll, SAVE_KEY, serialize, deserialize, toCode, fromCode,
+  trackView, briefView, weekView, demoFloor, crewStrip, peopleView, profileView, markSeen, MODULES, TRACK,
 } from '../engine/game.js';
 import { STORAGE_OK, lsGet, lsSet } from './storage.js';
 import { registerSW, installPrompt } from './sw-register.js';
@@ -32,6 +32,7 @@ let routineOpen = false;
 let floorOpen = true;        // the floor's itemised hours, open until folded     // the standing week, folded to one line unless opened
 let busy = false;
 let install = null;
+let draft = null;          // the profile form in progress
 
 const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 // Hours to the quarter: 0.25 h is a quarter hour, not 0.3.
@@ -48,14 +49,14 @@ function loadSaved() {
 function titleScreen() {
   const saved = loadSaved();
   return `<main class="title">
-    <p class="maker">Northern Motors &middot; Welding department</p>
+    <p class="maker">Northern Motors</p>
     <h1>Shift</h1>
-    <p class="lede">A leadership simulator for the shop floor. A few weeks at a time, forty hours a week, a crew of seven, and a paint department that wants six bodies.</p>
+    <p class="lede">A leadership simulator for the shop floor. A few weeks at a time, forty hours a week, a crew with problems whose causes are hidden, and a plant that does not wait for you.</p>
     <div class="bay"><div class="legend"><span>Fit-up</span><span>Body weld</span><span>Finish</span><span>Paint</span></div><canvas data-bay="demo" aria-label="The welding bay at Northern Motors, everyone at work"></canvas><p class="caption" data-caption>Tap someone to see how they look from across the bay.</p></div>
     ${STORAGE_OK ? '' : '<p class="warn">This browser will not keep anything for this page, so progress is lost when you leave. Copy a save code from the menu before you go, or open Shift in its own tab.</p>'}
     ${banner ? `<p class="warn">${esc(banner)}</p>` : ''}
     <div class="stack">
-      ${saved ? '<button class="btn primary" data-act="continue">Continue</button>' : '<button class="btn primary" data-act="new">Start the Supervisor track</button>'}
+      ${saved ? '<button class="btn primary" data-act="continue">Continue</button>' : '<button class="btn primary" data-act="new">Start: who are you here?</button>'}
       ${saved ? (pending?.act === 'new' ? `<p class="warn">This wipes the track on this device: every module played, every debrief. A save code from the menu keeps a copy.</p><div class="row"><button class="btn" data-act="new">Yes, start over</button><button class="btn quiet" data-act="cancel">Keep it</button></div>` : '<button class="btn" data-act="ask-new">Start over</button>') : ''}
       <button class="btn" data-act="load-code">Load a save code</button>
       ${install ? '<button class="btn" data-act="install">Install on this device</button>' : ''}
@@ -73,8 +74,10 @@ function loadBox() {
 function trackScreen() {
   const t = trackView(save);
   return `<main class="screen">
-    <div class="stack"><p class="label">Northern Motors &middot; ${esc(t.title)}</p><h2>The welding department</h2></div>
+    <div class="stack"><p class="label">Northern Motors &middot; ${esc(t.title)}</p><h2>${t.you ? `${esc(t.you.seat)}, ${esc(t.you.department)}` : 'The welding department'}</h2></div>
+    ${t.you ? youCard(t.you) : ''}
     <p class="lede">${esc(t.intro)}</p>
+    ${t.you ? `<p class="soft"><span class="label">Your path</span><br>The order below is built from your profile: what you want to work on first, what your seat leans on next, and what you called a strength last, as a check. Your coach can open any module.</p>` : ''}
     ${banner ? `<p class="banner">${esc(banner)}</p>` : ''}
     ${t.inRun ? `<div class="banner info row"><span>${t.inRun.over ? `Your last run of ${esc(t.inRun.title)} has ended.` : `You are in week ${t.inRun.week} of ${esc(t.inRun.title)}.`}</span><button class="btn" data-act="resume">${t.inRun.over ? 'See how it went' : 'Back to it'}</button></div>` : ''}
     <div class="ladder">${t.modules.map(rung).join('')}</div>
@@ -91,8 +94,52 @@ function rung(m) {
   if (m.wins) chips.push(`<span class="chip good">Got through ${m.wins}</span>`);
   if (m.debriefed) chips.push('<span class="chip amber">Debriefed</span>');
   if (m.signedOff) chips.push(`<span class="chip good">Signed off: ${esc(m.signedOff.coach)}</span>`);
-  const inner = `<span class="n">${m.n}</span><span class="body"><h3>${esc(m.title)}</h3><span class="soft">${esc(m.teaches)} &middot; ${m.weeks} weeks</span>${chips.length ? `<span class="chips">${chips.join('')}</span>` : ''}${m.open ? '' : `<span class="soft">${esc(m.why)}</span>`}</span>`;
+  const inner = `<span class="n">${m.n}</span><span class="body"><h3>${esc(m.title)}</h3><span class="soft">${esc(m.teaches)} &middot; ${m.weeks} weeks</span><span class="chips">${m.focus.map((f) => `<span class="chip focus">${esc(f)}</span>`).join('')}</span>${m.because ? `<span class="soft">${esc(m.because)}</span>` : ''}${chips.length ? `<span class="chips">${chips.join('')}</span>` : ''}${m.open ? '' : `<span class="soft">${esc(m.why)}</span>`}</span>`;
   return m.open ? `<button class="rung" data-act="brief" data-id="${m.id}">${inner}</button>` : `<div class="rung locked">${inner}</div>`;
+}
+
+function youCard(y) {
+  return `<section class="you"><div class="row" style="justify-content:space-between"><p class="label">Your profile${y.name ? ` &middot; ${esc(y.name)}` : ''}</p><button class="btn quiet small" data-act="profile">Change</button></div>
+    <p>${esc(y.seat)} in ${esc(y.department)} (${esc(y.group)}, under ${esc(y.manager)}).${y.tied.length ? ` Also tied to ${esc(y.tied.join(', '))}.` : ''}</p>
+    ${y.work.length ? `<p><span class="label">Want to work on</span><br>${esc(y.work.join(', '))}</p>` : ''}
+    ${y.strengths.length ? `<p><span class="label">Strengths</span><br>${esc(y.strengths.join(', '))}</p>` : ''}
+    ${y.written ? '' : `<p class="soft">Every module is written in the welding bay so far. You play them from there; the people screen puts ${esc(y.department)} and its neighbours first.</p>`}
+  </section>`;
+}
+
+// ================================================================ the profile
+// "Log in or create a profile": the seat, the department, what is tied to it,
+// and the self-rated strengths and areas to work on. The path is built from it.
+function profileScreen() {
+  draft = draft || (save?.profile ? { ...save.profile } : { seat: '', department: '', tied: [], strengths: [], work: [], name: '' });
+  const v = profileView(draft);
+  const chosen = (list, id) => list.includes(id);
+  const area = (a, field) => {
+    const on = chosen(draft[field], a.id);
+    const other = field === 'strengths' ? 'work' : 'strengths';
+    const blocked = !on && (draft[field].length >= v.limit || chosen(draft[other], a.id));
+    return `<button class="check ${on ? 'on' : 'off'}" data-pick="${field}" data-id="${a.id}" aria-pressed="${on}" ${blocked ? 'disabled' : ''}><span class="box"></span><span>${esc(a.label)}<span class="why">${esc(a.about)}</span></span></button>`;
+  };
+  const areas = (field) => v.families.map((f) => `<p class="label">${esc(f.name)}</p><div class="checklist">${f.areas.map((a) => area(a, field)).join('')}</div>`).join('');
+  const ready = draft.seat && draft.department;
+  return `<main class="screen">
+    <div><button class="btn quiet" data-act="${save?.profile ? 'track' : 'title'}">${save?.profile ? 'Back to the track' : 'Back'}</button></div>
+    <div class="stack"><p class="label">Northern Motors</p><h2>Who are you here?</h2></div>
+    <p class="soft">This shapes which modules come first and what the screens show. It is not a test. Your coach sees it, and you can change it any time.</p>
+    ${banner ? `<p class="warn">${esc(banner)}</p>` : ''}
+    <section><p class="label">Your name, for the debrief (optional)</p><input id="pname" type="text" autocomplete="name" value="${esc(draft.name)}" data-draft="name"></section>
+    <section><p class="label">Your seat</p><div class="opts">${v.seats.map((x) => `<button class="opt ${draft.seat === x.id ? 'on' : ''}" data-pick="seat" data-id="${x.id}"><span class="dot"></span><span class="t">${esc(x.label)}<span class="why">${esc(x.about)}</span></span></button>`).join('')}</div></section>
+    <section><p class="label">Your department</p><div class="opts">${v.departments.map((d) => `<button class="opt ${draft.department === d.id ? 'on' : ''}" data-pick="department" data-id="${d.id}"><span class="dot"></span><span class="t">${esc(d.name)} <span class="soft">&middot; ${esc(d.group)}</span><span class="why">${esc(d.what)}</span></span></button>`).join('')}</div>
+      <p class="soft">The modules are written in ${esc(v.writtenBay)} so far. Pick your real department anyway: it sets your neighbours and your path, and it is where the next modules get written.</p></section>
+    ${draft.department ? `<section><p class="label">Departments tied to you</p>
+      ${v.byLine.length ? `<p class="soft">By the line: ${v.byLine.map((d) => `${esc(d.name)} (${d.how})`).join(', ')}. Always counted.</p>` : ''}
+      <p class="soft">Anything else you deal with every week:</p>
+      <div class="checklist">${v.others.map((d) => `<button class="check ${chosen(draft.tied, d.id) ? 'on' : 'off'}" data-pick="tied" data-id="${d.id}" aria-pressed="${chosen(draft.tied, d.id)}"><span class="box"></span><span>${esc(d.name)}</span></button>`).join('')}</div></section>` : ''}
+    <section><p class="label">What you want to work on (up to ${v.limit})</p><p class="soft">Your own call. These modules come first.</p>${areas('work')}</section>
+    <section><p class="label">What you would call a strength (up to ${v.limit})</p><p class="soft">These come last, as a check: a self-rating is a claim, and the floor gets a vote.</p>${areas('strengths')}</section>
+    ${ready ? '' : '<p class="soft">Pick a seat and a department to go on. The rest is optional.</p>'}
+    <button class="btn primary block" data-act="profile-save" ${ready ? '' : 'disabled'}>${save?.profile ? 'Save the changes' : 'Start the track'}</button>
+  </main>`;
 }
 
 function exportBox() {
@@ -102,13 +149,15 @@ function exportBox() {
 
 // ================================================================ the brief
 function briefScreen() {
-  const b = briefView(briefId);
+  const b = briefView(briefId, save.profile);
   const m = trackView(save).modules.find((x) => x.id === briefId);
   const other = save.run && !save.run.over ? save.run : null;
   return `<main class="screen">
     <div><button class="btn quiet" data-act="track">Back to the track</button></div>
     <div class="stack"><p class="label">Module ${m.n} of ${TRACK.modules.length} &middot; Handbook ${esc(b.handbook)}</p><h2>${esc(b.title)}</h2><p class="soft">${esc(b.teaches)} &middot; ${b.weeks} weeks</p></div>
+    ${b.seat ? `<p class="banner info">${esc(b.seat)}</p>` : ''}
     <div class="prose">${b.brief.map((p) => `<p>${esc(p)}</p>`).join('')}</div>
+    <section><p class="label">What this module trains</p>${b.focus.map((f) => `<p><strong>${esc(f.label)}.</strong> ${esc(f.about)}</p>`).join('')}</section>
     <section><p class="label">To get through it</p><p>${esc(b.goal)}</p></section>
     <section><p class="label">Ways it goes wrong</p><ul class="notes">${b.lose.map((l) => `<li>${esc(l)}</li>`).join('')}</ul></section>
     <section><p class="label">Your crew</p><div class="people">${crewStrip().map((c) => `<div class="person"><canvas data-portrait="${c.id}" aria-hidden="true"></canvas><div class="body"><span class="name">${esc(c.name)}</span><span class="soft">${esc(c.station)}${c.lead ? ' &middot; lead' : ''}</span><span>${esc(c.about)}</span></div></div>`).join('')}</div></section>
@@ -197,8 +246,9 @@ function ticket(c) {
 }
 
 function crewTab(v) {
-  const pv = peopleView();
-  const plant = `<section><h2>Beyond the bay</h2><p class="soft">${esc(pv.about)}</p>
+  const pv = peopleView(save.profile);
+  const yours = pv.yours.length ? `<section><h2>Your corner of the plant</h2><div class="people">${pv.yours.map((d) => `<div class="person nopic"><div class="body"><span class="name">${esc(d.name)} <span class="chip">${esc(d.how)}</span></span><span class="soft">${esc(d.supervisor === 'you, in the welding seat' ? 'Supervisor: the seat this module is played in' : `Supervisor ${d.supervisor}`)} &middot; ${d.people} people &middot; ${esc(d.stations.join(', '))}</span><span>${esc(d.what)}</span></div></div>`).join('')}</div></section>` : '';
+  const plant = `${yours}<section><h2>Beyond the bay</h2><p class="soft">${esc(pv.about)}</p>
     <p><span class="label">The line, in order</span><br>${pv.flow.map(esc).join(' &rarr; ')} &rarr; out the door</p>
     <ul class="notes">${pv.vehicles.map((x) => `<li><strong>${esc(x.name)}:</strong> ${esc(x.what)}</li>`).join('')}</ul>
     ${pv.groups.map((g) => `<p class="label">${esc(g.title)}</p><div class="people">${g.people.map((p) => `<div class="person nopic"><div class="body"><span class="name">${esc(p.name)}</span><span class="soft">${esc(p.role)}</span><span>${esc(p.about)}</span></div></div>`).join('')}</div>`).join('')}</section>`;
@@ -250,13 +300,14 @@ function endScreen() {
     <section><h3>How it went</h3><ul class="checks">${o.checks.map((c) => `<li><span class="stamp ${c.ok ? 'met' : 'missed'}">${c.ok ? 'Met' : 'Missed'}</span><span>${esc(c.label)}</span></li>`).join('')}</ul></section>
     <section><h3>What came from what</h3>${s.trace.length ? `<ul class="trace">${s.trace.map((t) => `<li><span><span class="label">Week ${t.week}</span> ${esc(t.text)}</span><span class="because">${esc(t.because)}</span></li>`).join('')}</ul>` : '<p class="soft">Nothing landed on you this time: no resignations, no injuries, nothing that blew up. The Friday reports in the log show how close it came.</p>'}</section>
     ${o.carried.length ? `<section><h3>Still open</h3><ul class="notes">${o.carried.map((c) => `<li>${esc(c)}</li>`).join('')}</ul></section>` : ''}
-    <section class="profile"><div class="row" style="justify-content:space-between"><h3>Practice profile</h3><span class="chip amber">${esc(p.label)}</span></div>
-      <p class="soft">How your decisions read against what you knew when you made them, on the same 0 to 25 scale as the behaviour assessment. A conversation starter for the debrief, never a score on a person.</p>
-      ${p.domains.map((d) => `<div class="dom"><span>${esc(d.label)}</span><span class="score">${d.score === null ? '' : `${d.score} &middot; `}${esc(d.band)}</span><div class="meter"><span style="width:${d.score === null ? 0 : (d.score / 25 * 100).toFixed(1)}%"></span></div>
-        <p class="soft explain">${esc(d.explain)}</p>${d.evidence.length ? `<ul class="notes">${d.evidence.map((e) => `<li>Week ${e.week}: ${esc(e.note)} <span class="num">${e.pts > 0 ? '+' : ''}${e.pts}</span></li>`).join('')}</ul>` : ''}</div>`).join('')}
-      ${p.overall !== null ? `<p><span class="label">Overall, supervisor weighting</span><br><span class="num">${p.overall}</span> of 100</p>` : `<p class="banner info">${esc(p.why)}</p>`}
-      ${p.strengths.length ? `<p class="label">What you did well</p><ul class="notes">${p.strengths.map((n) => `<li>${esc(n.note)}${n.n > 1 ? ` (${n.n} times)` : ''}</li>`).join('')}</ul>` : ''}
-      ${p.gaps.length ? `<p class="label">What to talk about</p><ul class="notes">${p.gaps.map((n) => `<li>${esc(n.note)}${n.n > 1 ? ` (${n.n} times)` : ''}</li>`).join('')}</ul>` : ''}
+    <section class="profile"><div class="row" style="justify-content:space-between"><h3>What this module trains</h3><span class="chip amber">${esc(p.label)}</span></div>
+      <p class="soft">How your decisions read against what you knew when you made them, on this module's focus only. The moves below are what the module looks for; the list is what it saw. A conversation starter for the debrief, never a score on a person.</p>
+      ${p.focus.map((f) => `<div class="dom"><span>${esc(f.label)}</span><span class="score read-${f.read.id}">${esc(f.read.label)}${f.read.id === 'thin' ? '' : ` &middot; ${f.n} decisions`}</span>
+        <p class="soft explain">${esc(f.about)} The moves: ${esc(f.moves.join('; ').toLowerCase())}.</p>
+        ${f.made.length ? `<p class="label">Made</p><ul class="notes">${f.made.map((e) => `<li>Week ${e.week}: ${esc(e.note)}</li>`).join('')}</ul>` : ''}
+        ${f.missed.length ? `<p class="label">Missed</p><ul class="notes">${f.missed.map((e) => `<li>Week ${e.week}: ${esc(e.note)}</li>`).join('')}</ul>` : ''}
+        ${!f.made.length && !f.missed.length ? '<p class="soft">Nothing clear either way. A run where you did not touch the thing the module is about is itself worth a question.</p>' : ''}</div>`).join('')}
+      ${p.also.length ? `<p class="label">Also on the floor, unrated</p><ul class="notes">${p.also.map((a) => `<li><strong>${esc(a.label)}</strong>: ${a.made} made, ${a.missed} missed${a.notes.length ? `. ${esc(a.notes.map((n) => n.note).join('; '))}.` : ''}</li>`).join('')}</ul>` : ''}
     </section>
     <div class="stack"><button class="btn primary" data-act="debrief" data-id="${s.moduleId}">Debrief with your coach</button>
     <button class="btn" data-act="replay" data-id="${s.moduleId}">Play it again (new week, new causes)</button>
@@ -273,7 +324,7 @@ function debriefScreen() {
     <div><button class="btn quiet" data-act="track">Back to the track</button></div>
     <div class="stack"><p class="label">Debrief &middot; ${esc(m.title)} &middot; Handbook ${esc(m.handbook)}</p><h2>Debrief</h2></div>
     <p class="soft">Ten minutes with your coach after a run. Answer in your own words. The answers stay on this device and travel in the save code.</p>
-    ${t.last ? `<p class="banner info">Last run: ${t.last.win ? 'you got through it' : 'you did not get through it'}${t.last.overall !== null && t.last.overall !== undefined ? `, practice score ${t.last.overall} of 100` : ''}. The end report and the log have the detail.</p>` : '<p class="warn">Play the module before debriefing it.</p>'}
+    ${t.last ? `<p class="banner info">Last run: ${t.last.win ? 'you got through it' : 'you did not get through it'}${t.last.reads?.length ? `. ${esc(t.last.reads.map((r) => `${MODULES[debriefId].focus.includes(r.id) ? r.id : r.id}: ${r.read}`).join('; '))}` : ''}. The end report and the log have the detail.</p>` : '<p class="warn">Play the module before debriefing it.</p>'}
     ${m.debrief.questions.map((q, i) => `<div class="q"><label for="dq${i}">${esc(q)}</label><textarea id="dq${i}" data-field="a${i}">${esc(d.answers[i] || '')}</textarea></div>`).join('')}
     <div class="q"><label for="dcommit">${esc(m.debrief.commitment)}</label><textarea id="dcommit" data-field="commitment">${esc(d.commitment || '')}</textarea>
       ${d.by ? `<span class="soft">Follow up by ${esc(d.by)}: ninety days from when you wrote it.</span>` : '<span class="soft">A follow-up date ninety days out is set when you write it.</span>'}</div>
@@ -288,7 +339,8 @@ function debriefText(id) {
   const m = MODULES[id];
   const t = save.track.modules[id];
   const d = t.debrief || { answers: [] };
-  return [`Shift debrief: ${m.title}`, t.last ? `Last run: ${t.last.win ? 'got through it' : 'did not get through it'}. Practice score ${t.last.overall ?? 'n/a'} (practice, not assessment).` : '',
+  const who = save.profile ? `${save.profile.name ? `${save.profile.name}, ` : ''}${save.profile.seat}, ${save.profile.department}` : '';
+  return [`Shift debrief: ${m.title}`, who, t.last ? `Last run: ${t.last.win ? 'got through it' : 'did not get through it'}. ${(t.last.reads || []).map((r) => `${r.id} ${r.read}`).join('; ')} (practice, not assessment).` : '',
     ...m.debrief.questions.map((q, i) => `\n${q}\n${d.answers[i] || '(no answer)'}`), `\n${m.debrief.commitment}\n${d.commitment || '(none yet)'}`, d.by ? `Follow up by ${d.by}.` : '',
     t.signedOff ? `Signed off by ${t.signedOff.coach}.` : 'Not signed off yet.'].filter(Boolean).join('\n');
 }
@@ -298,6 +350,8 @@ function render() {
   if (!save && screen !== 'title') screen = 'title';
   let html;
   if (screen === 'title') html = titleScreen();
+  else if (screen === 'profile') html = profileScreen();
+  else if (screen === 'track' && !save.profile) { screen = 'profile'; html = profileScreen(); }
   else if (screen === 'track') html = trackScreen();
   else if (screen === 'brief') html = briefScreen();
   else if (screen === 'debrief') html = debriefScreen();
@@ -335,11 +389,16 @@ function act(t) {
   const a = t.dataset.act;
   if (a !== 'cancel' && !a.startsWith('ask-')) pending = null;
   switch (a) {
-    case 'new': save = newSave(); persist(); screen = 'track'; codeBox = null; banner = null; return;
+    case 'new': save = newSave(); persist(); draft = null; screen = 'profile'; codeBox = null; banner = null; return;
+    case 'profile': draft = null; screen = 'profile'; banner = null; scrollTo(0, 0); return;
+    case 'profile-save': {
+      try { save = setProfile(save, { ...draft, since: save.profile?.since || new Date().toISOString().slice(0, 10) }); persist(); draft = null; banner = null; screen = 'track'; scrollTo(0, 0); } catch (e) { banner = e.message; }
+      return;
+    }
     case 'ask-new': pending = { act: 'new' }; return;
     case 'ask-abandon': pending = { act: 'abandon' }; return;
     case 'cancel': pending = null; codeBox = null; return;
-    case 'continue': save = loadSaved(); screen = save?.run && !save.run.over ? 'week' : 'track'; tab = 'week'; return;
+    case 'continue': save = loadSaved(); screen = save?.run && !save.run.over ? 'week' : save?.profile ? 'track' : 'profile'; tab = 'week'; return;
     case 'title': screen = 'title'; codeBox = null; return;
     case 'track': screen = 'track'; modal = null; codeBox = null; return;
     case 'resume': screen = save.run.over ? 'end' : 'week'; tab = 'week'; return;
@@ -393,7 +452,7 @@ function run() {
 }
 
 app.addEventListener('click', (e) => {
-  const t = e.target.closest('[data-act],[data-tab],[data-action],[data-opt],[data-skip]');
+  const t = e.target.closest('[data-act],[data-tab],[data-action],[data-opt],[data-skip],[data-pick]');
   if (!t || busy) return;
   if (t.tagName === 'SUMMARY') e.preventDefault();   // the page owns the open state
   busy = true;
@@ -403,7 +462,14 @@ app.addEventListener('click', (e) => {
     else if (t.dataset.action === 'run') run();
     else if (t.dataset.opt) { plan.picks[t.dataset.card] = t.dataset.opt; keepScroll = true; }
     else if (t.dataset.skip) { const id = t.dataset.skip; plan.skip = plan.skip.includes(id) ? plan.skip.filter((x) => x !== id) : [...plan.skip, id]; keepScroll = true; }
-    else { act(t); if (/^(routine-|floor-|howto-)/.test(t.dataset.act || '')) keepScroll = true; }
+    else if (t.dataset.pick) {
+      const f = t.dataset.pick; const id = t.dataset.id;
+      draft.name = app.querySelector('#pname')?.value ?? draft.name;
+      if (f === 'seat' || f === 'department') { draft[f] = id; if (f === 'department') draft.tied = draft.tied.filter((d) => d !== id); }
+      else draft[f] = draft[f].includes(id) ? draft[f].filter((x) => x !== id) : [...draft[f], id];
+      keepScroll = true;
+    }
+    else { if (t.dataset.act === 'profile-save' && draft) draft.name = app.querySelector('#pname')?.value ?? draft.name; act(t); if (/^(routine-|floor-|howto-)/.test(t.dataset.act || '')) keepScroll = true; }
     const y = scrollY;
     render();
     if (keepScroll) scrollTo(0, y);

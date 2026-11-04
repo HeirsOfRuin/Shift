@@ -4,7 +4,7 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { newModule, advance, hoursFor, weekView, TRACK, MODULES } from '../src/engine/game.js';
+import { newModule, advance, hoursFor, weekView, TRACK, MODULES, AREAS } from '../src/engine/game.js';
 import { decide, POLICIES } from '../sim/bot.js';
 
 function* runs(seeds = 6) {
@@ -76,11 +76,30 @@ test('a plan cannot pick an option a card does not have', () => {
   assert.throws(() => advance(s, { picks: { cover: 'd9' } }), /no option/);
 });
 
-test('the practice profile stays on the 0 to 25 scale and is labelled practice', () => {
+test('the practice read covers only the module\'s focus areas, gives no overall number, and is labelled practice', () => {
   for (const r of runs(2)) {
     const s = playThrough(r);
-    for (const d of s.outcome.profile.domains) if (d.score !== null) assert.ok(d.score >= 0 && d.score <= 25, `${d.id} ${d.score}`);
-    assert.match(s.outcome.profile.label, /Practice/);
+    const p = s.outcome.profile;
+    assert.match(p.label, /Practice/);
+    assert.equal(p.overall, undefined);
+    assert.deepEqual(p.focus.map((f) => f.id), MODULES[r.module].focus);
+    for (const f of p.focus) {
+      assert.ok(['solid', 'getting', 'notyet', 'thin'].includes(f.read.id), f.read.id);
+      if (f.n < 3) assert.equal(f.read.id, 'thin', `${r.module}: a read from ${f.n} decisions`);
+    }
+    for (const a of p.also) assert.ok(!MODULES[r.module].focus.includes(a.id));
+  }
+});
+
+test('every scored decision names a focus area the catalogue has', () => {
+  for (const r of runs(1)) for (const d of playThrough(r).decisions) assert.ok(AREAS[d.area], `${r.module}: scored "${d.note}" on unknown area ${d.area}`);
+});
+
+test('every module names one or two focus areas, and every area gets at least three decisions from some style', () => {
+  for (const id of TRACK.modules) assert.ok(MODULES[id].focus.length >= 1 && MODULES[id].focus.length <= 2, id);
+  for (const module of TRACK.modules) for (const area of MODULES[module].focus) {
+    const best = Math.max(...POLICIES.map((policy) => playThrough({ module, policy, seed: 3 }).outcome.profile.focus.find((f) => f.id === area).n));
+    assert.ok(best >= 3, `${module} ${area}: at most ${best} decisions in any style`);
   }
 });
 

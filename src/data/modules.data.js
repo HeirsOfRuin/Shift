@@ -19,7 +19,7 @@ const R = {
     id: 'appraisals', cue: 'deadline', title: 'Four appraisals due',
     body: "Marion's office sent the second reminder Monday. Four appraisals for your crew, due at the end of the month. Done properly they take the better part of an hour each, and the people getting them can tell when they weren't.",
     options: [
-      { id: 'do', label: 'Do them properly this week', hours: 3, kind: 'do', effects: [{ trust: 0.03, who: 'all' }], score: [['Accountability Management', 1, 'Kept a promise to HR and the crew']] },
+      { id: 'do', label: 'Do them properly this week', hours: 3, kind: 'do', effects: [{ trust: 0.03, who: 'all' }], score: [['D1', 1, 'Kept a promise to HR and the crew']] },
       { id: 'later', label: 'Push them to next month', hours: 0, kind: 'skip', effects: [{ floorLoad: { label: "HR's follow-up on the appraisals you pushed off", hours: 2, inWeeks: 2 } }, { queue: { weeks: 2, effects: [{ managerTrust: -0.06 }], line: "Marion's office copied Dana on the third reminder about your appraisals." }, because: 'You put the appraisals off' }] },
     ],
   },
@@ -27,7 +27,7 @@ const R = {
     id: 'engReview', cue: 'deadline', title: 'Engineering wants a welder to look at a drawing',
     body: "Ben in manufacturing engineering has a revised fixture for the Drayman Crew cab and wants a welder's eye on it before it goes to the toolroom. An hour and a half at his bench. He asked nicely, which with Ben means it matters.",
     options: [
-      { id: 'do', label: 'Go and look at it with him', hours: 1.5, kind: 'do', effects: [{ line: 'You found a clamp that sits right where the torch has to go on the B-pillar seam. Ben took the drawing back and thanked you twice.' }], score: [['Cross-Functional Awareness', 2, 'Gave engineering a welder before it was too late']] },
+      { id: 'do', label: 'Go and look at it with him', hours: 1.5, kind: 'do', effects: [{ line: 'You found a clamp that sits right where the torch has to go on the B-pillar seam. Ben took the drawing back and thanked you twice.' }], score: [['E2', 2, 'Gave engineering a welder before it was too late']] },
       { id: 'skip', label: 'Tell him it looks fine from here', hours: 0, kind: 'skip', effects: [{ queue: { weeks: 2, effects: [{ defects: 1 }], line: 'The new Drayman Crew fixture arrived. The clamp on the B-pillar seam sits right where the torch has to go, and the welds there show it.', trace: 'trace.fixture' }, because: 'You skipped the fixture review' }] },
     ],
   },
@@ -51,8 +51,8 @@ const R = {
     id: 'joelGauge', cue: 'people', who: 'joel', title: '{c} has a question he has been sitting on',
     body: "{c} caught you at the coffee machine. He isn't sure he's reading the gap gauge right on the finish checks, and he doesn't want to ask Donna a third time. Doing it properly at the bench is an hour.",
     options: [
-      { id: 'do', label: 'Show him at the bench', hours: 1, kind: 'do', effects: [{ skill: 0.05, who: 'joel' }, { trust: 0.05, who: 'joel' }], score: [['Early Coaching & Guidance', 2, 'Answered a new hand at the bench']] },
-      { id: 'skip', label: 'Tell him to ask Donna', hours: 0, kind: 'skip', effects: [{ floorLoad: { label: 'Rework on finish checks Joel was not sure about', hours: 1, weeks: 2 } }, { trust: -0.03, who: 'joel' }, { line: "{c} didn't ask Donna. He didn't ask anyone." }], score: [['Early Coaching & Guidance', -1, "Sent a new hand's question somewhere else"]] },
+      { id: 'do', label: 'Show him at the bench', hours: 1, kind: 'do', effects: [{ skill: 0.05, who: 'joel' }, { trust: 0.05, who: 'joel' }], score: [['D4', 2, 'Answered a new hand at the bench']] },
+      { id: 'skip', label: 'Tell him to ask Donna', hours: 0, kind: 'skip', effects: [{ floorLoad: { label: 'Rework on finish checks Joel was not sure about', hours: 1, weeks: 2 } }, { trust: -0.03, who: 'joel' }, { line: "{c} didn't ask Donna. He didn't ask anyone." }], score: [['D4', -1, "Sent a new hand's question somewhere else"]] },
     ],
   },
   kevVacation: {
@@ -83,7 +83,7 @@ const R = {
     id: 'eyewash', cue: 'safety', title: 'An action from the safety committee',
     body: "Last month's safety committee left you one action: check the eyewash station by booth one. It has been on the list for three weeks.",
     options: [
-      { id: 'do', label: 'Check it today', hours: 0.5, kind: 'do', effects: [{ safetyDebt: -0.01 }, { line: 'The eyewash bottles were out of date. You swapped them.' }], score: [['Accountability Management', 1, 'Closed a safety action']] },
+      { id: 'do', label: 'Check it today', hours: 0.5, kind: 'do', effects: [{ safetyDebt: -0.01 }, { line: 'The eyewash bottles were out of date. You swapped them.' }], score: [['C2', 1, 'Closed a safety action']] },
       { id: 'skip', label: 'Leave it on the list', hours: 0, kind: 'skip', effects: [{ safetyDebt: 0.01 }] },
     ],
   },
@@ -117,7 +117,7 @@ export const TRACK = {
 export const MODULES = {
   // -------------------------------------------------------------------- 1
   'the-week': {
-    title: 'The week', handbook: '2: When everything is urgent, nothing is strategic', weeks: 6, goal: 'main',
+    title: 'The week', focus: ['A1', 'A2'], handbook: '2: When everything is urgent, nothing is strategic', weeks: 6, goal: 'main',
     teaches: 'Time, priorities, and what you refuse',
     brief: [
       "It's Monday and the inbox is already full. Appraisals, a drawing from engineering, a rep with free coffee, a page Dana wants by Thursday. None of it is unreasonable on its own, and all of it together is about fifty hours.",
@@ -145,7 +145,7 @@ export const MODULES = {
 
   // -------------------------------------------------------------------- 2
   'late-one': {
-    title: 'The late one', handbook: '7: Culture is what you tolerate under pressure', weeks: 8, goal: 'main',
+    title: 'The late one', focus: ['D2'], handbook: '7: Culture is what you tolerate under pressure', weeks: 8, goal: 'main',
     teaches: 'Accountability that fits the reason',
     brief: [
       "It's the first week of March. The Drayman line is running ahead for once, and the Surveyor Rescue that ships at the end of the month is the one Russ asks about every morning before he has his coat off.",
@@ -173,7 +173,7 @@ export const MODULES = {
 
   // -------------------------------------------------------------------- 3
   loop: {
-    title: 'The loop', handbook: '7: Culture is what you tolerate under pressure', weeks: 8, goal: 'main',
+    title: 'The loop', focus: ['D3'], handbook: '7: Culture is what you tolerate under pressure', weeks: 8, goal: 'main',
     teaches: 'Conflict that keeps coming back',
     brief: [
       "Marisol and Donna aren't speaking, or they're speaking in the way that's worse than not. Marisol's bodies come back from finish with more red tags than they did a month ago, and she says Donna's been picking at her. Donna says she's been doing her job.",
@@ -201,7 +201,7 @@ export const MODULES = {
 
   // -------------------------------------------------------------------- 4
   firefighting: {
-    title: 'Firefighting', handbook: '1: Firefighting is a leadership failure, not a badge of honour', weeks: 8, goal: 'main',
+    title: 'Firefighting', focus: ['B3'], handbook: '1: Firefighting is a leadership failure, not a badge of honour', weeks: 8, goal: 'main',
     teaches: 'Fixing the fire, or the thing that keeps lighting it',
     brief: [
       "The jig on body weld two keeps walking. Not much: a millimetre and a half by Wednesday, enough that Marisol's seams on the Hauler roof start to wander and Donna starts tagging them. You know how to fix it. You've re-squared that jig more times than you've had lunch at the table.",
@@ -229,7 +229,7 @@ export const MODULES = {
 
   // -------------------------------------------------------------------- 5
   pulled: {
-    title: 'Pulled off the floor', handbook: '6: Leaders build leaders, not just output', weeks: 8, goal: 'held',
+    title: 'Pulled off the floor', focus: ['A4', 'D1'], handbook: '6: Leaders build leaders, not just output', weeks: 8, goal: 'held',
     teaches: 'The bench: what you built before you left',
     brief: [
       'The customer audit is in three weeks, and Dana has put you on the team. For weeks three, four and five you will be in a room with a binder and an auditor most of every day. You will see the floor at lunch, if you eat lunch.',
@@ -245,31 +245,31 @@ export const MODULES = {
       { id: 'scheduler', week: 1, cue: 'develop', who: 'kev', title: "{c} could take Jess's numbers",
         body: "Every week you give Jess the capacity numbers. It's an hour, and it's the hour that tells you what next week looks like. {c} has watched you do it a hundred times. He has never done it.",
         options: [
-          { id: 'teach', label: 'Sit with him and hand it over', hours: 1.5, kind: 'delegate', effects: [{ bench: 0.15 }, { removeRoutine: 'scheduler' }, { morale: 0.03, who: 'kev' }], score: [['Emotional Awareness', 1, 'Saw what only you were holding'], ['Culture & Organizational Influence', 2, 'Handed over a real piece of the job']] },
-          { id: 'keep', label: 'Keep doing it yourself', hours: 0, kind: 'keep', score: [['Emotional Awareness', -1, 'Kept a piece of the job only you can do']] },
+          { id: 'teach', label: 'Sit with him and hand it over', hours: 1.5, kind: 'delegate', effects: [{ bench: 0.15 }, { removeRoutine: 'scheduler' }, { morale: 0.03, who: 'kev' }], score: [['A4', 2, 'Handed over a real piece of the job']] },
+          { id: 'keep', label: 'Keep doing it yourself', hours: 0, kind: 'keep', score: [['A4', -1, 'Kept a piece of the job only you can do']] },
         ] },
       { id: 'huddles', week: 1, cue: 'develop', who: 'kev', title: 'Let {c} run the huddles',
         body: 'The morning huddle is yours. Five minutes, every day. If {c} runs it, the crew starts looking at him first in the morning, which is the point.',
         options: [
-          { id: 'teach', label: 'Run the first two together, then hand it over', hours: 1, kind: 'delegate', effects: [{ bench: 0.15 }, { removeRoutine: 'huddles' }], score: [['Emotional Awareness', 1, 'Saw what only you were holding'], ['Culture & Organizational Influence', 2, 'Let the lead lead']] },
-          { id: 'keep', label: 'Keep running them', hours: 0, kind: 'keep', score: [['Emotional Awareness', -1, 'Kept a piece of the job only you can do']] },
+          { id: 'teach', label: 'Run the first two together, then hand it over', hours: 1, kind: 'delegate', effects: [{ bench: 0.15 }, { removeRoutine: 'huddles' }], score: [['A4', 2, 'Let the lead lead']] },
+          { id: 'keep', label: 'Keep running them', hours: 0, kind: 'keep', score: [['A4', -1, 'Kept a piece of the job only you can do']] },
         ] },
       { id: 'steps', week: 2, cue: 'develop', who: 'kev', title: 'Walk {c} through the hard conversations',
         body: "If someone is late three times while you're in the audit room, {c} is who they'll be late to. He doesn't know the steps, and he doesn't want to get them wrong in front of the crew.",
         options: [
-          { id: 'teach', label: 'Walk him through how you handle it', hours: 1.5, kind: 'delegate', effects: [{ bench: 0.15 }, { flag: 'kevSteps' }], score: [['Emotional Awareness', 1, 'Saw what only you were holding'], ['Early Coaching & Guidance', 2, 'Prepared the lead for the hard part']] },
-          { id: 'keep', label: 'Tell him to call you', hours: 0, kind: 'keep', score: [['Emotional Awareness', -1, 'Planned to be reachable instead of replaceable']] },
+          { id: 'teach', label: 'Walk him through how you handle it', hours: 1.5, kind: 'delegate', effects: [{ bench: 0.15 }, { flag: 'kevSteps' }], score: [['D1', 2, 'Prepared the lead for the hard part']] },
+          { id: 'keep', label: 'Tell him to call you', hours: 0, kind: 'keep', score: [['A4', -1, 'Planned to be reachable instead of replaceable']] },
         ] },
       { id: 'cross', week: 2, cue: 'develop', who: 'marisol', title: 'Show {c} the finish checks',
         body: "If Donna's off while you're away, finish slows to a crawl. {c} could cover the checks with an hour of showing.",
         options: [
-          { id: 'teach', label: 'Show her', hours: 1, kind: 'delegate', effects: [{ bench: 0.05 }, { skill: 0.03, who: 'marisol' }], score: [['Emotional Awareness', 1, 'Saw what only you were holding']] },
+          { id: 'teach', label: 'Show her', hours: 1, kind: 'delegate', effects: [{ bench: 0.05 }, { skill: 0.03, who: 'marisol' }], score: [['A4', 1, 'Saw what only you were holding']] },
           { id: 'keep', label: 'Hope Donna stays healthy', hours: 0, kind: 'keep' },
         ] },
       { id: 'announce', week: 2, cue: 'develop', who: 'kev', title: 'Tell the crew who is in charge',
         body: "The crew knows you'll be busy. They don't know what that means for them. Ten minutes at the huddle with {c} standing beside you would settle it.",
         options: [
-          { id: 'teach', label: 'Say it at the huddle with him there', hours: 0.5, kind: 'delegate', effects: [{ bench: 0.1 }], score: [['Emotional Awareness', 1, 'Saw what only you were holding'], ['Tone-Setting', 2, 'Made the handover visible']] },
+          { id: 'teach', label: 'Say it at the huddle with him there', hours: 0.5, kind: 'delegate', effects: [{ bench: 0.1 }], score: [['A4', 2, 'Made the handover visible']] },
           { id: 'keep', label: 'Let them work it out', hours: 0, kind: 'keep', effects: [{ bench: -0.05 }] },
         ] },
     ],
@@ -288,7 +288,7 @@ export const MODULES = {
 
   // -------------------------------------------------------------------- 6
   upstairs: {
-    title: 'Nobody upstairs', handbook: '4: Ownership without authority creates friction; 8: Leading up', weeks: 8, goal: 'main',
+    title: 'Nobody upstairs', focus: ['E1'], handbook: '4: Ownership without authority creates friction; 8: Leading up', weeks: 8, goal: 'main',
     teaches: 'Decision rights: what is yours, and what is not',
     brief: [
       'Dana is off for five weeks: a knee, done properly this time. Russ is covering her departments on top of his own, which means Russ is covering nothing very closely.',
@@ -304,22 +304,22 @@ export const MODULES = {
       { id: 'saturday', week: 2, cue: 'notYours', title: 'Saturday for the Rescue?',
         body: "A Saturday with three welders would put the Rescue back on its date. Overtime past eight hours a week needs a manager's signature under the overtime policy. Dana isn't here; Russ is, technically.",
         options: [
-          { id: 'sign', label: 'Approve it yourself and sort it out later', hours: 0.5, kind: 'decide', effects: [{ capacity: 1.2 }, { morale: -0.02, who: 'all' }, { queue: { weeks: 4, effects: [{ managerTrust: -0.1 }], line: 'Dana found the Saturday on the payroll report her first week back. She asked who signed it.', trace: 'trace.saturday' }, because: 'You signed overtime that needed a manager' }], score: [['Accountability Management', -1, 'Signed what was not yours to sign']] },
-          { id: 'russ', label: 'Put it to Russ today', hours: 0.5, kind: 'ask', effects: [{ chance: 0.6, then: [{ capacity: 1.2 }, { line: 'Russ signed the Saturday on Thursday night. Nobody complained about the overtime.' }], else: [{ line: "Russ didn't get to the Saturday request until Monday. The Saturday came and went." }] }], score: [['Cross-Functional Awareness', 2, 'Used the chain while Dana was away']] },
+          { id: 'sign', label: 'Approve it yourself and sort it out later', hours: 0.5, kind: 'decide', effects: [{ capacity: 1.2 }, { morale: -0.02, who: 'all' }, { queue: { weeks: 4, effects: [{ managerTrust: -0.1 }], line: 'Dana found the Saturday on the payroll report her first week back. She asked who signed it.', trace: 'trace.saturday' }, because: 'You signed overtime that needed a manager' }], score: [['E1', -1, 'Signed what was not yours to sign']] },
+          { id: 'russ', label: 'Put it to Russ today', hours: 0.5, kind: 'ask', effects: [{ chance: 0.6, then: [{ capacity: 1.2 }, { line: 'Russ signed the Saturday on Thursday night. Nobody complained about the overtime.' }], else: [{ line: "Russ didn't get to the Saturday request until Monday. The Saturday came and went." }] }], score: [['E1', 2, 'Used the chain while Dana was away']] },
           { id: 'no', label: 'No Saturday', hours: 0, kind: 'skip' },
         ] },
       { id: 'swap', week: 3, cue: 'yours', who: 'lyle', title: '{c} wants to swap two days',
         body: "{c} wants to trade two days with a fabricator for a family thing. Raymond's fine with it. Swaps inside the same pay band are a supervisor's call; the policy says so in as many words.",
         options: [
-          { id: 'yes', label: 'Approve it', hours: 0.25, kind: 'decide', effects: [{ morale: 0.05, who: 'lyle' }], score: [['Accountability Management', 2, 'Made the call that was yours']] },
-          { id: 'russ', label: 'Check with Russ first', hours: 0.5, kind: 'ask', effects: [{ morale: -0.03, who: 'lyle' }, { line: "Russ wrote back on Friday: 'Why are you asking me this?'" }], score: [['Emotional Awareness', -1, 'Sent up a call that was yours']] },
+          { id: 'yes', label: 'Approve it', hours: 0.25, kind: 'decide', effects: [{ morale: 0.05, who: 'lyle' }], score: [['E1', 2, 'Made the call that was yours']] },
+          { id: 'russ', label: 'Check with Russ first', hours: 0.5, kind: 'ask', effects: [{ morale: -0.03, who: 'lyle' }, { line: "Russ wrote back on Friday: 'Why are you asking me this?'" }], score: [['E1', -1, 'Sent up a call that was yours']] },
           { id: 'no', label: 'Say no', hours: 0, kind: 'skip', effects: [{ morale: -0.06, who: 'lyle' }, { trust: -0.05, who: 'lyle' }] },
         ] },
       { id: 'scrap', week: 4, cue: 'notYours', title: 'Scrap it or weld it?',
         body: "A Hauler roof panel came over from fab with a crease in it. Raymond says weld it, it'll paint out. Val is on vacation. Scrap calls belong to QC, and QC has a backup who is slow but exists.",
         options: [
-          { id: 'weld', label: 'Weld it and move on', hours: 0, kind: 'decide', effects: [{ chance: 0.5, then: [{ defects: 0.6 }, { line: "The crease didn't paint out. Theresa sent it back with a photo." }], else: [{ line: 'It painted out. Mostly.' }] }], score: [['Accountability Management', -1, "Made QC's call for them"]] },
-          { id: 'hold', label: "Hold it for QC's backup", hours: 0, kind: 'ask', effects: [{ capacity: -0.3 }, { line: "The panel sat on the rack until QC's backup signed it off Thursday afternoon." }], score: [['Cross-Functional Awareness', 2, 'Left the call with the people who own it']] },
+          { id: 'weld', label: 'Weld it and move on', hours: 0, kind: 'decide', effects: [{ chance: 0.5, then: [{ defects: 0.6 }, { line: "The crease didn't paint out. Theresa sent it back with a photo." }], else: [{ line: 'It painted out. Mostly.' }] }], score: [['E1', -1, "Made QC's call for them"]] },
+          { id: 'hold', label: "Hold it for QC's backup", hours: 0, kind: 'ask', effects: [{ capacity: -0.3 }, { line: "The panel sat on the rack until QC's backup signed it off Thursday afternoon." }], score: [['E1', 2, 'Left the call with the people who own it']] },
         ] },
     ],
     pool: { perWeek: [0, 1], cards: pool('vendorDemo', 'joelGauge', 'jessForecast', 'supplierCall', 'eyewash') },
@@ -337,7 +337,7 @@ export const MODULES = {
 
   // -------------------------------------------------------------------- 7
   rush: {
-    title: 'Rush week', handbook: '7: Culture is what you tolerate under pressure', weeks: 8, goal: 'standard',
+    title: 'Rush week', focus: ['C1'], handbook: '7: Culture is what you tolerate under pressure', weeks: 8, goal: 'standard',
     teaches: 'Holding the standard when the number is short',
     brief: [
       'Corey landed the county: four Surveyor Rescues, delivered before the fire season, which means weeks two through five. A Rescue is half again the welding of a Drayman. Paint will want seven or eight bodies a week and you make six on a good one.',
@@ -353,8 +353,8 @@ export const MODULES = {
       { id: 'tack', week: 2, cue: 'shortcut', who: 'brent', title: '{c} wants to skip the tack check',
         body: "{c} says the tack check on the Rescue cab costs twenty minutes a body and he's never seen one fail. He isn't wrong about the twenty minutes.",
         options: [
-          { id: 'allow', label: 'Let it go for the rush', hours: 0, kind: 'allow', effects: [{ capacity: 0.35 }, { standard: -0.12 }, { flag: 'tackSkipped' }], score: [['Accountability Management', -1, 'Let a check go to make the number']] },
-          { id: 'hold', label: 'Keep the check and tell him why', hours: 0.5, kind: 'hold', effects: [{ standard: 0.03 }, { morale: -0.02, who: 'brent' }], score: [['Accountability Management', 2, 'Held the check under pressure']] },
+          { id: 'allow', label: 'Let it go for the rush', hours: 0, kind: 'allow', effects: [{ capacity: 0.35 }, { standard: -0.12 }, { flag: 'tackSkipped' }], score: [['C1', -1, 'Let a check go to make the number']] },
+          { id: 'hold', label: 'Keep the check and tell him why', hours: 0.5, kind: 'hold', effects: [{ standard: 0.03 }, { morale: -0.02, who: 'brent' }], score: [['C1', 2, 'Held the check under pressure']] },
         ] },
       { id: 'ot2', week: 2, cue: 'overtime', title: 'Saturday?',
         body: 'A Saturday with three welders is a body and a bit. It is also a Saturday.',
@@ -365,8 +365,8 @@ export const MODULES = {
       { id: 'lunch', week: 3, cue: 'shortcut', who: 'kev', title: 'The crew offers to weld through lunch',
         body: "{c} says the crew would rather weld through lunch this week and take it Friday. They mean it kindly. It's thirty degrees in the bay.",
         options: [
-          { id: 'allow', label: 'Let them', hours: 0, kind: 'allow', effects: [{ capacity: 0.4 }, { standard: -0.06 }, { safetyDebt: 0.01 }, { morale: -0.03, who: 'all' }], score: [['Tone-Setting', -1, 'Let them skip the break in the heat']] },
-          { id: 'hold', label: 'Thank them and keep lunch', hours: 0.25, kind: 'hold', effects: [{ morale: 0.02, who: 'all' }, { standard: 0.02 }], score: [['Tone-Setting', 2, 'Kept the break and said thank you']] },
+          { id: 'allow', label: 'Let them', hours: 0, kind: 'allow', effects: [{ capacity: 0.4 }, { standard: -0.06 }, { safetyDebt: 0.01 }, { morale: -0.03, who: 'all' }], score: [['C1', -1, 'Let them skip the break in the heat']] },
+          { id: 'hold', label: 'Thank them and keep lunch', hours: 0.25, kind: 'hold', effects: [{ morale: 0.02, who: 'all' }, { standard: 0.02 }], score: [['C1', 2, 'Kept the break and said thank you']] },
         ] },
       { id: 'ot3', week: 3, cue: 'overtime', title: 'Saturday again?',
         body: 'Paint wants eight. Another Saturday is a body and a bit, and it is the second one.',
@@ -377,14 +377,14 @@ export const MODULES = {
       { id: 'sleeves', week: 3, cue: 'shortcut', who: 'tyler', title: "{c}'s welding in a T-shirt",
         body: "It's thirty-one degrees in the bay and {c} has his sleeves off at booth three. Nobody's said anything, which means everybody has noticed.",
         options: [
-          { id: 'hold', label: 'Say something now', hours: 0.25, kind: 'hold', effects: [{ standard: 0.04 }, { morale: -0.02, who: 'tyler' }], score: [['Accountability Management', 2, 'Said something the first time']] },
-          { id: 'allow', label: "Leave it, it's hot", hours: 0, kind: 'allow', effects: [{ standard: -0.1 }, { safetyDebt: 0.02 }], score: [['Accountability Management', -1, 'Let PPE go because it was hot']] },
+          { id: 'hold', label: 'Say something now', hours: 0.25, kind: 'hold', effects: [{ standard: 0.04 }, { morale: -0.02, who: 'tyler' }], score: [['C1', 2, 'Said something the first time']] },
+          { id: 'allow', label: "Leave it, it's hot", hours: 0, kind: 'allow', effects: [{ standard: -0.1 }, { safetyDebt: 0.02 }], score: [['C1', -1, 'Let PPE go because it was hot']] },
         ] },
       { id: 'spatter', week: 4, cue: 'shortcut', title: 'Paint will take some spatter, this once',
         body: 'Theresa says paint will take bodies with light spatter this week and sand it themselves. It saves your finish crew most of an hour a body.',
         options: [
           { id: 'allow', label: 'Take the deal', hours: 0, kind: 'allow', effects: [{ capacity: 0.5 }, { standard: -0.08 }, { escapeAdd: 0.1 }] },
-          { id: 'writing', label: 'Take it for this order only, in writing', hours: 0.5, kind: 'hold', effects: [{ capacity: 0.5 }, { standard: -0.02 }], score: [['Cross-Functional Awareness', 2, 'Made the exception visible and temporary']] },
+          { id: 'writing', label: 'Take it for this order only, in writing', hours: 0.5, kind: 'hold', effects: [{ capacity: 0.5 }, { standard: -0.02 }], score: [['C1', 2, 'Made the exception visible and temporary']] },
           { id: 'hold', label: 'Keep finishing to standard', hours: 0, kind: 'hold', effects: [{ standard: 0.02 }] },
         ] },
       { id: 'ot4', week: 4, cue: 'overtime', title: 'A third Saturday?',
@@ -396,13 +396,13 @@ export const MODULES = {
       { id: 'gauges', week: 5, cue: 'shortcut', title: 'The gauges are due for calibration',
         body: "The weld gauges are due for calibration this week. It takes them off the floor for a day. Nobody would know if they went next month. You'd know.",
         options: [
-          { id: 'hold', label: 'Send them', hours: 0.5, kind: 'hold', effects: [{ capacity: -0.2 }, { standard: 0.04 }], score: [['Accountability Management', 1, 'Kept the calibration date']] },
+          { id: 'hold', label: 'Send them', hours: 0.5, kind: 'hold', effects: [{ capacity: -0.2 }, { standard: 0.04 }], score: [['C1', 1, 'Kept the calibration date']] },
           { id: 'allow', label: 'Next month', hours: 0, kind: 'allow', effects: [{ standard: -0.08 }] },
         ] },
       { id: 'after', week: 6, cue: 'shortcut', ifFlag: 'tackSkipped', who: 'brent', title: 'The tack check never came back',
         body: "The rush is over. The tack check didn't come back with it. {c} says nobody's missed it.",
         options: [
-          { id: 'hold', label: 'Bring it back at the huddle', hours: 0.5, kind: 'hold', effects: [{ standard: 0.08 }, { morale: -0.02, who: 'all' }], score: [['Accountability Management', 2, 'Took back an exception when the rush ended']] },
+          { id: 'hold', label: 'Bring it back at the huddle', hours: 0.5, kind: 'hold', effects: [{ standard: 0.08 }, { morale: -0.02, who: 'all' }], score: [['C1', 2, 'Took back an exception when the rush ended']] },
           { id: 'allow', label: 'Leave it gone', hours: 0, kind: 'allow', effects: [{ standard: -0.05 }, { defects: 0.4 }] },
         ] },
     ],
@@ -421,7 +421,7 @@ export const MODULES = {
 
   // -------------------------------------------------------------------- 8
   across: {
-    title: 'Across', handbook: '8: Leading at every level: horizontally', weeks: 8, goal: 'main',
+    title: 'Across', focus: ['E2'], handbook: '8: Leading at every level: horizontally', weeks: 8, goal: 'main',
     teaches: 'Peers: going across before going up',
     brief: [
       "Paint kicks back your bodies for spatter. Some days. On other days the same spatter sails through. Your crew has noticed which days are which, and they've started sending the marginal ones when Theresa's on the line and holding them when her lead is.",

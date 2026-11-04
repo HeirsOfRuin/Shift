@@ -1,14 +1,35 @@
-# Shift beta 1: the Supervisor track
+# Shift beta 3: the Supervisor track, with a profile
 
-Published 2026-11-03 as a private page:
+Published 2026-11-04 as a private page, the same link as betas 1 and 2:
 **https://claude.ai/artifact/4c5QqYTmZdn5iKcutCPZJx**
 (only the author can open it until he shares it from the page's Share menu).
-Built from commit `6ad35b4` plus the layout fix that followed; rebuild with
-`npm run build` and republish `dist/shift.embed.html` to the same link.
+Rebuild with `npm run build` and republish `dist/shift.embed.html` to the same
+link. The build id is baked in, so an installed copy picks the new one up.
 
-This is the calibration gate (workflow stage 5) and the vertical slice (stage
-6) at once: the author's verdict on voice, look and length happens on this
-build.
+**What changed in beta 3 (2026-11-04):** the scoring is no longer the LBA's
+four domains. Each module names one or two focus areas from Shift's own
+catalogue (`CATALOGUE.md`) and the end report reads only those, in three
+levels, with no overall number. And the game starts with a profile: your
+seat, your department, what is tied to it, what you want to work on, what you
+call a strength. The track reorders itself from that, and says why. Every
+module is still played in the welding bay; a brief for anyone else says so.
+
+**What changed in beta 2 (2026-11-03):** pressure from open problems, fatigue,
+a People tab, and old saves carried forward.
+
+## How to test beta 3
+
+1. Open the link. **Start over** if you have a beta 2 save, or keep it: an
+   old save asks for a profile before the track.
+2. Fill in the profile as yourself, then as one of your leads. Look at the
+   order the track gives each of you and the reason under each module. Is
+   the order one you would assign?
+3. Play one module and read the end report. The question is whether the
+   read (Solid, Getting there, Not yet) and the made-and-missed lists would
+   start the debrief conversation, and whether anything in "also on the
+   floor, unrated" should have been in the module's focus.
+4. Then decide the order of the next build (`FRAME-departments.md`, last
+   section): the three new modules first, or the three seats first.
 
 ## What is in it
 
@@ -24,7 +45,7 @@ build.
 - The beta switch on the track screen opens every module at once. Without it,
   each module opens when the one before it is debriefed and signed off.
 
-## How to test it
+## How to test it (from beta 1; still valid for voice, look and length)
 
 1. Open the link on your phone. Start the Supervisor track. Play **The week**
    honestly, the way you would run your own week.
@@ -81,9 +102,11 @@ balanced bot, and expect that gap to be the coaching conversation.
   right calibration.
 - **Text repeats on replays.** About 460 lines, two or three variants for the
   frequent ones. The voice has not had your verdict yet.
-- **The practice profile's subdomain-to-domain mapping is the agent's
-  reading** of your LBA standard (`src/data/tags.data.js`). Confirm or correct
-  it; nothing else changes if you do.
+- **The focus areas are the agent's first cut** (`src/data/focus.data.js`).
+  Cut, add or rename; a module's `focus` line is all that changes.
+- **One bay.** The profile takes any department and seat; every module's
+  floor, crew and text are the welding supervisor's. `FRAME-departments.md`
+  costs the rest.
 - **Saves live on one device.** The artifact page and an installed copy keep
   separate saves. A save code moves progress anywhere.
 - **Coach sign-off is honour system.** Anyone holding the phone can sign.

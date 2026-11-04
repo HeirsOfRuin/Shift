@@ -44,7 +44,7 @@ export function kernel(s, r, lines) {
       for (const id of p.who) { const c = person(s, id); if (c) { c.defectAdd = 0; if (p.type === 'load') c.stress = 0; } }
       lines.push({ kind: 'result', text: p.how });
     },
-    score(p, sub, pts, note) { s.decisions.push({ week: s.week, problem: p?.id ?? null, sub, pts, note }); },
+    score(p, area, pts, note) { s.decisions.push({ week: s.week, problem: p?.id ?? null, area, pts, note }); },
   };
   return K;
 }
@@ -164,7 +164,7 @@ export function advance(prev, plan = {}) {
   for (const id of skip) {
     if (id === 'meeting') s.dept.managerTrust = clamp(s.dept.managerTrust - (m.managerAway ? 0.01 : 0.05));
     if (id === 'scheduler') s.dept.surprise = true;
-    if (id === 'safety') { s.dept.safetyDebt += 0.01; K.score(null, 'Accountability Management', -1, 'Let the safety walk go'); }
+    if (id === 'safety') { s.dept.safetyDebt += 0.01; K.score(null, 'C2', -1, 'Let the safety walk go'); }
     if (id === 'timecards') for (const c of s.crew) c.morale = clamp(c.morale - 0.03);
     if (id === 'huddles') { s.week_.capacityMul *= 0.97; for (const c of s.crew) c.morale = clamp(c.morale - 0.01); }
   }
@@ -181,18 +181,18 @@ export function advance(prev, plan = {}) {
       if (!p || p.state === 'resolved') continue;
       if (opt.id === 'leave') {
         const weeksSeen = s.week - (p.seenWeek ?? s.week);
-        if (p.told && p.told === PROBLEMS[p.type].passing) K.score(p, subFor(p.type), 1, 'Watched a passing thing instead of acting');
-        else if (weeksSeen >= 1 && p.state === 'active') K.score(p, subFor(p.type), -1, 'Left a signal alone');
+        if (p.told && p.told === PROBLEMS[p.type].passing) K.score(p, areaFor(p.type), 1, 'Watched a passing thing instead of acting');
+        else if (weeksSeen >= 1 && p.state === 'active') K.score(p, areaFor(p.type), -1, 'Left a signal alone');
         continue;
       }
       p.acted = true;
       // knowing what you know: find out before acting, then act on what you found
-      if (!p.told && opt.kind === 'ask') K.score(p, 'Emotional Awareness', 2, 'Found out before acting');
-      else if (!p.told && ['fix', 'hold', 'soft', 'yourself', 'up', 'around'].includes(opt.kind)) K.score(p, 'Emotional Awareness', -1, 'Acted before finding out why');
-      else if (p.told && (opt.fits || []).includes(p.told)) K.score(p, 'Emotional Awareness', 2, 'Acted on what you had found out');
-      // changing course when a fix did not hold is the self-awareness this measures
-      if (Object.keys(p.fails).length && !p.fails[opt.id] && opt.kind !== 'leave') K.score(p, 'Emotional Awareness', 2, 'Changed course when a fix did not hold');
-      else if ((p.fails[opt.id] || 0) >= 2) K.score(p, 'Emotional Awareness', -1, 'Tried the same failed fix a third time');
+      if (!p.told && opt.kind === 'ask') K.score(p, areaFor(p.type), 2, 'Found out before acting');
+      else if (!p.told && ['fix', 'hold', 'soft', 'yourself', 'up', 'around'].includes(opt.kind)) K.score(p, areaFor(p.type), -1, 'Acted before finding out why');
+      else if (p.told && (opt.fits || []).includes(p.told)) K.score(p, areaFor(p.type), 2, 'Acted on what you had found out');
+      // changing course when a fix did not hold
+      if (Object.keys(p.fails).length && !p.fails[opt.id] && opt.kind !== 'leave') K.score(p, areaFor(p.type), 2, 'Changed course when a fix did not hold');
+      else if ((p.fails[opt.id] || 0) >= 2) K.score(p, areaFor(p.type), -1, 'Tried the same failed fix a third time');
       if (!p.tried.includes(opt.id)) p.tried.push(opt.id);
       p.tries[opt.id] = (p.tries[opt.id] || 0) + 1;
       const before = p.state;
@@ -202,18 +202,20 @@ export function advance(prev, plan = {}) {
       continue;
     }
     if (card.kind === 'cover') { cover = Number(opt.days || 0); continue; }
-    if (card.kind === 'walk') { walk = opt.id === 'walk'; if (walk) K.score(null, 'Basic Empathy', 2, 'Walked the floor'); continue; }
+    if (card.kind === 'walk') { walk = opt.id === 'walk'; if (walk) K.score(null, 'A1', 2, 'Made time to walk the floor'); continue; }
     if (card.kind === 'coach') {
       if (opt.id === 'none') continue;
       const c = person(s, opt.id);
       if (!c || !active(c)) continue;
       c.skill = clamp(c.skill + 0.03 * (1 - c.skill)); c.trust = clamp(c.trust + 0.03); c.morale = clamp(c.morale + 0.02);
-      K.score(null, 'Early Coaching & Guidance', 1, `Spent an hour coaching ${c.name}`);
+      K.score(null, 'D1', 1, `Spent an hour coaching ${c.name}`);
       continue;
     }
     // scripted and request cards: effects are data
     applyEffects(K, opt.effects || [], { c: card.who?.[0] ? person(s, card.who[0]) : undefined });
-    for (const [sub, pts, note] of opt.score || []) K.score(null, sub, pts, note);
+    for (const [area, pts, note] of opt.score || []) K.score(null, area, pts, note);
+    // prioritisation: what a careful reader could tell from the request itself
+    for (const [area, pts, note] of triage(card, opt)) K.score(null, area, pts, note);
   }
   if (cover) lines.push({ kind: 'result', text: say(s, cover > 1 ? 'you.coveredDays' : 'you.coveredDay', { n: cover }) });
 
@@ -221,23 +223,24 @@ export function advance(prev, plan = {}) {
   const wasTired = s.dept.tired || 0;
   s.dept.tired = hours > C.hoursCeiling ? wasTired + (hours - C.hoursCeiling) * C.tiredPerHour : Math.max(0, wasTired - C.tiredRecover);
   const chosen = hours - m.interrupts - m.meetings - C.routine.filter((it) => !s.dept.routineGone.includes(it.id) && !skip.includes(it.id)).reduce((a, it) => a + it.hours, 0);
-  if (hours > C.tiredAt) K.score(null, 'Impulse Control', -1, 'Worked past forty-five');
-  else if (hours <= C.hoursCeiling && chosen >= 2) K.score(null, 'Impulse Control', 2, 'Kept the week inside forty and still acted');
+  if (hours > C.tiredAt) K.score(null, 'A2', -1, 'Worked past forty-five');
+  else if (hours <= C.hoursCeiling && chosen >= 2) K.score(null, 'A2', 2, 'Kept the week inside forty and still acted');
+  else if (hours <= C.hoursCeiling) K.score(null, 'A2', 0, 'Kept the week short by choosing little');
   const lastHours = s.history.at(-1)?.hours ?? 0;
-  if (lastHours > C.tiredAt && hours <= C.hoursCeiling + 2) K.score(null, 'Emotional Awareness', 2, 'Noticed your own load and pulled back');
+  if (lastHours > C.tiredAt && hours <= C.hoursCeiling + 2) K.score(null, 'F2', 2, 'Noticed your own load and pulled back');
   if (s.dept.tired >= C.tiredHome && wasTired < C.tiredHome) lines.push({ kind: 'consequence', text: say(s, 'you.tiredHome') });
   else if (s.dept.tired >= C.tiredSlips && wasTired < C.tiredSlips) lines.push({ kind: 'consequence', text: say(s, 'you.tiredSlips') });
   // reading the forecast before reaching for a stinger
   const cardCover = m.cards.find((c) => c.kind === 'cover');
   if (cardCover) {
     const gap = m.demand - m.forecast;
-    if (cover && gap > 0) K.score(null, 'Emotional Awareness', 2, 'Saw the gap coming and covered it');
-    else if (cover && gap < -0.3) K.score(null, 'Emotional Awareness', -1, 'Welded when the booths were fine');
-    else if (!cover && gap > 1) K.score(null, 'Emotional Awareness', -1, 'Let a known gap go unfilled');
+    if (cover && gap > 0) K.score(null, 'A3', 2, 'Saw the gap coming and covered it');
+    else if (cover && gap < -0.3) K.score(null, 'A3', -1, 'Welded when the booths were fine');
+    else if (!cover && gap > 1) K.score(null, 'A3', -1, 'Let a known gap go unfilled');
   }
 
   // you as the bottleneck
-  if (hours > C.bottleneckAt) { s.dept.overStreak++; s.week_.capacityMul *= 0.95; K.score(null, 'Impulse Control', -1, 'Worked past the point of being useful'); }
+  if (hours > C.bottleneckAt) { s.dept.overStreak++; s.week_.capacityMul *= 0.95; K.score(null, 'F2', -1, 'Worked past the point of being useful'); }
   else s.dept.overStreak = 0;
   if (s.dept.overStreak >= C.bottleneckWeeks && !s.dept.bottleneck) { s.dept.bottleneck = true; lines.push({ kind: 'consequence', text: say(s, 'you.bottleneck') }); }
   const fatigue = hours > C.fatigueAt ? 0.008 : 0;
@@ -355,9 +358,22 @@ export function advance(prev, plan = {}) {
   return { state: s, record };
 }
 
-function subFor(type) {
-  return { late: 'Accountability Management', rework: 'Early Coaching & Guidance', load: 'Basic Empathy', friction: 'Recurring Conflict Resolution',
-    hazard: 'Basic Empathy', recurring: 'Openness to Improvement', escalation: 'Emotional Awareness', standards: 'Cross-Functional Awareness' }[type];
+// Prioritisation from the inbox: refusing what nobody needs and making time for
+// your own people and safety. Read from the request's cue, which is what a
+// careful reader gets from its words; deadlines are a trade and score nothing.
+function triage(card, opt) {
+  if (card.kind !== 'script' || !['optional', 'people', 'safety'].includes(card.cue)) return [];
+  const did = opt.kind !== 'skip';
+  if (card.cue === 'optional') return did ? [['A1', -1, 'Spent hours on something nobody needed']] : [['A1', 2, 'Said no to something that could wait']];
+  const what = card.cue === 'safety' ? 'a safety item' : 'one of your own people';
+  return did ? [['A1', 1, `Made time for ${what}`]] : [['A1', -1, `Put off ${what}`]];
+}
+
+// The focus area a problem type belongs to: finding out before acting on a
+// lateness is accountability, on a hazard it is safety (CATALOGUE.md).
+function areaFor(type) {
+  return { late: 'D2', rework: 'D1', load: 'D1', friction: 'D3',
+    hazard: 'C2', recurring: 'B3', escalation: 'E1', standards: 'E2' }[type];
 }
 
 // While you are in the audit room, the floor runs on whatever bench you built.

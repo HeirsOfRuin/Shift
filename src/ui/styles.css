@@ -233,3 +233,16 @@ textarea.code { font-family: var(--mono); font-size: 12px; word-break: break-all
 section { display: flex; flex-direction: column; gap: 10px; }
 
 @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; transition: none !important; } }
+
+/* the profile and the path */
+.you { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; display: grid; gap: 6px; }
+.you p { margin: 0; }
+.btn.small { padding: 4px 10px; font-size: 0.85em; }
+.chip.focus { background: var(--arc); color: var(--ground); }
+.opt .why, .check .why { display: block; font-size: 0.85em; color: var(--ink-soft); margin-top: 2px; }
+.check[disabled] { opacity: 0.4; }
+#pname { width: 100%; box-sizing: border-box; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--line); background: var(--ground); color: inherit; font: inherit; }
+.score.read-solid { color: var(--good); }
+.score.read-getting { color: var(--amber); }
+.score.read-notyet { color: var(--tag); }
+.score.read-thin { color: var(--ink-faint); }

@@ -5,21 +5,29 @@
 import { CONFIG as C } from '../data/config.data.js';
 import { MODULES, TRACK } from '../data/modules.data.js';
 import { STATIONS, CREW, CAST, PLANT, CAST_ABOUT } from '../data/crew.data.js';
+import { AREAS, FAMILIES, SELF_LIMIT } from '../data/focus.data.js';
+import { SEATS, DEPARTMENTS, GROUPS, WRITTEN_BAY } from '../data/departments.data.js';
 import { hoursFor } from './week.js';
-import { unlocked } from './state.js';
+import { unlocked, order } from './state.js';
+import { pathFor } from './path.js';
 import { moodWord, standardWord, trustWord, active } from './derive.js';
 import { say } from './text.js';
 
 export function trackView(save) {
+  const ids = order(save);
+  const path = save.profile ? pathFor(save.profile) : null;
   return {
     id: TRACK.id, title: TRACK.title, intro: TRACK.intro, openAll: save.track.openAll,
-    modules: TRACK.modules.map((id, i) => {
+    you: whoView(save.profile),
+    modules: ids.map((id, i) => {
       const m = MODULES[id];
       const t = save.track.modules[id];
       const open = unlocked(save, id);
       return {
         id, n: i + 1, title: m.title, teaches: m.teaches, weeks: m.weeks, open,
-        why: open ? '' : `Opens when "${MODULES[TRACK.modules[i - 1]].title}" is signed off by your coach.`,
+        focus: m.focus.map((a) => AREAS[a].label),
+        because: path ? path.find((x) => x.id === id).why : '',
+        why: open ? '' : `Opens when "${MODULES[ids[i - 1]].title}" is signed off by your coach.`,
         plays: t.plays, wins: t.wins, last: t.last, debriefed: !!t.debrief, signedOff: t.signedOff,
       };
     }),
@@ -27,9 +35,55 @@ export function trackView(save) {
   };
 }
 
-export function briefView(id) {
+export function briefView(id, profile = null) {
   const m = MODULES[id];
-  return { id, title: m.title, teaches: m.teaches, handbook: m.handbook, weeks: m.weeks, brief: m.brief, goal: m.goalText, lose: m.lose };
+  return {
+    id, title: m.title, teaches: m.teaches, handbook: m.handbook, weeks: m.weeks, brief: m.brief, goal: m.goalText, lose: m.lose,
+    focus: m.focus.map((a) => ({ id: a, label: AREAS[a].label, about: AREAS[a].about, moves: AREAS[a].moves })),
+    seat: seatNote(profile),
+  };
+}
+
+/** Every module is written in the welding supervisor's seat so far. A trainee in
+ *  another seat or department plays it there; the brief says so plainly rather
+ *  than pretending (rule 6: a silent state is a broken one). */
+function seatNote(profile) {
+  if (!profile) return '';
+  const dept = DEPARTMENTS[profile.department];
+  const seat = SEATS[profile.seat];
+  if (profile.department === WRITTEN_BAY && profile.seat === 'supervisor') return '';
+  const where = profile.department === WRITTEN_BAY ? '' : ` You run ${dept.name}; this module is written in the welding bay, two doors down, and the lessons travel.`;
+  const who = profile.seat === 'supervisor' ? '' : ` You are a ${seat.label.toLowerCase()}; in this module you hold the supervisor's seat for a few weeks, and the debrief asks what carries back to yours.`;
+  return `This module puts you in the welding supervisor's chair.${where}${who}`;
+}
+
+/** The profile as the screens show it. */
+export function whoView(profile) {
+  if (!profile) return null;
+  const dept = DEPARTMENTS[profile.department];
+  return {
+    name: profile.name, seat: SEATS[profile.seat].label, seatId: profile.seat, department: dept.name, departmentId: profile.department,
+    group: GROUPS[dept.group].name, manager: GROUPS[dept.group].manager,
+    tied: profile.tied.map((d) => DEPARTMENTS[d].name),
+    strengths: profile.strengths.map((a) => AREAS[a].label), work: profile.work.map((a) => AREAS[a].label),
+    written: profile.department === WRITTEN_BAY,
+  };
+}
+
+/** What the profile screen offers: seats, departments (with what each is tied
+ *  to by the line), and the catalogue by family. `draft` is the form so far. */
+export function profileView(draft = {}) {
+  const dept = DEPARTMENTS[draft.department];
+  const byLine = dept ? [...dept.fedBy, ...dept.feeds] : [];
+  return {
+    seats: Object.entries(SEATS).map(([id, x]) => ({ id, label: x.label, about: x.about })),
+    departments: Object.entries(DEPARTMENTS).map(([id, d]) => ({ id, name: d.name, what: d.what, group: GROUPS[d.group].name, written: !!d.bay })),
+    byLine: byLine.map((id) => ({ id, name: DEPARTMENTS[id].name, how: dept.fedBy.includes(id) ? 'feeds you' : 'you feed' })),
+    others: Object.keys(DEPARTMENTS).filter((id) => id !== draft.department && !byLine.includes(id)).map((id) => ({ id, name: DEPARTMENTS[id].name })),
+    families: Object.entries(FAMILIES).map(([f, name]) => ({ id: f, name, areas: Object.entries(AREAS).filter(([, a]) => a.family === f).map(([id, a]) => ({ id, label: a.label, about: a.about })) })),
+    limit: SELF_LIMIT,
+    writtenBay: DEPARTMENTS[WRITTEN_BAY].name,
+  };
 }
 
 /** The week screen. `plan` is the player's current picks, so the hours bar is live. */
@@ -110,10 +164,18 @@ export function crewStrip() {
   return CREW.map((c) => ({ id: c.id, name: c.name, station: STATIONS[c.station].label, about: c.about, look: c.look, lead: !!c.lead }));
 }
 
-/** Who is who: the plant, the vehicles, and the people beyond the bay. */
-export function peopleView() {
+/** Who is who: the plant, the vehicles, and the people beyond the bay. With a
+ *  profile, the trainee's own department and the ones tied to it come first. */
+export function peopleView(profile = null) {
+  const mine = profile ? [profile.department, ...DEPARTMENTS[profile.department].fedBy, ...DEPARTMENTS[profile.department].feeds, ...profile.tied] : [];
+  const yours = [...new Set(mine)].map((id) => {
+    const d = DEPARTMENTS[id];
+    const how = id === profile.department ? 'yours' : profile.tied.includes(id) && !d.feeds.includes(profile.department) && !d.fedBy.includes(profile.department) ? 'tied to you' : d.feeds.includes(profile.department) ? 'feeds you' : 'you feed';
+    return { id, name: d.name, how, supervisor: d.supervisor, what: d.what, stations: d.stations, people: d.people };
+  });
   return {
     plant: PLANT.name, about: PLANT.about, flow: PLANT.flow, vehicles: PLANT.vehicles,
+    yours,
     groups: PLANT.groups.map((g) => ({ title: g.title, people: g.ids.map((id) => ({ id, name: CAST[id].full, role: CAST[id].role, about: CAST_ABOUT[id] })) })),
   };
 }

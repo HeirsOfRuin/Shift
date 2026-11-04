@@ -51,7 +51,7 @@ for (const id of modules) {
   md.push(`\n### ${MODULES[id].title} (\`${id}\`), ${RUNS} seeds per style\n`);
   md.push('| Style | Win | Schedule | Kept everyone | Problem settled | Paint starved | Bottleneck | Shipped / asked | Hours a week | Morale | Trust | Practice score |');
   md.push('|---|---|---|---|---|---|---|---|---|---|---|---|');
-  for (const r of rows) md.push(`| ${r.policy} | ${pct(r.win)} | ${pct(r.schedule)} | ${pct(r.kept)} | ${pct(r.problem)} | ${pct(r.starved)} | ${pct(r.bottleneck)} | ${(100 * r.ship).toFixed(0)}% | ${r.hours.toFixed(1)} | ${r.morale.toFixed(2)} | ${r.trust.toFixed(2)} | ${r.practice.toFixed(0)} |`);
+  for (const r of rows) md.push(`| ${r.policy} | ${pct(r.win)} | ${pct(r.schedule)} | ${pct(r.kept)} | ${pct(r.problem)} | ${pct(r.starved)} | ${pct(r.bottleneck)} | ${(100 * r.ship).toFixed(0)}% | ${r.hours.toFixed(1)} | ${r.morale.toFixed(2)} | ${r.trust.toFixed(2)} | ${(100 * r.practice).toFixed(0)}% |`);
   md.push('');
   for (const [label, ok] of gate(rows)) { md.push(`- ${ok ? 'PASS' : 'FAIL'} ${label}`); pass &&= ok; }
 }
