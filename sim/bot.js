@@ -16,7 +16,7 @@ const PROBLEM = {
   firefighter(c) {
     return { late: 'remind', rework: 'fixYourself', load: 'carry', friction: 'warning', hazard: c.waiting ? 'leave' : 'workOrder',
       recurring: 'fixYourself', escalation: 'decide', standards: 'matchThem',
-      constraint: c.ruledOut.includes('weld') ? 'improveFit' : 'improveWeld', huddle: 'shutDown', newhand: 'fixHis' }[c.type];
+      constraint: c.ruledOut.includes('weld') ? 'improveFit' : 'improveWeld', huddle: 'shutDown', newhand: 'fixHis', otherside: 'fixInPaint' }[c.type];
   },
   documenter(c) {
     if (c.type === 'late' || c.type === 'rework') return c.weeks % 2 === 0 ? 'document' : 'leave';
@@ -29,6 +29,7 @@ const PROBLEM = {
     if (c.type === 'constraint') return c.weeks === 0 ? 'askCrew' : c.ruledOut.includes('weld') ? 'leave' : 'improveWeld';
     if (c.type === 'huddle') return 'parkingLot';
     if (c.type === 'newhand') return c.weeks === 0 ? 'sheet' : c.weeks >= 2 && !c.tried.includes('document') ? 'document' : 'leave';
+    if (c.type === 'otherside') return 'sendBack';
     return 'leave';
   },
   coach(c) {
@@ -46,6 +47,8 @@ const PROBLEM = {
       case 'constraint': return !c.tried.includes('askCrew') ? 'askCrew' : c.ruledOut.includes('weld') ? 'leave' : 'improveWeld';
       case 'huddle': return !t ? 'talk' : { habit: 'parkingLot', parts: 'fixParts', unheard: 'giveFloor', newRoute: 'talk' }[t];
       case 'newhand': return !t ? 'watch' : { untaught: 'teach', afraid: 'pair', rushed: 'slowDown', settling: 'watch' }[t];
+      // the coach goes to the people first: Tyler, then paint's side
+      case 'otherside': return c.pending ? 'checkPaint' : !t ? (c.tried.includes('slowTyler') ? 'lookPaint' : 'slowTyler') : { wire: 'swapWire', rushing: 'slowTyler', noStandard: 'writeStandard', careful: 'leave' }[t];
     }
     return 'leave';
   },
@@ -103,6 +106,10 @@ const PROBLEM = {
       case 'newhand':
         if (!t) return 'watch';
         return { untaught: 'teach', afraid: 'pair', rushed: 'slowDown', settling: 'leave' }[t];
+      case 'otherside':
+        if (c.pending) return 'checkPaint';
+        if (!t) return 'lookPaint';
+        return { wire: 'swapWire', rushing: 'slowTyler', noStandard: 'writeStandard', careful: 'leave' }[t];
     }
     return 'leave';
   },

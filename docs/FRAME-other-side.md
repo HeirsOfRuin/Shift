@@ -80,4 +80,22 @@ before that is paid for.
 
 ## Status
 
-Filled in after the build.
+Built 2026-11-04 as beta 7. Module gate at 100 seeds per style, supervisor
+seat: all five conditions pass on the first run.
+
+| Module | Balanced | Coach | Documenter | Firefighter | Doing nothing |
+|---|---|---|---|---|---|
+| The other side | 74% ±4 | 74% ±4 | 7% ±3 | 7% ±3 | 8% ±3 |
+
+Reads, 100 seeds: balanced reads Solid on E2 *Working across* 100% and on C3
+*Quality at the source* 70% (the other 30% are runs where paint's careful new
+hire was the cause and there was nothing to trace); the firefighter, who has
+paint sand everything, reads Not yet on C3 100%; the ignorer reads Not yet on
+E2 100%. The coach bot ties balanced on wins: it goes to Tyler first and
+looks second, which is a people-first way to the same place.
+
+What the build taught: the first cut had only two C3 decisions on the
+balanced path (look, fix), one short of a read. The third is a real move
+that was missing from the frame: *go and check from paint's side that it
+held*. A fix now stops the tickets; the check settles it, or it settles
+itself two weeks later with a line that says you never went to see.

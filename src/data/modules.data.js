@@ -140,7 +140,7 @@ export const TRACK = {
   intro: "You run the welding department at Northern Motors: seven people, three stations, and a paint department that wants six bodies a week. Each module is a few weeks of that job. Nobody tells you the right answer, because there usually isn't one; there is what you knew, what you did, and what it did.",
   introManager: "You're the operations manager for the Metal side at Northern Motors: fabrication, machining, welding and paint. Kev runs welding. Everything on his floor reaches you through him, and your four moves are to ask him, tell him, go down yourself, or leave it with him. What he can do without you at the end is the number that matters.",
   introLead: "You're the lead hand in welding at Northern Motors: fit-up is your table, six people ask you first, and Kev, who had your job until spring, is the supervisor. Every hour you lead comes off the table. Nobody tells you the right answer; there is what you knew, what you did, what you took to Kev, and what it did.",
-  modules: ['the-week', 'late-one', 'loop', 'firefighting', 'pulled', 'upstairs', 'rush', 'across', 'waits', 'monday', 'newhand'],
+  modules: ['the-week', 'late-one', 'loop', 'firefighting', 'pulled', 'upstairs', 'rush', 'across', 'waits', 'monday', 'newhand', 'otherside'],
 };
 
 export const MODULES = {
@@ -614,6 +614,47 @@ export const MODULES = {
         'What would you want someone to have told you in your first week, that nobody did?',
       ],
       commitment: 'What the next new hire on my floor gets in their first week, and who sits with them:',
+    },
+  },
+
+  // -------------------------------------------------------------------- 12 (beta 7)
+  otherside: {
+    title: 'The other side', focus: ['E2', 'C3'], seats: ['supervisor'], onlySupervisor: "it is about covering a peer's floor", notManager: 'both floors are already yours', handbook: '8: Leading at every level: horizontally', weeks: 8, goal: 'main',
+    teaches: "Receiving what you send: four weeks running paint, with your own bodies coming back through the door",
+    brief: [
+      "Theresa is away for four weeks from next Monday: a wedding, a honeymoon, the first holiday she has taken in six years. Dana has asked you to cover paint as well as welding. Not run it, exactly. Be the person the paint crew brings things to.",
+      "What the paint crew brings Theresa, most mornings, is welding's bodies. Spatter in the drip rail. A seam that needs a pass with the grinder before it will take primer. You have heard about it from Theresa for a year, in the tone you had filed under paint being paint.",
+      "From Monday it lands on your desk, with your crew's names on the tickets. You can send it back. You can sand it. You can find out why it is happening, now that you stand on both sides of the door.",
+    ],
+    goalText: "Paint fed and your own spatter settled at the root before Theresa is back, with nobody lost and paint's week covered.",
+    lose: ['Paint short two weeks running', 'Losing a person', 'Three weeks over 55 hours', 'Theresa coming back to a month of your bodies she has to sort out'],
+    setup: { meetings: { 2: 6, 3: 6, 4: 6, 5: 6 }, meetingsLabel: "Paint's week", covering: "You are covering paint this week as well as welding: six hours of paint's standing week, and paint's kickback tickets come to you." },
+    main: { type: 'otherside', who: ['tyler'], seen: true, week: 2 },
+    second: { weeks: [4, 6], not: ['standards', 'rework'] },
+    cards: [
+      { id: 'notes', week: 2, cue: 'pressure', title: "Theresa's handover note",
+        body: "Theresa left you two pages. The first is the booth schedule. The second is headed 'Welding', and it is a list.",
+        options: [
+          { id: 'read', label: 'Read it properly, both pages', hours: 0.5, kind: 'do', effects: [{ line: "The second page: spatter in the drip rails on the Rescue roofs; bodies arriving at four when paint needs them by two; and 'no written spatter standard; I ask and nobody knows.' Three things, a year old each." }], score: [['E2', 1, "Read what the other side had been trying to tell you"]] },
+          { id: 'skim', label: 'Skim it; you know what paint wants', hours: 0, kind: 'skip', effects: [{ peerTrust: -0.03 }], score: [['E2', -1, 'Skimmed what the other side had written down for you']] },
+        ] },
+      { id: 'back', week: 6, cue: 'pressure', title: 'Theresa is back',
+        body: "Theresa is back on Monday, tanned and suspicious. She has four weeks of kickback tickets in front of her and your name on the cover sheet.",
+        options: [
+          { id: 'sit', label: 'Sit down with her about what you saw from her side', hours: 1, kind: 'do', effects: [{ peerTrust: 0.1 }, { line: "You told Theresa what four weeks on her side of the door had looked like. She listened, and then she said 'I know,' and then she said thank you, which from Theresa is a speech." }], score: [['E2', 2, 'Brought what you saw back across']] },
+          { id: 'hand', label: 'Hand paint back and get on with your own floor', hours: 0, kind: 'skip', effects: [{ peerTrust: -0.02 }], score: [['E2', 0, 'Handed it back without a word about what you saw']] },
+        ] },
+    ],
+    pool: { perWeek: [0, 1], cards: pool('vendorDemo', 'townHall', 'jessForecast', 'supplierCall', 'danaPage') },
+    debrief: {
+      questions: [
+        'What did your own bodies look like from the other side of the door? What did you do with the first ticket that had your crew\'s name on it?',
+        "Which of paint's complaints had you been filing under 'paint being paint'? Which of them turned out to be yours?",
+        'Did you send bodies back to your own crew? What did that cost you with them, and what did it buy?',
+        'On your real floor: whose output do you receive, and whose receives yours? When did you last stand on their side of it?',
+        'What will you say to the next supervisor downstream who tells you your work is costing them an hour a day?',
+      ],
+      commitment: 'One morning this month I will spend on the receiving end of my own department\'s work, and what I will bring back:',
     },
   },
 };

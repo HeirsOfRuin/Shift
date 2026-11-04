@@ -109,7 +109,7 @@ function problemCard(s, p) {
     know,
     weeks: s.week - (p.seenWeek ?? s.week),
     told: p.told, tried: [...p.tried], failed: Object.keys(p.fails), failedTwice: Object.keys(p.fails).filter((k) => p.fails[k] >= 2),
-    sessions: p.sessions, ruledOut: [...p.ruledOut], waiting: !!(p.order || p.russDue || p.engDue || p.aroundDue),
+    sessions: p.sessions, ruledOut: [...p.ruledOut], waiting: !!(p.order || p.russDue || p.engDue || p.aroundDue), pending: !!p.pending,
     options: [
       ...Object.entries(def.actions).filter(([, a]) => !(s.seat === 'lead' && a.needs)).map(([id, a]) => ({ id, label: fill(s, a.label, { p }), hours: a.hours, kind: a.kind, fits: a.fits || [] })),
       // a lead hand's one move for what needs the supervisor's signature

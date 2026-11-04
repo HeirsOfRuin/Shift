@@ -164,6 +164,23 @@ export const PROBLEMS = {
       document: { label: 'Write up the scrapped brackets', hours: 1, kind: 'hold', needs: 'supervisor' },
     },
   },
+  // ---- beta 7: The other side (E2 + C3): your own bodies, from paint's side
+  otherside: {
+    label: 'Your own bodies, from the other side',
+    causes: { wire: 0.3, rushing: 0.25, noStandard: 0.3, careful: 0.15 },
+    passing: 'careful',
+    stories: { wire: { rushing: 0.3 } },
+    actions: {
+      lookPaint: { label: "Spend a morning on paint's side of the door, with the kickback tickets", hours: 2, kind: 'ask' },
+      sendBack: { label: 'Send your own bodies back to your own crew', hours: 0.5, kind: 'hold' },
+      fixInPaint: { label: 'Have paint sand it, like Theresa does', hours: 1, kind: 'yourself' },
+      swapWire: { label: 'Go back to the old wire', hours: 0.5, kind: 'fix', fits: ['wire'] },
+      slowTyler: { label: 'Take Tyler off the Rescue roofs for a week and show him', hours: 1, kind: 'fix', fits: ['rushing'] },
+      writeStandard: { label: 'Write the spatter standard with Val, now that you stand on both sides', hours: 3, kind: 'fix', fits: ['noStandard'] },
+      checkPaint: { label: "Go and check from paint's side that it held", hours: 1, kind: 'ask' },
+      waveThrough: { label: 'Wave them through; Theresa can sort it when she is back', hours: 0, kind: 'soft' },
+    },
+  },
 };
 
 // Where a problem of each type can land, when a module draws one at random.

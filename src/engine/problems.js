@@ -637,6 +637,80 @@ export const TYPES = {
       return [];
     },
   },
+
+  // ------------------------------------------------------------- the other side (beta 7)
+  // The player covers paint and receives their own department's spatter. Open,
+  // it costs paint's rework hours and welding's defects; waved through, it
+  // goes quiet and Theresa finds it her first week back.
+  otherside: {
+    notice() { return true; },
+    act(K, p, action) {
+      const v = { p };
+      const d = K.s.dept;
+      const tyler = K.person('tyler');
+      switch (action) {
+        case 'lookPaint': told(p); K.line('told', `otherside.told.${p.told}`, v); return;
+        case 'sendBack':
+          p.sentBack = (p.sentBack || 0) + 1;
+          d.standard = K.clamp(d.standard + 0.03);
+          for (const c of K.crew()) if (c.station === 'weld' && K.active(c)) c.morale = K.clamp(c.morale - 0.03);
+          K.s.week_.capacity -= 0.3;
+          K.line('result', p.sentBack === 1 ? 'otherside.sendBack.first' : 'otherside.sendBack.again', v);
+          return;
+        case 'fixInPaint': p.sandedThisWeek = true; K.line('result', 'otherside.fixInPaint', v); return;
+        case 'checkPaint':
+          if (p.pending) { K.resolve(p, 'otherside.checked', { root: true }); K.s.dept.peerTrust = K.clamp(K.s.dept.peerTrust + 0.03); }
+          else if (!p.told) { told(p); K.line('told', `otherside.told.${p.told}`, v); }
+          else K.line('result', 'otherside.check.nothing', v);
+          return;
+        case 'swapWire':
+          if (p.cause === 'wire' && works(K, p, action, 0.85, 0.95)) { p.pending = K.week; K.line('result', 'otherside.fixed.wire', v); }
+          else { if (p.cause !== 'wire') p.ruledOut.push('wire'); K.line('result', p.cause === 'wire' ? 'otherside.wire.notYet' : 'otherside.wire.noHelp', v); }
+          return;
+        case 'slowTyler':
+          if (tyler && K.active(tyler)) { tyler.trust = K.clamp(tyler.trust + 0.03); tyler.skill = K.clamp(tyler.skill + 0.02); }
+          if (p.cause === 'rushing' && works(K, p, action, 0.8, 0.9)) { p.pending = K.week; K.line('result', 'otherside.fixed.tyler', v); }
+          else { if (p.cause !== 'rushing') p.ruledOut.push('rushing'); K.line('result', p.cause === 'rushing' ? 'otherside.tyler.notYet' : 'otherside.tyler.noHelp', v); }
+          return;
+        case 'writeStandard':
+          d.flags.spatterStandard = true;
+          if (p.cause === 'noStandard' && works(K, p, action, 0.85, 0.95)) { d.peerTrust = K.clamp(d.peerTrust + 0.08); p.pending = K.week; K.line('result', 'otherside.fixed.standard', v); }
+          else if (p.cause === 'careful') K.resolve(p, 'otherside.fixed.standardCareful', { settled: true });
+          else { K.line('result', p.cause === 'noStandard' ? 'otherside.standard.notYet' : 'otherside.standard.noHelp', v); }
+          return;
+        case 'waveThrough':
+          p.state = 'quiet'; p.quietUntil = K.week + 2; p.waved = true;
+          d.escapeAdd = (d.escapeAdd || 0) + 0.1;
+          K.line('result', 'otherside.waveThrough', v);
+          return;
+      }
+    },
+    week(K, p) {
+      const v = { p };
+      const d = K.s.dept;
+      if (p.cause === 'careful' && K.week - p.since >= 2 && K.r.people.next() < 0.6) { K.resolve(p, 'otherside.passed.careful', { settled: true }); return; }
+      // fixed at the source and never checked from paint's side: it settles on its own after two weeks
+      if (p.pending) { if (K.week - p.pending >= 2) K.resolve(p, 'otherside.settledUnchecked', { root: true }); else K.line('signal', 'otherside.pending', v); return; }
+      // paint's rework on welding's bodies, on your desk now
+      if (!p.sandedThisWeek) { K.s.week_.defects += 0.4 * p.severity; p.extraInterrupts = 2; }
+      else { p.extraInterrupts = 1; p.sandedThisWeek = false; }
+      if (p.cause === 'wire') K.s.week_.defects += 0.2;
+      if ((K.week - p.since) % 3 === 2) p.severity++;
+      if (K.week === 6 && !p.theresaSaw) { p.theresaSaw = true; d.peerTrust = K.clamp(d.peerTrust - (p.waved ? 0.15 : 0.06)); K.line('consequence', p.waved ? 'otherside.theresaFoundIt' : 'otherside.theresaBackOpen', v); }
+      K.line('signal', `otherside.week.${p.severity >= 2 ? 'worse' : 'open'}`, v);
+    },
+    score(p, action) {
+      if (action === 'lookPaint') return p.told ? [] : [['E2', 2, 'Stood on the other side of the door']];
+      if (action === 'checkPaint') return p.pending ? [['C3', 2, 'Checked at the receiving end that the fix held']] : p.told ? [['C3', 0, 'Went to check before there was anything to check']] : [['E2', 2, 'Stood on the other side of the door']];
+      if (action === 'sendBack') return [['C3', (p.sentBack || 0) <= 1 ? 1 : 0, 'Fed it back upstream, to your own crew']];
+      if (action === 'fixInPaint') return [['C3', -1, "Let paint absorb welding's rework"]];
+      if (action === 'swapWire') return p.told === 'wire' ? [['C3', 2, 'Traced the defect to where it was made: the wire']] : [['C3', 0, 'Changed the wire on a hunch']];
+      if (action === 'slowTyler') return p.told === 'rushing' ? [['C3', 2, 'Traced the defect to where it was made: the booth']] : [['C3', 0, 'Slowed a welder who was not the cause']];
+      if (action === 'writeStandard') return p.told === 'noStandard' ? [['E2', 2, 'Agreed one standard at the interface']] : [['E2', 1, 'Wrote a standard both sides can use, for a different problem']];
+      if (action === 'waveThrough') return [['E2', -1, 'Left it for Theresa to find']];
+      return [];
+    },
+  },
 };
 
 export function actionsFor(type) { return PROBLEMS[type].actions; }

@@ -169,7 +169,7 @@ function briefScreen() {
 
 // ================================================================ the week
 const CUE = { huddle: 'At the huddle', deadline: 'Request &middot; deadline', people: 'Request &middot; one of yours', safety: 'Safety', optional: 'Request', pressure: 'Request &middot; pressure', develop: 'Before you go', shortcut: 'Shortcut offered', overtime: 'Overtime', yours: 'A decision', notYours: 'A decision', plain: 'Request' };
-const TYPE = { late: 'Lateness', rework: 'Rework', load: 'Carrying too much', friction: 'Friction', hazard: 'Safety', recurring: 'The same fire', escalation: 'A decision', standards: 'Two standards', constraint: 'Where it waits', huddle: 'The huddle', newhand: 'The new hand' };
+const TYPE = { late: 'Lateness', rework: 'Rework', load: 'Carrying too much', friction: 'Friction', hazard: 'Safety', recurring: 'The same fire', escalation: 'A decision', standards: 'Two standards', constraint: 'Where it waits', huddle: 'The huddle', newhand: 'The new hand', otherside: 'From the other side' };
 
 function weekScreen() {
   const v = weekView(save.run, plan);
@@ -186,6 +186,7 @@ function weekTab(v) {
   const out = [];
   if (v.away) out.push('<p class="banner">You are in the audit room most of this week. The meetings already take 18 hours; Kev is running the floor.</p>');
   if (v.managerAway) out.push('<p class="banner info">Dana is away. Russ is covering her departments as well as his own.</p>');
+  if (v.covering) out.push(`<p class="banner info">${esc(v.covering)}</p>`);
   out.push(`<div class="bay"><div class="legend"><span>Fit-up</span><span>Body weld</span><span>Finish</span><span>Paint</span></div><canvas data-bay="week" aria-label="The welding bay this week"></canvas><p class="caption" data-caption>Tap someone to see how they look from across the bay.</p></div>`);
   out.push(`<p class="soft"><span class="label">This module</span><br>${esc(v.module.goal)}</p>`);
   if (v.dept.supCap) out.push(`<p class="soft"><span class="label">Kev, this week</span><br>${esc(v.dept.supCap)}.</p>`);
@@ -214,7 +215,7 @@ function hoursPanel(hr, items = [], tired = '') {
     <div class="total ${state}"><span class="label">Your week</span><span class="num">${h(hr.total)}</span></div>
     <div class="bar" role="img" aria-label="${h(hr.total)} planned against a forty-hour week"><span class="floor" style="width:${w(hr.floor)}"></span><span class="meet" style="width:${w(hr.meetings)}"></span><span class="routine" style="width:${w(hr.routine)}"></span><span class="chosen" style="width:${w(hr.chosen)}"></span></div>
     <div class="marks"><i style="left:${w(hr.ceiling)}">40</i><i style="left:${w(hr.bottleneck)}">55</i></div>
-    <div class="key"><span><b class="floor"></b>${esc(hr.floorLabel || 'The floor')} ${h(hr.floor)}</span>${hr.meetings ? `<span><b class="meet"></b>Audit room ${h(hr.meetings)}</span>` : ''}<span><b class="routine"></b>Standing week ${h(hr.routine)}</span><span><b class="chosen"></b>Your choices ${h(hr.chosen)}</span></div>
+    <div class="key"><span><b class="floor"></b>${esc(hr.floorLabel || 'The floor')} ${h(hr.floor)}</span>${hr.meetings ? `<span><b class="meet"></b>${esc(hr.meetingsLabel)} ${h(hr.meetings)}</span>` : ''}<span><b class="routine"></b>Standing week ${h(hr.routine)}</span><span><b class="chosen"></b>Your choices ${h(hr.chosen)}</span></div>
     <p class="limit">${esc(hr.limit)}</p>
     ${hr.table ? `<p class="limit">At the table this week: ${h(hr.table.worked)} of ${h(hr.table.of)}. What you choose to do comes off the table unless you stay to make it up.</p>` : ''}
     ${tired ? `<p class="banner">${esc(tired)}</p>` : ''}

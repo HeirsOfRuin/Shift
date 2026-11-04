@@ -51,7 +51,7 @@ copy. If they disagree, the data file wins and this page is stale.
 | **C. Quality and safety** | | | | |
 | C1 | Holding the standard | Keeps the standard when the number is short; makes an exception visible and temporary; takes it back when the pressure ends | ready | Rush week |
 | C2 | Safety | Goes and looks on the first report; makes it safe before it is fixed; closes the action | ready | none yet: *The near miss* (scored in The week, unrated) |
-| C3 | Quality at the source | Traces a defect to where it was made; feeds back upstream; does not let rework hide the cause | small | none yet |
+| C3 | Quality at the source | Traces a defect to where it was made; feeds back upstream; does not let rework hide the cause | ready | The other side |
 | **D. People** | | | | |
 | D1 | Coaching and development | Coaches early, at the bench; asks before acting on someone; fits the help to the reason | ready | Pulled off the floor |
 | D2 | Accountability | Finds out why before acting; fits the response to the cause; holds the line when it is a choice | ready | The late one |
@@ -59,7 +59,7 @@ copy. If they disagree, the data file wins and this page is stale.
 | D4 | Training and onboarding | Answers a new hand at the bench; teaches the reason; checks understanding | ready | The new hand |
 | **E. Up and across** | | | | |
 | E1 | Leading up and decision rights | Finds out whose call it is; makes the calls that are theirs; uses the chain | ready | Nobody upstairs |
-| E2 | Working across | Goes across before going up; fixes the handoff, not the blame; agrees one standard at the interface | ready | Across |
+| E2 | Working across | Goes across before going up; fixes the handoff, not the blame; agrees one standard at the interface | ready | Across; The other side |
 | E3 | Leading change | Explains the why before the what; involves the sceptics; keeps the change alive | new | none yet: *Nobody asked for this* |
 | **F. Meetings and self** | | | | |
 | F1 | Running a huddle | Starts on time; every action gets an owner; handles the derailer | ready | Monday, 7:00 |
@@ -109,9 +109,9 @@ Both are the scoring telling the truth about that style, not a scoring fault.
 ## The next modules, in order
 
 *Where it waits* (B1), *Monday, 7:00* (F1) and *The new hand* (D4) were built
-2026-11-04 (`FRAME-three-modules.md`). Next, after the three seats
-(`FRAME-departments.md`): *The other side* (E2, from the author's note the same
-day: "forcing some people to see the other departments pov from time to time
-would actually be a really good training tool": a week in the paint seat,
-receiving what welding sends), then *It looked great for a week* (B2), *The
-near miss* (C2), *The number on the board* (B4), *Nobody asked for this* (E3).
+2026-11-04 (`FRAME-three-modules.md`), then the three seats
+(`FRAME-seats.md`), then *The other side* (E2 and C3, from the author's note:
+"forcing some people to see the other departments pov from time to time would
+actually be a really good training tool"; `FRAME-other-side.md`). Next: *It
+looked great for a week* (B2), *The near miss* (C2), *The number on the board*
+(B4), *Nobody asked for this* (E3).

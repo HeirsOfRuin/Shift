@@ -252,6 +252,13 @@ everything is urgent nothing is strategic; 3 Structure protects good people;
 
 ## 10. Status and the exact next steps
 
+**Update (2026-11-04, beta 7):** *The other side* (`FRAME-other-side.md`),
+from the author's point-of-view note: the welding supervisor covers paint for
+four weeks and their own department's spatter lands on their desk. Twelve
+modules, three seats. **Next:** the author's verdict on betas 5 to 7, then
+*It looked great for a week* (B2 Lean tools), which needs a decay mechanic
+and its own kill gate.
+
 **Update (2026-11-04, beta 6):** the operations manager's seat
 (`FRAME-seats.md`, `KILLGATE-manager.md`): the player is Dana, Kev runs
 welding, and every problem reaches her through him; her four moves are ask,

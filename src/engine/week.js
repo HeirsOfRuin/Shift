@@ -223,11 +223,11 @@ export function advance(prev, plan = {}) {
       }
       // knowing what you know: find out before acting, then act on what you found
       if (!p.told && opt.kind === 'ask') K.score(p, areaFor(p.type), 2, 'Found out before acting');
-      else if (!p.told && ['fix', 'hold', 'soft', 'yourself', 'up', 'around'].includes(opt.kind)) K.score(p, areaFor(p.type), -1, 'Acted before finding out why');
-      else if (p.told && (opt.fits || []).includes(p.told)) K.score(p, areaFor(p.type), 2, 'Acted on what you had found out');
+      else if (!p.told && ['fix', 'hold', 'soft', 'yourself', 'up', 'around'].includes(opt.kind)) K.score(p, areaFor(p.type, opt.kind), -1, 'Acted before finding out why');
+      else if (p.told && (opt.fits || []).includes(p.told)) K.score(p, areaFor(p.type, opt.kind), 2, 'Acted on what you had found out');
       // changing course when a fix did not hold
-      if (Object.keys(p.fails).length && !p.fails[opt.id] && opt.kind !== 'leave') K.score(p, areaFor(p.type), 2, 'Changed course when a fix did not hold');
-      else if ((p.fails[opt.id] || 0) >= 2) K.score(p, areaFor(p.type), -1, 'Tried the same failed fix a third time');
+      if (Object.keys(p.fails).length && !p.fails[opt.id] && opt.kind !== 'leave') K.score(p, areaFor(p.type, opt.kind), 2, 'Changed course when a fix did not hold');
+      else if ((p.fails[opt.id] || 0) >= 2) K.score(p, areaFor(p.type, opt.kind), -1, 'Tried the same failed fix a third time');
       if (!p.tried.includes(opt.id)) p.tried.push(opt.id);
       p.tries[opt.id] = (p.tries[opt.id] || 0) + 1;
       const before = p.state;
@@ -410,9 +410,10 @@ function triage(card, opt) {
 
 // The focus area a problem type belongs to: finding out before acting on a
 // lateness is accountability, on a hazard it is safety (CATALOGUE.md).
-function areaFor(type) {
+function areaFor(type, kind = null) {
+  if (type === 'otherside' && ['fix', 'hold', 'yourself', 'soft'].includes(kind)) return 'C3';
   return { late: 'D2', rework: 'D1', load: 'D1', friction: 'D3',
-    hazard: 'C2', recurring: 'B3', escalation: 'E1', standards: 'E2', constraint: 'B1', huddle: 'F1', newhand: 'D4' }[type];
+    hazard: 'C2', recurring: 'B3', escalation: 'E1', standards: 'E2', constraint: 'B1', huddle: 'F1', newhand: 'D4', otherside: 'E2' }[type];
 }
 
 // ---------------------------------------------------------------- the manager's seat

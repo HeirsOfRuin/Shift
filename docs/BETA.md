@@ -1,10 +1,18 @@
-# Shift beta 6: eleven modules, three seats, a profile, a path
+# Shift beta 7: twelve modules, three seats, a profile, a path
 
 Published 2026-11-04 as a private page, the same link as every beta:
 **https://claude.ai/artifact/4c5QqYTmZdn5iKcutCPZJx**
 (only the author can open it until he shares it from the page's Share menu).
 Rebuild with `npm run build` and republish `dist/shift.embed.html` to the same
 link. The build id is baked in, so an installed copy picks the new one up.
+
+**What changed in beta 7 (2026-11-04):** *The other side*, from your note
+about seeing other departments' point of view. Theresa is away for four
+weeks and you cover paint as well as welding: paint's standing week comes to
+you, and so do paint's kickback tickets, with your own crew's names on them.
+Send them back to your own crew, have paint sand them like Theresa does, or
+find out why, now that you stand on both sides of the door; then go back and
+check it held. Supervisor's seat only.
 
 **What changed in beta 6 (2026-11-04):** the operations manager's seat.
 Pick "Operations manager" on the profile and you are Dana: Kev runs welding
@@ -46,6 +54,12 @@ module is still played in the welding bay; a brief for anyone else says so.
 
 **What changed in beta 2 (2026-11-03):** pressure from open problems, fatigue,
 a People tab, and old saves carried forward.
+
+## How to test beta 7
+
+Play *The other side* as the welding supervisor. One question: when the
+first ticket came back with your crew's name on it, what did you do, and
+would you have done it a week earlier on your real floor?
 
 ## How to test beta 6
 
