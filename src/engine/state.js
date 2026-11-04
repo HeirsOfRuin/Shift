@@ -43,8 +43,15 @@ export function setProfile(save, p) {
 
 /** The module order for this save: the trainee's path if there is a profile, the
  *  track's written order if not. Unlocking follows it. */
+/** The seat a profile plays in. The manager's seat is framed, not built
+ *  (FRAME-seats.md), so a manager plays the supervisor's chair for now. */
+export function seatFor(profile) { return profile?.seat === 'lead' ? 'lead' : 'supervisor'; }
+export const supports = (id, seat) => (MODULES[id].seats || ['supervisor']).includes(seat);
+
 export function order(save) {
-  return save.profile ? pathFor(save.profile).map((x) => x.id) : TRACK.modules;
+  const seat = seatFor(save.profile);
+  const ids = save.profile ? pathFor(save.profile).map((x) => x.id) : TRACK.modules;
+  return ids.filter((id) => supports(id, seat));
 }
 
 /** Is a module open to play? The first is; each next one opens on the previous sign-off. */
@@ -59,7 +66,7 @@ export function unlocked(save, id) {
 export function startRun(save, moduleId, seed) {
   if (!unlocked(save, moduleId)) throw new Error('That module is not open yet: the one before it needs a coach sign-off.');
   const s = structuredClone(save);
-  s.run = newModule(moduleId, seed);
+  s.run = newModule(moduleId, seed, seatFor(s.profile));
   s.runs += 1;
   return s;
 }

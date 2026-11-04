@@ -25,6 +25,20 @@ export const CREW = [
     about: 'Finish and inspect. Three months. New, keen, hesitates. Trained by Donna, watched by everyone.' },
 ];
 
+// The lead hand's seat: the player works fit-up in Kev's old spot, and Kev is
+// the supervisor. Problems never land on the player.
+export const PLAYER_LEAD = { id: 'you', name: 'You', full: 'You', pronoun: 'he', station: 'fit', slot: 0, skill: 0.85, morale: 0.7, trust: 1, lead: true, player: true,
+  look: { skin: 1, hair: 'short', hairColour: 1, beard: false, build: 'medium' },
+  about: 'Lead hand, fit-up. Kev\'s old spot. The first person everyone asks.' };
+
+// Who holds which role around the player, by seat. {sup} and {senior} in text
+// resolve through these: the supervisor seat reports to Dana and leans on Kev;
+// the lead seat reports to Kev and leans on Lyle.
+export const ROLES = {
+  supervisor: { sup: { name: 'Dana', full: 'Dana Fiorino', pronoun: 'she' }, senior: { name: 'Kev', full: 'Kev Dueck', pronoun: 'he' } },
+  lead: { sup: { name: 'Kev', full: 'Kev Dueck', pronoun: 'he' }, senior: { name: 'Lyle', full: 'Lyle Cardinal', pronoun: 'he' } },
+};
+
 export const STATIONS = {
   fit: { label: 'Fit-up', seats: 2 },
   weld: { label: 'Body weld', seats: 3 },

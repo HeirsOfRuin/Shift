@@ -119,7 +119,7 @@ function scripted(policy, card, v) {
       if (cue === 'huddle') return by('allow') ?? fallback;
       if (cue === 'deadline' || cue === 'pressure') return by('do') ?? fallback;
       if (cue === 'shortcut') return by('allow') ?? fallback;
-      if (cue === 'overtime') return by('overtime') ?? fallback;
+      if (cue === 'overtime') return by('overtime') ?? by('up') ?? fallback;
       if (cue === 'yours' || cue === 'notYours') return by('decide') ?? fallback;
       return by('keep') ?? by('skip') ?? fallback;
     case 'documenter':
@@ -143,7 +143,7 @@ function scripted(policy, card, v) {
       if (cue === 'shortcut') return by('hold') ?? fallback;
       if (cue === 'yours') return by('decide') ?? fallback;
       if (cue === 'notYours') return by('ask') ?? fallback;
-      if (cue === 'overtime') return v.paint.forecast < v.paint.thisWeek - 1.5 ? by('overtime') : by('no');
+      if (cue === 'overtime') return v.paint.forecast < v.paint.thisWeek - 1.5 ? (by('overtime') ?? by('up')) : by('no');
       return by('skip') ?? fallback;
   }
   return fallback;
@@ -156,7 +156,7 @@ export function decide(s, policy) {
   const picks = {};
   const want = [];
   const problems = v.cards.filter((c) => c.kind === 'problem').sort((a, b) => b.main - a.main);
-  for (const c of problems) want.push([c, PROBLEM[policy](c) || 'leave']);
+  for (const c of problems) want.push([c, policy === 'documenter' && c.options.some((o) => o.id === 'takeUp') && !c.tried.includes('takeUp') ? 'takeUp' : PROBLEM[policy](c) || 'leave']);
   for (const c of v.cards.filter((x) => x.kind === 'script')) want.push([c, scripted(policy, c, v)]);
   const coach = v.cards.find((c) => c.kind === 'coach');
   if (coach && (policy === 'balanced' || policy === 'coach')) {
@@ -167,14 +167,20 @@ export function decide(s, policy) {
   const walk = v.cards.find((c) => c.kind === 'walk');
   if (walk && (policy === 'balanced' || policy === 'coach')) want.push([walk, 'walk']);
   for (const [card, id] of want) {
-    const opt = card.options.find((o) => o.id === id);
+    let opt = card.options.find((o) => o.id === id);
+    // the lead hand's seat: what needs the supervisor becomes "take it to Kev";
+    // the firefighter never does, the ignorer never does, the rest do
+    if (!opt && card.options.some((o) => o.id === 'takeUp') && !['firefighter', 'ignorer'].includes(policy)) opt = card.options.find((o) => o.id === 'takeUp' && !card.waiting);
     if (!opt) continue;
-    if (opt.hours <= left) { picks[card.id] = id; left -= opt.hours; }
+    if (opt.hours <= left) { picks[card.id] = opt.id; left -= opt.hours; }
   }
   const cover = v.cards.find((c) => c.kind === 'cover');
   if (cover) {
     const gap = (margin) => Math.max(0, Math.ceil((v.paint.thisWeek + margin - v.paint.forecast) / 0.42));
-    const days = { firefighter: Math.min(3, gap(0.8)), documenter: gap(-1.2) ? 1 : 0, coach: 0, ignorer: 0, balanced: Math.min(2, gap(-0.3)) }[policy];
+    // a lead hand is already producing at fit-up; welding a booth empties their own table
+    // a lead hand is already producing at fit-up; a second day in a booth empties their own table
+    const most = s.seat === 'lead' ? 1 : 2;
+    const days = { firefighter: Math.min(3, gap(0.8)), documenter: gap(-1.2) ? 1 : 0, coach: 0, ignorer: 0, balanced: Math.min(most, gap(-0.3)) }[policy];
     const afford = Math.max(0, Math.min(days, Math.floor(left / 8)));
     picks[cover.id] = `d${afford}`;
   }

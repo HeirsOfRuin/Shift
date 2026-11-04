@@ -24,7 +24,7 @@ function who(s, vars, slot) {
 
 export function fill(s, template, vars = {}) {
   return template.replace(/\{([a-zA-Z]+)(?:\.([a-zA-Z]+))?\}/g, (m, base, part) => {
-    const person = who(s, vars, base) || CAST[base] || null;
+    const person = who(s, vars, base) || s?.roles?.[base] || CAST[base] || null;
     if (person) {
       if (!part || part === 'name') return person.name;
       if (part === 'full') return person.full;

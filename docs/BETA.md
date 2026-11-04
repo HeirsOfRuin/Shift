@@ -1,10 +1,20 @@
-# Shift beta 4: eleven modules, a profile, a path
+# Shift beta 5: eleven modules, two seats, a profile, a path
 
 Published 2026-11-04 as a private page, the same link as every beta:
 **https://claude.ai/artifact/4c5QqYTmZdn5iKcutCPZJx**
 (only the author can open it until he shares it from the page's Share menu).
 Rebuild with `npm run build` and republish `dist/shift.embed.html` to the same
 link. The build id is baked in, so an installed copy picks the new one up.
+
+**What changed in beta 5 (2026-11-04, latest):** the lead hand's seat. Pick
+"Lead hand" on the profile and you are the new lead at fit-up, in Kev's old
+spot, with Kev as your supervisor. Eight modules play from there. Your hours
+bar shows the table shrinking as you take on tickets; what needs a signature
+(a write-up, a start-time change, a Saturday) goes to Kev with whatever you
+found out, and he does it his way the next week, or hands it back if you
+brought nothing. The end report reads the module's focus and, when you took
+something up, how you led up. The operations manager's seat is not built;
+pick it and you play the supervisor's chair, and the brief says so.
 
 **What changed in beta 4 (2026-11-04, later the same day):** three new modules
 for the topics the brief named and nothing covered. *Where it waits*: paint is
@@ -27,6 +37,14 @@ module is still played in the welding bay; a brief for anyone else says so.
 
 **What changed in beta 2 (2026-11-03):** pressure from open problems, fatigue,
 a People tab, and old saves carried forward.
+
+## How to test beta 5
+
+Make a second profile as one of your leads (Start over from the title, or
+Change on the track) and play *The late one* or *The new hand* from the lead
+hand's seat. Two questions: does taking it to Kev feel like what a lead does,
+or like a button; and is the table-time cost of leading about right for a
+lead hand who also works a station?
 
 ## How to test beta 4
 

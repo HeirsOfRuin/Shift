@@ -69,7 +69,10 @@ export function readArea(decisions, area) {
 }
 
 export function profile(s) {
-  const focus = MODULES[s.moduleId].focus;
+  // the seat's own area reads beside the module's: a lead hand is always also
+  // being read on what they took up and what they kept (FRAME-seats.md)
+  const seatArea = s.seat === 'lead' && !MODULES[s.moduleId].focus.includes('E1') && s.decisions.some((d) => d.area === 'E1');
+  const focus = [...MODULES[s.moduleId].focus, ...(seatArea ? ['E1'] : [])];
   const outside = [...new Set(s.decisions.map((d) => d.area))].filter((a) => AREAS[a] && !focus.includes(a));
   return {
     label: 'Practice, not assessment',

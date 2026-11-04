@@ -15,6 +15,8 @@ import { PROBLEMS } from '../data/problems.data.js';
 // The right action usually works, not always; a second try works more often.
 const works = (K, p, action, first, again) => K.r.outcomes.next() < ((p.tries[action] || 0) > 1 ? again : first) * (K.sharp ?? 1);
 const told = (p) => { if (!p.told) p.told = p.story; };
+// The senior hand beside the player: Kev in the supervisor's seat, Lyle in the lead's.
+const senior = (K) => K.person(K.s.seat === 'lead' ? 'lyle' : 'kev');
 
 export const TYPES = {
   // ------------------------------------------------------------- lateness
@@ -304,11 +306,11 @@ export const TYPES = {
     notice() { return true; },
     act(K, p, action) {
       const v = { p };
-      const kev = K.person('kev');
+      const kev = senior(K);
       switch (action) {
         case 'investigate': told(p); K.line('told', `recurring.told.${p.told}`, v); return;
         case 'fixYourself': p.fixedThisWeek = true; K.line('result', 'recurring.fixYourself', v); return;
-        case 'leadFix': p.fixedThisWeek = true; if (K.active(kev)) kev.daysOut += 0.5; K.line('result', 'recurring.leadFix', v); return;
+        case 'leadFix': p.fixedThisWeek = true; if (kev && K.active(kev)) kev.daysOut += 0.5; K.line('result', 'recurring.leadFix', v); return;
         case 'workOrder':
           if (p.cause === 'pin') { if (!p.order) p.order = { due: K.week + 1 }; K.line('result', 'recurring.order.placed', v); }
           else { p.ruledOut.push('pin'); K.line('result', 'recurring.order.notPins', v); }
@@ -577,7 +579,7 @@ export const TYPES = {
     act(K, p, action) {
       const [a] = p.who.map(K.person);
       const v = { p };
-      const kev = K.person('kev');
+      const kev = senior(K);
       switch (action) {
         case 'watch': told(p); a.trust = K.clamp(a.trust + 0.05); K.line('told', `newhand.told.${p.told}`, v); return;
         case 'teach':

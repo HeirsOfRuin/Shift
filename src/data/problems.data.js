@@ -8,7 +8,8 @@
 //
 // Action fields: hours; kind (what the bots read: ask, fix, hold, contain,
 // yourself, soft, up, around, leave); fits (the causes it is the right answer
-// for; common sense a good supervisor has, never shown as a hint).
+// for; common sense a good supervisor has, never shown as a hint); needs
+// ('supervisor': a lead hand cannot do this and takes it to the supervisor).
 
 export const PROBLEMS = {
   late: {
@@ -18,8 +19,8 @@ export const PROBLEMS = {
     stories: { attitude: { ride: 0.4 } },
     actions: {
       talk: { label: 'Talk to {a.him} privately', hours: 1, kind: 'ask' },
-      document: { label: 'Write it up and start the discipline steps', hours: 1.5, kind: 'hold', fits: ['attitude'] },
-      accommodate: { label: 'Offer {a.him} a later start time', hours: 0.5, kind: 'fix', fits: ['childcare'] },
+      document: { label: 'Write it up and start the discipline steps', hours: 1.5, kind: 'hold', fits: ['attitude'], needs: 'supervisor' },
+      accommodate: { label: 'Offer {a.him} a later start time', hours: 0.5, kind: 'fix', fits: ['childcare'], needs: 'supervisor' },
       carpool: { label: 'Sort out a ride with someone on {a.his} road', hours: 1, kind: 'fix', fits: ['ride'] },
       remind: { label: 'Mention it in passing', hours: 0.25, kind: 'soft' },
     },
@@ -35,7 +36,7 @@ export const PROBLEMS = {
       correct: { label: 'Tell {a.him} to tighten up', hours: 0.5, kind: 'soft' },
       fixYourself: { label: 'Fix the welds yourself', hours: 2, kind: 'yourself' },
       fixFixture: { label: 'Rebuild the fixture with maintenance', hours: 4, kind: 'fix', fits: ['fixture'] },
-      document: { label: 'Write {a.him} up for quality', hours: 1.5, kind: 'hold' },
+      document: { label: 'Write {a.him} up for quality', hours: 1.5, kind: 'hold', needs: 'supervisor' },
     },
   },
   load: {
@@ -46,7 +47,7 @@ export const PROBLEMS = {
     actions: {
       talk: { label: 'Take {a.him} for a coffee and ask', hours: 1, kind: 'ask' },
       redistribute: { label: 'Hand out what {a.hes} been carrying', hours: 2, kind: 'fix', fits: ['unowned'] },
-      timeOff: { label: 'Give {a.him} two days off', hours: 1, kind: 'fix', fits: ['personal'] },
+      timeOff: { label: 'Give {a.him} two days off', hours: 1, kind: 'fix', fits: ['personal'], needs: 'supervisor' },
       carry: { label: 'Take some of it yourself', hours: 3, kind: 'yourself' },
     },
   },
@@ -84,7 +85,7 @@ export const PROBLEMS = {
     actions: {
       investigate: { label: 'Spend a morning finding out why it keeps moving', hours: 3, kind: 'ask' },
       fixYourself: { label: 'Re-square the jig yourself again', hours: 2, kind: 'yourself' },
-      leadFix: { label: 'Have Kev re-square it', hours: 0.5, kind: 'yourself' },
+      leadFix: { label: 'Have {senior} re-square it', hours: 0.5, kind: 'yourself' },
       workOrder: { label: 'Work order: replace the locating pins', hours: 0.5, kind: 'fix', fits: ['pin'] },
       standardWork: { label: 'Write the setup down with the crew and train it', hours: 4, kind: 'fix', fits: ['setup'] },
       raiseFab: { label: 'Take the parts to Raymond in fabrication', hours: 1, kind: 'fix', fits: ['steel'] },
@@ -156,11 +157,11 @@ export const PROBLEMS = {
     actions: {
       watch: { label: 'Sit with {a.him} at the table for an hour and watch', hours: 1, kind: 'ask' },
       teach: { label: 'Teach {a.him} the job and why it is done that way', hours: 2, kind: 'fix', fits: ['untaught'] },
-      pair: { label: 'Pair {a.him} with Kev for the week, and tell Kev why', hours: 0.5, kind: 'fix', fits: ['afraid'] },
+      pair: { label: 'Pair {a.him} with {senior} for the week, and tell {senior} why', hours: 0.5, kind: 'fix', fits: ['afraid'] },
       slowDown: { label: 'Take the rack off {a.him}: speed comes later', hours: 0.5, kind: 'fix', fits: ['rushed'] },
       sheet: { label: 'Hand {a.him} the fit-up sheet and the drawing', hours: 0.25, kind: 'soft' },
       fixHis: { label: 'Fix {a.his} brackets yourself after hours', hours: 2, kind: 'yourself' },
-      document: { label: 'Write up the scrapped brackets', hours: 1, kind: 'hold' },
+      document: { label: 'Write up the scrapped brackets', hours: 1, kind: 'hold', needs: 'supervisor' },
     },
   },
 };

@@ -22,14 +22,24 @@ export const CONFIG = {
   escapeShare: 0.3,          // share of defects finish misses and paint finds
   fitRack: 4,                // fit-up stops when the rack holds this many
 
+  // The standing week. `seats` says who has it; a lead hand has no production
+  // meeting, no timecards and no capacity numbers (those are the supervisor's),
+  // and ten minutes with the supervisor at the end of each day instead.
   routine: [
-    { id: 'meeting', label: 'Production meeting', hours: 2, why: 'Dana runs it Tuesdays. Skip it and she hears about your week from someone else.' },
-    { id: 'scheduler', label: "Jess's capacity numbers", hours: 1, why: 'Jess builds next week from them. Skip it and next week holds a surprise.' },
-    { id: 'safety', label: 'Safety walk', hours: 1, why: 'Thursday, with the checklist. Skip it and nobody looks.' },
-    { id: 'timecards', label: 'Timecards', hours: 1.5, why: 'Payroll needs them by Friday, and they are where lateness shows up.' },
-    { id: 'paint', label: 'Paint handoff', hours: 0.5, why: 'Ten minutes a day at the paint door. Skip it and more of your rework goes over.' },
-    { id: 'huddles', label: 'Morning huddles', hours: 2.5, why: 'Five minutes a day with the crew. Skip them and the day starts without a plan.' },
+    { id: 'meeting', label: 'Production meeting', hours: 2, why: 'Dana runs it Tuesdays. Skip it and she hears about your week from someone else.', seats: ['supervisor'] },
+    { id: 'scheduler', label: "Jess's capacity numbers", hours: 1, why: 'Jess builds next week from them. Skip it and next week holds a surprise.', seats: ['supervisor'] },
+    { id: 'safety', label: 'Safety walk', hours: 1, why: 'Thursday, with the checklist. Skip it and nobody looks.', seats: ['supervisor', 'lead'] },
+    { id: 'timecards', label: 'Timecards', hours: 1.5, why: 'Payroll needs them by Friday, and they are where lateness shows up.', seats: ['supervisor'] },
+    { id: 'paint', label: 'Paint handoff', hours: 0.5, why: 'Ten minutes a day at the paint door. Skip it and more of your rework goes over.', seats: ['supervisor', 'lead'] },
+    { id: 'huddles', label: 'Morning huddles', hours: 2.5, why: 'Five minutes a day with the crew. Skip them and the day starts without a plan.', seats: ['supervisor', 'lead'] },
+    { id: 'handover', label: 'Ten minutes with Kev', hours: 1, why: 'End of each day, at his door. Skip it and he hears about your week from someone else.', seats: ['lead'] },
   ],
+  // The lead hand's seat: the floor is the table. Leading comes off the table
+  // unless the lead stays past forty to make it up (FRAME-seats.md).
+  lead: { table: 22, floorLoad: [
+    { id: 'table', label: 'At the table: your own fit-up work', hours: 22 },
+    { id: 'walkups', label: 'Walk-ups: the crew asks you first', hours: 3 },
+  ] },
 
   interrupts: { base: 22, perProblem: 3, perSeverity: 1.5, newHand: 1, leadOut: 6, leadStrained: 2 },
   // A clean week (no open problems) leaves about eight hours after the floor

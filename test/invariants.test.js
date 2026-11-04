@@ -8,11 +8,11 @@ import { newModule, advance, hoursFor, weekView, TRACK, MODULES, AREAS } from '.
 import { decide, POLICIES } from '../sim/bot.js';
 
 function* runs(seeds = 6) {
-  for (const module of TRACK.modules) for (const policy of POLICIES) for (let seed = 1; seed <= seeds; seed++) yield { module, policy, seed };
+  for (const module of TRACK.modules) for (const seat of MODULES[module].seats || ['supervisor']) for (const policy of POLICIES) for (let seed = 1; seed <= seeds; seed++) yield { module, policy, seed, seat };
 }
 
-function playThrough({ module, policy, seed }, each = () => {}) {
-  let s = newModule(module, seed);
+function playThrough({ module, policy, seed, seat = 'supervisor' }, each = () => {}) {
+  let s = newModule(module, seed, seat);
   for (let guard = 0; !s.over && guard < 40; guard++) {
     const plan = decide(s, policy);
     const expected = hoursFor(s, plan);
@@ -82,13 +82,27 @@ test('the practice read covers only the module\'s focus areas, gives no overall 
     const p = s.outcome.profile;
     assert.match(p.label, /Practice/);
     assert.equal(p.overall, undefined);
-    assert.deepEqual(p.focus.map((f) => f.id), MODULES[r.module].focus);
+    const seatArea = r.seat === 'lead' && !MODULES[r.module].focus.includes('E1') && s.decisions.some((d) => d.area === 'E1');
+    assert.deepEqual(p.focus.map((f) => f.id), [...MODULES[r.module].focus, ...(seatArea ? ['E1'] : [])], 'the module\'s focus, plus the seat\'s own area when a lead hand took something up');
     for (const f of p.focus) {
       assert.ok(['solid', 'getting', 'notyet', 'thin'].includes(f.read.id), f.read.id);
       if (f.n < 3) assert.equal(f.read.id, 'thin', `${r.module}: a read from ${f.n} decisions`);
     }
     for (const a of p.also) assert.ok(!MODULES[r.module].focus.includes(a.id));
   }
+});
+
+test('the lead hand cannot do what needs the supervisor, and the supervisor never sees "take it to Kev"', () => {
+  for (const r of runs(1)) {
+    playThrough(r, (before) => {
+      for (const card of weekView(before, {}).cards.filter((c) => c.kind === 'problem')) {
+        const ids = card.options.map((o) => o.id);
+        if (r.seat === 'lead') { assert.ok(!ids.includes('document') && !ids.includes('accommodate') && !ids.includes('timeOff'), `${r.module}: a lead can ${ids}`); }
+        else assert.ok(!ids.includes('takeUp'), `${r.module}: the supervisor can take it up`);
+      }
+    });
+  }
+  assert.throws(() => newModule('pulled', 1, 'lead'), /not written for the lead seat/);
 });
 
 test('every scored decision names a focus area the catalogue has', () => {

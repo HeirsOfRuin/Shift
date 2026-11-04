@@ -45,7 +45,11 @@ function collectExports(code, rel) {
 }
 
 async function load(rel) {
-  if (modules.has(rel)) return;
+  // A cycle (a imports b imports a) must fail here, not in order(): loading
+  // marks the module before its deps, or the recursion never ends and the
+  // process runs out of heap instead of saying so (Shift, beta 5).
+  if (modules.has(rel)) { if (modules.get(rel) === 'loading') throw new Error(`Import cycle through ${rel}`); return; }
+  modules.set(rel, 'loading');
   const abs = join(ROOT, rel);
   let code;
   try { code = await readFile(abs, 'utf8'); } catch { throw new Error(`Cannot read module: ${rel}`); }

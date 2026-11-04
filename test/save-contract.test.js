@@ -36,7 +36,8 @@ test('a profile is validated, builds the path, and the path sets the unlock orde
   const first = path[0].id;
   assert.ok(MODULES[first].focus.some((a) => save.profile.work.includes(a)), 'the first module trains something they want to work on');
   assert.equal(path.at(-1).id, 'late-one', 'the strength comes last, as a check');
-  assert.deepEqual(order(save), path.map((x) => x.id));
+  assert.deepEqual(order(save), path.map((x) => x.id).filter((id) => (MODULES[id].seats || []).includes('lead')), 'a lead hand\'s path holds only the modules written for the seat');
+  assert.ok(!order(save).includes('pulled'));
   assert.ok(unlocked(save, first));
   assert.ok(!unlocked(save, path[1].id));
   assert.ok(!unlocked(save, TRACK.modules[0]) || first === TRACK.modules[0]);

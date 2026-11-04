@@ -16,7 +16,7 @@
 // bots read it, the player reads the words.
 const R = {
   appraisals: {
-    id: 'appraisals', cue: 'deadline', title: 'Four appraisals due',
+    id: 'appraisals', cue: 'deadline', seats: ['supervisor'], title: 'Four appraisals due',
     body: "Marion's office sent the second reminder Monday. Four appraisals for your crew, due at the end of the month. Done properly they take the better part of an hour each, and the people getting them can tell when they weren't.",
     options: [
       { id: 'do', label: 'Do them properly this week', hours: 3, kind: 'do', effects: [{ trust: 0.03, who: 'all' }], score: [['D1', 1, 'Kept a promise to HR and the crew']] },
@@ -56,7 +56,7 @@ const R = {
     ],
   },
   kevVacation: {
-    id: 'kevVacation', cue: 'people', who: 'kev', title: "{c}'s vacation request",
+    id: 'kevVacation', cue: 'people', seats: ['supervisor'], who: 'kev', title: "{c}'s vacation request",
     body: "{c} wants the last week of the month off for his daughter's wedding. He needs an answer so he can book, and it means sorting out cover at fit-up. Half an hour, if you do it now.",
     options: [
       { id: 'do', label: 'Sort the cover and say yes', hours: 0.5, kind: 'do', effects: [{ morale: 0.05, who: 'kev' }, { trust: 0.05, who: 'kev' }] },
@@ -64,7 +64,7 @@ const R = {
     ],
   },
   jessForecast: {
-    id: 'jessForecast', cue: 'deadline', title: 'Jess needs next month from you',
+    id: 'jessForecast', cue: 'deadline', seats: ['supervisor'], title: 'Jess needs next month from you',
     body: 'Jess is building next month around the Rescue order and wants your honest number for each week, not the hopeful one. An hour with the sheet.',
     options: [
       { id: 'do', label: 'Give her the honest numbers', hours: 1, kind: 'do' },
@@ -96,7 +96,7 @@ const R = {
     ],
   },
   danaPage: {
-    id: 'danaPage', cue: 'deadline', title: 'Dana wants a page on overtime',
+    id: 'danaPage', cue: 'deadline', seats: ['supervisor'], title: 'Dana wants a page on overtime',
     body: 'Russ asked Dana why welding overtime went up last quarter, so Dana is asking you. One page, by Thursday.',
     options: [
       { id: 'do', label: 'Write it', hours: 1.5, kind: 'do', effects: [{ managerTrust: 0.05 }] },
@@ -111,13 +111,15 @@ export const TRACK = {
   id: 'supervisor',
   title: 'Supervisor track',
   intro: "You run the welding department at Northern Motors: seven people, three stations, and a paint department that wants six bodies a week. Each module is a few weeks of that job. Nobody tells you the right answer, because there usually isn't one; there is what you knew, what you did, and what it did.",
+  introLead: "You're the lead hand in welding at Northern Motors: fit-up is your table, six people ask you first, and Kev, who had your job until spring, is the supervisor. Every hour you lead comes off the table. Nobody tells you the right answer; there is what you knew, what you did, what you took to Kev, and what it did.",
   modules: ['the-week', 'late-one', 'loop', 'firefighting', 'pulled', 'upstairs', 'rush', 'across', 'waits', 'monday', 'newhand'],
 };
 
 export const MODULES = {
   // -------------------------------------------------------------------- 1
   'the-week': {
-    title: 'The week', focus: ['A1', 'A2'], handbook: '2: When everything is urgent, nothing is strategic', weeks: 6, goal: 'main',
+    title: 'The week', focus: ['A1', 'A2'], seats: ['supervisor', 'lead'],
+    leadBrief: "Kev got the supervisor's job in the spring and you got his: lead hand, fit-up, and the first person everyone asks. The inbox is smaller than Kev's and it still does not fit beside twenty-four hours at the table.", handbook: '2: When everything is urgent, nothing is strategic', weeks: 6, goal: 'main',
     teaches: 'Time, priorities, and what you refuse',
     brief: [
       "It's Monday and the inbox is already full. Appraisals, a drawing from engineering, a rep with free coffee, a page Dana wants by Thursday. None of it is unreasonable on its own, and all of it together is about fifty hours.",
@@ -145,7 +147,8 @@ export const MODULES = {
 
   // -------------------------------------------------------------------- 2
   'late-one': {
-    title: 'The late one', focus: ['D2'], handbook: '7: Culture is what you tolerate under pressure', weeks: 8, goal: 'main',
+    title: 'The late one', focus: ['D2'], seats: ['supervisor', 'lead'],
+    leadBrief: "You're the lead hand now; Kev is the supervisor. Brent is late and you can see it, and the crew can see you seeing it. Whatever the discipline steps are, they are Kev's to take. What you bring him is yours.", handbook: '7: Culture is what you tolerate under pressure', weeks: 8, goal: 'main',
     teaches: 'Accountability that fits the reason',
     brief: [
       "It's the first week of March. The Drayman line is running ahead for once, and the Surveyor Rescue that ships at the end of the month is the one Russ asks about every morning before he has his coat off.",
@@ -173,7 +176,8 @@ export const MODULES = {
 
   // -------------------------------------------------------------------- 3
   loop: {
-    title: 'The loop', focus: ['D3'], handbook: '7: Culture is what you tolerate under pressure', weeks: 8, goal: 'main',
+    title: 'The loop', focus: ['D3'], seats: ['supervisor', 'lead'],
+    leadBrief: "You're the lead hand; Kev is the supervisor and he's in the office more than on the floor. The thing between Marisol and Donna happens three metres from your table, every day, and nobody has told Kev about it.", handbook: '7: Culture is what you tolerate under pressure', weeks: 8, goal: 'main',
     teaches: 'Conflict that keeps coming back',
     brief: [
       "Marisol and Donna aren't speaking, or they're speaking in the way that's worse than not. Marisol's bodies come back from finish with more red tags than they did a month ago, and she says Donna's been picking at her. Donna says she's been doing her job.",
@@ -201,7 +205,8 @@ export const MODULES = {
 
   // -------------------------------------------------------------------- 4
   firefighting: {
-    title: 'Firefighting', focus: ['B3'], handbook: '1: Firefighting is a leadership failure, not a badge of honour', weeks: 8, goal: 'main',
+    title: 'Firefighting', focus: ['B3'], seats: ['supervisor', 'lead'],
+    leadBrief: "You're the lead hand, and the jig is yours to re-square; Kev used to do it and now he asks you to. He means it as a compliment.", handbook: '1: Firefighting is a leadership failure, not a badge of honour', weeks: 8, goal: 'main',
     teaches: 'Fixing the fire, or the thing that keeps lighting it',
     brief: [
       "The jig on body weld two keeps walking. Not much: a millimetre and a half by Wednesday, enough that Marisol's seams on the Hauler roof start to wander and Donna starts tagging them. You know how to fix it. You've re-squared that jig more times than you've had lunch at the table.",
@@ -229,7 +234,7 @@ export const MODULES = {
 
   // -------------------------------------------------------------------- 5
   pulled: {
-    title: 'Pulled off the floor', focus: ['A4', 'D1'], handbook: '6: Leaders build leaders, not just output', weeks: 8, goal: 'held',
+    title: 'Pulled off the floor', focus: ['A4', 'D1'], seats: ['supervisor'], onlySupervisor: 'it is about leaving the lead in charge', handbook: '6: Leaders build leaders, not just output', weeks: 8, goal: 'held',
     teaches: 'The bench: what you built before you left',
     brief: [
       'The customer audit is in three weeks, and Dana has put you on the team. For weeks three, four and five you will be in a room with a binder and an auditor most of every day. You will see the floor at lunch, if you eat lunch.',
@@ -288,7 +293,7 @@ export const MODULES = {
 
   // -------------------------------------------------------------------- 6
   upstairs: {
-    title: 'Nobody upstairs', focus: ['E1'], handbook: '4: Ownership without authority creates friction; 8: Leading up', weeks: 8, goal: 'main',
+    title: 'Nobody upstairs', focus: ['E1'], seats: ['supervisor'], onlySupervisor: "the decisions in it are a supervisor's", handbook: '4: Ownership without authority creates friction; 8: Leading up', weeks: 8, goal: 'main',
     teaches: 'Decision rights: what is yours, and what is not',
     brief: [
       'Dana is off for five weeks: a knee, done properly this time. Russ is covering her departments on top of his own, which means Russ is covering nothing very closely.',
@@ -337,7 +342,8 @@ export const MODULES = {
 
   // -------------------------------------------------------------------- 7
   rush: {
-    title: 'Rush week', focus: ['C1'], handbook: '7: Culture is what you tolerate under pressure', weeks: 8, goal: 'standard',
+    title: 'Rush week', focus: ['C1'], seats: ['supervisor', 'lead'],
+    leadBrief: "You're the lead hand. The shortcuts get offered to you first, at the table, in the tone of people doing you a favour. Saturdays are Kev's to approve; what slides on a Tuesday afternoon is yours.", handbook: '7: Culture is what you tolerate under pressure', weeks: 8, goal: 'standard',
     teaches: 'Holding the standard when the number is short',
     brief: [
       'Corey landed the county: four Surveyor Rescues, delivered before the fire season, which means weeks two through five. A Rescue is half again the welding of a Drayman. Paint will want seven or eight bodies a week and you make six on a good one.',
@@ -359,10 +365,10 @@ export const MODULES = {
       { id: 'ot2', week: 2, cue: 'overtime', title: 'Saturday?',
         body: 'A Saturday with three welders is a body and a bit. It is also a Saturday.',
         options: [
-          { id: 'yes', label: 'Run Saturday (you will be there)', hours: 5, kind: 'overtime', effects: [{ capacity: 1.2 }, { morale: -0.03, who: 'all' }, { stress: 0.5, who: 'kev' }] },
+          { id: 'yes', label: 'Run Saturday (you will be there)', hours: 5, kind: 'overtime', needs: 'supervisor', effects: [{ capacity: 1.2 }, { morale: -0.03, who: 'all' }, { stress: 0.5, who: 'kev' }] },
           { id: 'no', label: 'No Saturday this week', hours: 0, kind: 'no' },
         ] },
-      { id: 'lunch', week: 3, cue: 'shortcut', who: 'kev', title: 'The crew offers to weld through lunch',
+      { id: 'lunch', week: 3, cue: 'shortcut', who: 'brent', title: 'The crew offers to weld through lunch',
         body: "{c} says the crew would rather weld through lunch this week and take it Friday. They mean it kindly. It's thirty degrees in the bay.",
         options: [
           { id: 'allow', label: 'Let them', hours: 0, kind: 'allow', effects: [{ capacity: 0.4 }, { standard: -0.06 }, { safetyDebt: 0.01 }, { morale: -0.03, who: 'all' }], score: [['C1', -1, 'Let them skip the break in the heat']] },
@@ -371,7 +377,7 @@ export const MODULES = {
       { id: 'ot3', week: 3, cue: 'overtime', title: 'Saturday again?',
         body: 'Paint wants eight. Another Saturday is a body and a bit, and it is the second one.',
         options: [
-          { id: 'yes', label: 'Run Saturday', hours: 5, kind: 'overtime', effects: [{ capacity: 1.2 }, { morale: -0.04, who: 'all' }, { stress: 0.5, who: 'kev' }] },
+          { id: 'yes', label: 'Run Saturday', hours: 5, kind: 'overtime', needs: 'supervisor', effects: [{ capacity: 1.2 }, { morale: -0.04, who: 'all' }, { stress: 0.5, who: 'kev' }] },
           { id: 'no', label: 'No Saturday', hours: 0, kind: 'no' },
         ] },
       { id: 'sleeves', week: 3, cue: 'shortcut', who: 'tyler', title: "{c}'s welding in a T-shirt",
@@ -390,7 +396,7 @@ export const MODULES = {
       { id: 'ot4', week: 4, cue: 'overtime', title: 'A third Saturday?',
         body: 'Kev has stopped saying anything about Saturdays, which is how you know.',
         options: [
-          { id: 'yes', label: 'Run Saturday', hours: 5, kind: 'overtime', effects: [{ capacity: 1.2 }, { morale: -0.05, who: 'all' }, { stress: 1, who: 'kev' }] },
+          { id: 'yes', label: 'Run Saturday', hours: 5, kind: 'overtime', needs: 'supervisor', effects: [{ capacity: 1.2 }, { morale: -0.05, who: 'all' }, { stress: 1, who: 'kev' }] },
           { id: 'no', label: 'No Saturday', hours: 0, kind: 'no' },
         ] },
       { id: 'gauges', week: 5, cue: 'shortcut', title: 'The gauges are due for calibration',
@@ -421,7 +427,7 @@ export const MODULES = {
 
   // -------------------------------------------------------------------- 8
   across: {
-    title: 'Across', focus: ['E2'], handbook: '8: Leading at every level: horizontally', weeks: 8, goal: 'main',
+    title: 'Across', focus: ['E2'], seats: ['supervisor'], onlySupervisor: 'it is supervisor to supervisor', handbook: '8: Leading at every level: horizontally', weeks: 8, goal: 'main',
     teaches: 'Peers: going across before going up',
     brief: [
       "Paint kicks back your bodies for spatter. Some days. On other days the same spatter sails through. Your crew has noticed which days are which, and they've started sending the marginal ones when Theresa's on the line and holding them when her lead is.",
@@ -449,7 +455,8 @@ export const MODULES = {
 
   // -------------------------------------------------------------------- 9 (beta 4)
   waits: {
-    title: 'Where it waits', focus: ['B1'], handbook: '1: Firefighting is a leadership failure, not a badge of honour', weeks: 8, goal: 'main',
+    title: 'Where it waits', focus: ['B1'], seats: ['supervisor', 'lead'],
+    leadBrief: "You're the lead hand. Kev has told you to put real hours into fixing it and that he'll back whatever you find, which is generous, and means the hours come off your table.", handbook: '1: Firefighting is a leadership failure, not a badge of honour', weeks: 8, goal: 'main',
     teaches: 'Finding the station that limits everything, and only fixing that one',
     brief: [
       "Paint has been getting five bodies a week against the six it asks for, and it has been that way long enough that everyone has stopped asking why. They know why. It's body weld. Brent says it, Dana says it, Theresa says it with the sigh she keeps for welding.",
@@ -477,7 +484,8 @@ export const MODULES = {
 
   // -------------------------------------------------------------------- 10 (beta 4)
   monday: {
-    title: 'Monday, 7:00', focus: ['F1'], handbook: '2: When everything is urgent, nothing is strategic', weeks: 8, goal: 'main',
+    title: 'Monday, 7:00', focus: ['F1'], seats: ['supervisor', 'lead'],
+    leadBrief: "You're the lead hand, and the huddle is yours: Kev handed it over in the spring and stands at the back when he's there at all.", handbook: '2: When everything is urgent, nothing is strategic', weeks: 8, goal: 'main',
     teaches: 'Five minutes, every action with an owner, and the derailer handled without losing the room',
     brief: [
       "The huddle is at seven, at the board by fit-up, five minutes. That was the idea. For about a month it has been fifteen, and most of the extra is Brent: the brackets, the forklift route, the brackets again. By ten past, Lyle is looking at his boots and Joel is looking at Lyle.",
@@ -509,7 +517,7 @@ export const MODULES = {
           { id: 'ask', label: 'Ask him, by name, for one thing', hours: 0.25, kind: 'hold', effects: [{ trust: 0.06, who: 'lyle' }, { line: "{c}, asked by name, said the locating pins on table two have been loose for a month. He'd been waiting for someone to ask." }], score: [['F1', 2, 'Asked the quiet one, by name']] },
           { id: 'leave', label: 'Let him be; some people are quiet', hours: 0, kind: 'skip', effects: [{ queue: { weeks: 3, effects: [{ capacity: -0.5 }], line: "Table two's locating pins let go on Wednesday. Lyle had known for a month. Nobody asked." }, because: 'The quiet one was never asked' }] },
         ] },
-      { id: 'dana', week: 4, cue: 'huddle', title: 'Dana wants a quality review in the huddle',
+      { id: 'dana', week: 4, cue: 'huddle', seats: ['supervisor'], title: 'Dana wants a quality review in the huddle',
         body: "Dana would like fifteen minutes of quality numbers added to the huddle, daily, 'while everyone's there anyway.' She has the slides ready.",
         options: [
           { id: 'no', label: 'Keep the huddle five minutes; offer her Thursday afternoon instead', hours: 0.5, kind: 'hold', effects: [{ managerTrust: -0.02 }, { line: "Dana took Thursday afternoon, after a pause you could hear." }], score: [['F1', 2, 'Kept the huddle a huddle']] },
@@ -524,7 +532,7 @@ export const MODULES = {
       { id: 'safetyRaised', week: 6, cue: 'huddle', who: 'joel', title: '{c} mentions the crane hook, at the huddle, quietly',
         body: "{c} says, not quite to anyone, that the crane hook latch is sticking. It's seven-oh-three and there are four other things on the board.",
         options: [
-          { id: 'park', label: 'Stop the huddle: Kev tags the crane now, the rest of the board waits', hours: 0.25, kind: 'hold', effects: [{ safetyDebt: -0.01 }, { trust: 0.05, who: 'joel' }, { line: 'Kev red-tagged the crane at 7:05. Maintenance had the latch sorted by ten.' }], score: [['C2', 2, 'Stopped the huddle for a safety item'], ['F1', 2, 'Gave the safety item an owner before anything else']] },
+          { id: 'park', label: 'Stop the huddle: Kev tags the crane now, the rest of the board waits', hours: 0.25, kind: 'hold', effects: [{ safetyDebt: -0.01 }, { trust: 0.05, who: 'joel' }, { line: '{senior} red-tagged the crane at 7:05. Maintenance had the latch sorted by ten.' }], score: [['C2', 2, 'Stopped the huddle for a safety item'], ['F1', 2, 'Gave the safety item an owner before anything else']] },
           { id: 'after', label: 'Finish the board, then deal with it', hours: 0.5, kind: 'allow', effects: [{ safetyDebt: 0.01 }, { line: 'The crane got looked at after the huddle. Nobody used it in between, probably.' }], score: [['C2', 0, 'Dealt with a safety item after the board']] },
           { id: 'list', label: 'Add it to the list', hours: 0, kind: 'skip', effects: [{ safetyDebt: 0.03 }, { trust: -0.05, who: 'joel' }], score: [['C2', -1, 'Put a sticking crane latch on a list']] },
         ] },
@@ -544,7 +552,8 @@ export const MODULES = {
 
   // -------------------------------------------------------------------- 11 (beta 4)
   newhand: {
-    title: 'The new hand', focus: ['D4'], handbook: '6: Leaders build leaders, not just output', weeks: 8, goal: 'main',
+    title: 'The new hand', focus: ['D4'], seats: ['supervisor', 'lead'],
+    leadBrief: "You're the lead hand, and Sam is at the table beside you all day. Kev asked you to 'keep an eye on him', which is what supervisors say when they mean train him.", handbook: '6: Leaders build leaders, not just output', weeks: 8, goal: 'main',
     teaches: 'Teaching the task and the reason, and checking it landed',
     brief: [
       "Lyle is on parental leave until the summer, and Sam started Monday in his spot at fit-up. Sam is twenty-three, came off a farm shop where he welded everything that broke, and has good hands. Nobody doubts the hands.",

@@ -7,8 +7,8 @@ import { MODULES, TRACK } from '../data/modules.data.js';
 import { STATIONS, CREW, CAST, PLANT, CAST_ABOUT } from '../data/crew.data.js';
 import { AREAS, FAMILIES, SELF_LIMIT } from '../data/focus.data.js';
 import { SEATS, DEPARTMENTS, GROUPS, WRITTEN_BAY } from '../data/departments.data.js';
-import { hoursFor, crewFor } from './week.js';
-import { unlocked, order } from './state.js';
+import { hoursFor, tableFor, routineFor, crewFor } from './week.js';
+import { unlocked, order, seatFor, supports } from './state.js';
 import { pathFor } from './path.js';
 import { moodWord, standardWord, trustWord, active } from './derive.js';
 import { say } from './text.js';
@@ -16,9 +16,11 @@ import { say } from './text.js';
 export function trackView(save) {
   const ids = order(save);
   const path = save.profile ? pathFor(save.profile) : null;
+  const seat = seatFor(save.profile);
+  const notHere = TRACK.modules.filter((id) => !supports(id, seat)).map((id) => ({ id, title: MODULES[id].title, teaches: MODULES[id].teaches, focus: MODULES[id].focus.map((a) => AREAS[a].label), why: `Written for the supervisor's seat only: ${MODULES[id].onlySupervisor || 'it is the supervisor\'s job by its nature'}.` }));
   return {
-    id: TRACK.id, title: TRACK.title, intro: TRACK.intro, openAll: save.track.openAll,
-    you: whoView(save.profile),
+    id: TRACK.id, title: TRACK.title, intro: seat === 'lead' ? TRACK.introLead : TRACK.intro, openAll: save.track.openAll,
+    you: whoView(save.profile), seat, notHere,
     modules: ids.map((id, i) => {
       const m = MODULES[id];
       const t = save.track.modules[id];
@@ -37,10 +39,15 @@ export function trackView(save) {
 
 export function briefView(id, profile = null) {
   const m = MODULES[id];
+  const seat = seatFor(profile);
+  const lead = seat === 'lead';
+  const focus = [...m.focus, ...(lead && !m.focus.includes('E1') ? ['E1'] : [])];
   return {
-    id, title: m.title, teaches: m.teaches, handbook: m.handbook, weeks: m.weeks, brief: m.brief, goal: m.goalText, lose: m.lose,
-    focus: m.focus.map((a) => ({ id: a, label: AREAS[a].label, about: AREAS[a].about, moves: AREAS[a].moves })),
+    id, title: m.title, teaches: m.teaches, handbook: m.handbook, weeks: m.weeks, brief: lead && m.leadBrief ? [m.leadBrief, ...m.brief] : m.brief, goal: m.goalText, lose: m.lose,
+    focus: focus.map((a) => ({ id: a, label: AREAS[a].label, about: AREAS[a].about, moves: AREAS[a].moves, seatArea: !m.focus.includes(a) })),
+    seatAreaNote: lead && !m.focus.includes('E1') ? 'Read when something in the run needs Kev\'s signature: what you took up, and what you brought with it.' : '',
     seat: seatNote(profile),
+    playedAs: lead ? 'the lead hand, at fit-up, with Kev as your supervisor' : 'the welding supervisor',
   };
 }
 
@@ -51,10 +58,10 @@ function seatNote(profile) {
   if (!profile) return '';
   const dept = DEPARTMENTS[profile.department];
   const seat = SEATS[profile.seat];
-  if (profile.department === WRITTEN_BAY && profile.seat === 'supervisor') return '';
   const where = profile.department === WRITTEN_BAY ? '' : ` You run ${dept.name}; this module is written in the welding bay, two doors down, and the lessons travel.`;
-  const who = profile.seat === 'supervisor' ? '' : ` You are a ${seat.label.toLowerCase()}; in this module you hold the supervisor's seat for a few weeks, and the debrief asks what carries back to yours.`;
-  return `This module puts you in the welding supervisor's chair.${where}${who}`;
+  if (profile.seat === 'lead') return `You play this as the welding lead hand: at the table, with Kev as your supervisor, and nothing that needs his signature in your hands.${where}`;
+  if (profile.seat === 'supervisor') return where.trim();
+  return `This module puts you in the welding supervisor's chair.${where} The operations manager's seat is framed and not built yet; until it is, you play the supervisor and the debrief asks what carries up to yours.`;
 }
 
 /** The profile as the screens show it. */
@@ -91,15 +98,15 @@ export function weekView(s, plan = {}) {
   const m = s.monday;
   const module = MODULES[s.moduleId];
   const hours = s.over ? 0 : hoursFor(s, plan);
-  const routineHours = s.over ? 0 : C.routine.filter((it) => !s.dept.routineGone.includes(it.id) && !(plan.skip || []).includes(it.id)).reduce((a, it) => a + it.hours, 0);
+  const routineHours = s.over ? 0 : routineFor(s).filter((it) => !(plan.skip || []).includes(it.id)).reduce((a, it) => a + it.hours, 0);
   const limit = hours > C.bottleneckAt ? say(s, 'limit.bottleneck') : hours > C.fatigueAt ? say(s, 'limit.fatigue') : hours > C.tiredAt ? say(s, 'limit.tired') : hours > C.hoursCeiling ? say(s, 'limit.over') : say(s, 'limit.ok', { n: Math.max(0, Math.round((C.hoursCeiling - hours) * 2) / 2) });
   const last = s.history[s.history.length - 1];
   return {
-    module: { id: s.moduleId, title: module.title, goal: module.goalText },
+    module: { id: s.moduleId, title: module.title, goal: module.goalText }, seat: s.seat || 'supervisor',
     week: Math.min(s.week, s.weeks), weeks: s.weeks, over: s.over, outcome: s.outcome,
     floorItems: s.over ? [] : m.floorItems,
     tired: s.dept.tired >= C.tiredHome ? 'Run down: it is starting to show at home' : s.dept.tired >= C.tiredSlips ? 'Running down: your fixes land less often until you get a few normal weeks' : s.dept.tired > 0 ? 'A little tired from last week' : '',
-    hours: { total: hours, floor: s.over ? 0 : m.interrupts, meetings: s.over ? 0 : m.meetings, routine: routineHours, chosen: Math.max(0, hours - (m?.interrupts || 0) - (m?.meetings || 0) - routineHours), ceiling: C.hoursCeiling, tired: C.tiredAt, bottleneck: C.bottleneckAt, limit },
+    hours: { total: hours, floor: s.over ? 0 : m.interrupts, floorLabel: s.seat === 'lead' ? 'The table and the floor' : 'The floor', table: s.over ? null : tableFor(s, plan), meetings: s.over ? 0 : m.meetings, routine: routineHours, chosen: Math.max(0, hours - (m?.interrupts || 0) - (m?.meetings || 0) - routineHours), ceiling: C.hoursCeiling, tired: C.tiredAt, bottleneck: C.bottleneckAt, limit },
     away: m?.away, managerAway: m?.managerAway,
     cards: s.over ? [] : m.cards,
     paint: { lastShipped: last?.bodies ?? null, lastAsked: last?.asked ?? null, shipped: Math.round(s.dept.shipped), asked: s.dept.demanded, thisWeek: m?.demand, forecast: m?.forecast },
@@ -133,6 +140,7 @@ export function floorView(s) {
 const STATE_WORDS = { working: 'working', idle: 'standing around more than usual', talking: 'in a conversation that looks like it is not about work', frustrated: 'looks fed up', absent: 'not here' };
 function captionFor(c, state) {
   const where = { fit: 'fit-up', weld: 'body weld', finish: 'finish' }[c.station];
+  if (c.player) return `You, ${where}: at the table when you are not leading.`;
   return `${c.name}, ${where}: ${STATE_WORDS[state]}.`;
 }
 
@@ -160,8 +168,8 @@ export function crewView(s) {
 export { MODULES, TRACK };
 
 /** The crew as the brief shows them: name, station, a line about each. */
-export function crewStrip(moduleId = null) {
-  const crew = moduleId && MODULES[moduleId] ? crewFor(MODULES[moduleId]) : CREW;
+export function crewStrip(moduleId = null, seat = 'supervisor') {
+  const crew = moduleId && MODULES[moduleId] ? crewFor(MODULES[moduleId], seat) : CREW;
   return crew.map((c) => ({ id: c.id, name: c.name, station: STATIONS[c.station].label, about: c.about, look: c.look, lead: !!c.lead }));
 }
 

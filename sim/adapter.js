@@ -4,11 +4,11 @@
 import { newModule, advance, TRACK } from '../src/engine/game.js';
 import { decide, POLICIES } from './bot.js';
 
-export const axes = { policy: POLICIES, module: TRACK.modules };
-export const defaults = { policy: 'balanced', module: 'late-one' };
+export const axes = { policy: POLICIES, module: TRACK.modules, seat: ['supervisor', 'lead'] };
+export const defaults = { policy: 'balanced', module: 'late-one', seat: 'supervisor' };
 
 export function play(seed, opts = {}) {
-  let s = newModule(opts.module || defaults.module, seed);
+  let s = newModule(opts.module || defaults.module, seed, opts.seat || defaults.seat);
   for (let guard = 0; !s.over && guard < 40; guard++) {
     const before = s.week;
     s = advance(s, decide(s, opts.policy || defaults.policy)).state;

@@ -10,7 +10,7 @@
 //    confirmation and every copy happens on the page.
 
 import {
-  newSave, setProfile, startRun, playWeek, saveDebrief, signOff, setOpenAll, SAVE_KEY, serialize, deserialize, toCode, fromCode,
+  newSave, setProfile, seatFor, startRun, playWeek, saveDebrief, signOff, setOpenAll, SAVE_KEY, serialize, deserialize, toCode, fromCode,
   trackView, briefView, weekView, demoFloor, crewStrip, peopleView, profileView, markSeen, MODULES, TRACK,
 } from '../engine/game.js';
 import { STORAGE_OK, lsGet, lsSet } from './storage.js';
@@ -81,6 +81,7 @@ function trackScreen() {
     ${banner ? `<p class="banner">${esc(banner)}</p>` : ''}
     ${t.inRun ? `<div class="banner info row"><span>${t.inRun.over ? `Your last run of ${esc(t.inRun.title)} has ended.` : `You are in week ${t.inRun.week} of ${esc(t.inRun.title)}.`}</span><button class="btn" data-act="resume">${t.inRun.over ? 'See how it went' : 'Back to it'}</button></div>` : ''}
     <div class="ladder">${t.modules.map(rung).join('')}</div>
+    ${t.notHere.length ? `<section><p class="label">Not in this seat</p>${t.notHere.map((m) => `<div class="rung locked"><span class="n">&middot;</span><span class="body"><h3>${esc(m.title)}</h3><span class="soft">${esc(m.teaches)}</span><span class="soft">${esc(m.why)}</span></span></div>`).join('')}</section>` : ''}
     <div class="toggle"><button class="btn" data-act="open-all">${t.openAll ? 'Lock modules to the sign-off order' : 'Open every module'}</button><span class="soft">Beta switch. Normally each module opens when the one before it has been debriefed and signed off by a coach.</span></div>
     <div class="row"><button class="btn" data-act="export">Copy a save code</button><button class="btn quiet" data-act="title">Title screen</button></div>
     ${codeBox === 'export' ? exportBox() : ''}
@@ -154,13 +155,13 @@ function briefScreen() {
   const other = save.run && !save.run.over ? save.run : null;
   return `<main class="screen">
     <div><button class="btn quiet" data-act="track">Back to the track</button></div>
-    <div class="stack"><p class="label">Module ${m.n} of ${TRACK.modules.length} &middot; Handbook ${esc(b.handbook)}</p><h2>${esc(b.title)}</h2><p class="soft">${esc(b.teaches)} &middot; ${b.weeks} weeks</p></div>
+    <div class="stack"><p class="label">Module ${m.n} &middot; Handbook ${esc(b.handbook)}</p><h2>${esc(b.title)}</h2><p class="soft">${esc(b.teaches)} &middot; ${b.weeks} weeks &middot; played as ${esc(b.playedAs)}</p></div>
     ${b.seat ? `<p class="banner info">${esc(b.seat)}</p>` : ''}
     <div class="prose">${b.brief.map((p) => `<p>${esc(p)}</p>`).join('')}</div>
-    <section><p class="label">What this module trains</p>${b.focus.map((f) => `<p><strong>${esc(f.label)}.</strong> ${esc(f.about)}</p>`).join('')}</section>
+    <section><p class="label">What this module trains</p>${b.focus.map((f) => `<p><strong>${esc(f.label)}${f.seatArea ? ' (your seat)' : ''}.</strong> ${esc(f.about)}${f.seatArea && b.seatAreaNote ? ` ${esc(b.seatAreaNote)}` : ''}</p>`).join('')}</section>
     <section><p class="label">To get through it</p><p>${esc(b.goal)}</p></section>
     <section><p class="label">Ways it goes wrong</p><ul class="notes">${b.lose.map((l) => `<li>${esc(l)}</li>`).join('')}</ul></section>
-    <section><p class="label">Your crew</p><div class="people">${crewStrip(briefId).map((c) => `<div class="person"><canvas data-portrait="${c.id}" aria-hidden="true"></canvas><div class="body"><span class="name">${esc(c.name)}</span><span class="soft">${esc(c.station)}${c.lead ? ' &middot; lead' : ''}</span><span>${esc(c.about)}</span></div></div>`).join('')}</div></section>
+    <section><p class="label">Your crew</p><div class="people">${crewStrip(briefId, seatFor(save.profile)).map((c) => `<div class="person"><canvas data-portrait="${c.id}" aria-hidden="true"></canvas><div class="body"><span class="name">${esc(c.name)}</span><span class="soft">${esc(c.station)}${c.lead ? ' &middot; lead' : ''}</span><span>${esc(c.about)}</span></div></div>`).join('')}</div></section>
     ${other ? `<p class="warn">Starting this ends your run of ${esc(MODULES[other.moduleId].title)} in week ${other.week}. It will not count as played.</p>` : ''}
     <button class="btn primary block" data-act="start-module" data-id="${b.id}">Start Monday</button>
   </main>`;
@@ -212,8 +213,9 @@ function hoursPanel(hr, items = [], tired = '') {
     <div class="total ${state}"><span class="label">Your week</span><span class="num">${h(hr.total)}</span></div>
     <div class="bar" role="img" aria-label="${h(hr.total)} planned against a forty-hour week"><span class="floor" style="width:${w(hr.floor)}"></span><span class="meet" style="width:${w(hr.meetings)}"></span><span class="routine" style="width:${w(hr.routine)}"></span><span class="chosen" style="width:${w(hr.chosen)}"></span></div>
     <div class="marks"><i style="left:${w(hr.ceiling)}">40</i><i style="left:${w(hr.bottleneck)}">55</i></div>
-    <div class="key"><span><b class="floor"></b>The floor ${h(hr.floor)}</span>${hr.meetings ? `<span><b class="meet"></b>Audit room ${h(hr.meetings)}</span>` : ''}<span><b class="routine"></b>Standing week ${h(hr.routine)}</span><span><b class="chosen"></b>Your choices ${h(hr.chosen)}</span></div>
+    <div class="key"><span><b class="floor"></b>${esc(hr.floorLabel || 'The floor')} ${h(hr.floor)}</span>${hr.meetings ? `<span><b class="meet"></b>Audit room ${h(hr.meetings)}</span>` : ''}<span><b class="routine"></b>Standing week ${h(hr.routine)}</span><span><b class="chosen"></b>Your choices ${h(hr.chosen)}</span></div>
     <p class="limit">${esc(hr.limit)}</p>
+    ${hr.table ? `<p class="limit">At the table this week: ${h(hr.table.worked)} of ${h(hr.table.of)}. What you choose to do comes off the table unless you stay to make it up.</p>` : ''}
     ${tired ? `<p class="banner">${esc(tired)}</p>` : ''}
     ${items.length ? `<details class="floorlist"${floorOpen ? ' open' : ''}><summary data-act="floor-toggle">Where the floor's ${h(hr.floor)} go</summary><ul>${[...items].sort((a, b) => Number(!!(b.problem || b.pushed)) - Number(!!(a.problem || a.pushed)) || b.hours - a.hours).map((it) => `<li class="${it.problem ? 'fallout' : it.pushed ? 'pushed' : ''}"><span>${esc(it.label)}${it.pushed ? ' <span class="chip">pushed off</span>' : ''}</span><span class="num">${h(it.hours)}</span></li>`).join('')}</ul><p class="soft">Fixing a problem at the root takes its fallout off this list. Developing Kev and training Joel shrink it too.</p></details>` : ''}
   </div>`;
@@ -368,7 +370,7 @@ function mountArt() {
     const cap = cv.parentElement.querySelector('[data-caption]');
     mountBay(cv, data, (p) => { if (cap) cap.textContent = p ? p.caption : 'Nobody there. Tap a person.'; });
   }
-  const crew = [...crewStrip(screen === 'brief' ? briefId : save?.run?.moduleId)];
+  const crew = [...crewStrip(screen === 'brief' ? briefId : save?.run?.moduleId, screen === 'brief' ? seatFor(save?.profile) : save?.run?.seat || 'supervisor')];
   for (const cv of app.querySelectorAll('canvas[data-portrait]')) {
     const c = crew.find((x) => x.id === cv.dataset.portrait);
     if (c) drawPortrait(cv, c.look, c.lead);

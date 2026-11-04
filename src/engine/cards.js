@@ -12,13 +12,13 @@ import { CONFIG as C } from '../data/config.data.js';
 import { PROBLEMS } from '../data/problems.data.js';
 import { streamFor } from './rng.js';
 import { say, fill } from './text.js';
-import { active } from './derive.js';
+import { active, routineFor } from './derive.js';
 
 export function buildCards(s, module) {
   const cards = [];
   const routine = ({
     id: 'routine', kind: 'routine', title: say(s, 'card.routine.title'), body: say(s, 'card.routine.body'),
-    items: C.routine.filter((it) => !s.dept.routineGone.includes(it.id)).map((it) => ({ id: it.id, label: it.label, hours: it.hours, why: it.why })),
+    items: routineFor(s).map((it) => ({ id: it.id, label: it.label, hours: it.hours, why: it.why })),
     gone: s.dept.routineGone.map((id) => C.routine.find((it) => it.id === id)?.label).filter(Boolean),
     options: [], pick: null,
   });
@@ -26,8 +26,10 @@ export function buildCards(s, module) {
   const open = s.problems.filter((p) => p.seen && p.state === 'active').sort((a, b) => (b.main - a.main) || (a.id - b.id));
   for (const p of open) cards.push(problemCard(s, p));
 
+  const seat = s.seat || 'supervisor';
+  const forSeat = (def) => (def.seats || ['supervisor', 'lead']).includes(seat);
   for (const def of module.cards || []) {
-    if (def.week !== s.week) continue;
+    if (def.week !== s.week || !forSeat(def)) continue;
     if (def.ifFlag && !s.dept.flags[def.ifFlag]) continue;
     if (def.unlessFlag && s.dept.flags[def.unlessFlag]) continue;
     cards.push(scriptCard(s, def));
@@ -37,7 +39,7 @@ export function buildCards(s, module) {
     const r = streamFor(s.seed, s.week, 'requests');
     const [lo, hi] = module.pool.perWeek;
     const n = r.range(lo, hi);
-    const avail = module.pool.cards.filter((c) => !s.dept.usedCards.includes(c.id) && (!c.from || s.week >= c.from) && (!c.to || s.week <= c.to));
+    const avail = module.pool.cards.filter((c) => forSeat(c) && !s.dept.usedCards.includes(c.id) && (!c.from || s.week >= c.from) && (!c.to || s.week <= c.to));
     for (let i = 0; i < n && avail.length; i++) {
       const def = avail.splice(r.int(avail.length), 1)[0];
       s.dept.usedCards.push(def.id);
@@ -90,7 +92,9 @@ function problemCard(s, p) {
     told: p.told, tried: [...p.tried], failed: Object.keys(p.fails), failedTwice: Object.keys(p.fails).filter((k) => p.fails[k] >= 2),
     sessions: p.sessions, ruledOut: [...p.ruledOut], waiting: !!(p.order || p.russDue || p.engDue || p.aroundDue),
     options: [
-      ...Object.entries(def.actions).map(([id, a]) => ({ id, label: fill(s, a.label, { p }), hours: a.hours, kind: a.kind, fits: a.fits || [] })),
+      ...Object.entries(def.actions).filter(([, a]) => !(s.seat === 'lead' && a.needs)).map(([id, a]) => ({ id, label: fill(s, a.label, { p }), hours: a.hours, kind: a.kind, fits: a.fits || [] })),
+      // a lead hand's one move for what needs the supervisor's signature
+      ...(s.seat === 'lead' && Object.values(def.actions).some((a) => a.needs) ? [{ id: 'takeUp', label: say(s, p.upDue ? 'option.takeUp.waiting' : 'option.takeUp'), hours: 0.5, kind: 'up', fits: [] }] : []),
       { id: 'leave', label: say(s, `option.leave.${fresh ? 'new' : 'open'}`), hours: 0, kind: 'leave', fits: [] },
     ],
     pick: 'leave',
@@ -102,7 +106,13 @@ function scriptCard(s, def) {
   return {
     id: `m${def.id}`, kind: 'script', cue: def.cue || 'plain', who: def.who ? [def.who] : [],
     title: fill(s, def.title, vars), body: fill(s, def.body, vars), know: [],
-    options: def.options.map((o) => ({ id: o.id, label: fill(s, o.label, vars), hours: o.hours || 0, kind: o.kind || 'do', effects: o.effects || [], score: o.score || [] })),
+    options: def.options.map((o) => (s.seat === 'lead' && o.needs
+      // what needs a signature becomes a request to the supervisor, who usually says yes
+      ? { id: o.id, label: fill(s, `Ask {sup}: ${o.label.charAt(0).toLowerCase()}${o.label.slice(1)}`, vars), hours: 0.5, kind: 'up', effects: [{ chance: 0.7, then: o.effects || [], else: [{ line: say(s, 'lead.ask.no') }] }], score: [...(o.score || []), ['E1', 1, `Asked ${s.roles.sup.name} for what needed a signature`]] }
+      // a lead hand who holds the line on a shortcut pays for it with the crew: they eat lunch with these people
+      : s.seat === 'lead' && def.cue === 'shortcut' && o.kind === 'hold'
+        ? { id: o.id, label: fill(s, o.label, vars), hours: o.hours || 0, kind: 'hold', effects: [...(o.effects || []), { morale: -0.012, who: 'all' }, { ifFlag: 'leadHeld', then: [], else: [{ flag: 'leadHeld' }, { line: say(s, 'lead.hold.cost') }] }], score: o.score || [] }
+        : { id: o.id, label: fill(s, o.label, vars), hours: o.hours || 0, kind: o.kind || 'do', effects: o.effects || [], score: o.score || [] })),
     pick: def.pick || def.options[def.options.length - 1].id,
   };
 }

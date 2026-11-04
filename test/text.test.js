@@ -6,7 +6,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { newModule, advance, weekView, TRACK } from '../src/engine/game.js';
+import { newModule, advance, weekView, TRACK, MODULES } from '../src/engine/game.js';
 import { decide, POLICIES } from '../sim/bot.js';
 import { TEXT } from '../src/data/text.data.js';
 import { PROBLEMS } from '../src/data/problems.data.js';
@@ -14,8 +14,8 @@ import { PROBLEMS } from '../src/data/problems.data.js';
 const RAW = /[{}]|undefined|NaN|\[object/;
 
 test('no raw tokens anywhere a player can read, across every module and bot', () => {
-  for (const module of TRACK.modules) for (const policy of POLICIES) for (let seed = 1; seed <= 8; seed++) {
-    let s = newModule(module, seed);
+  for (const module of TRACK.modules) for (const seat of MODULES[module].seats || ['supervisor']) for (const policy of POLICIES) for (let seed = 1; seed <= 8; seed++) {
+    let s = newModule(module, seed, seat);
     while (!s.over) {
       const v = weekView(s, {});
       for (const c of v.cards) {

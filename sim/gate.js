@@ -1,4 +1,4 @@
-// node sim/gate.js [--runs=100] [--module=id]
+// node sim/gate.js [--runs=100] [--module=id] [--seat=lead]
 // The kill gate's five conditions (docs/KILLGATE.md), applied to every module
 // of the track with the engine's own bots. A module ships only if it passes.
 // Exit code 1 if any gated module fails, so `npm run check` can run it.
@@ -14,10 +14,10 @@ const pct = (p) => `${(100 * p).toFixed(0)}% ±${se(p).toFixed(0)}`;
 const within = (p, lo, hi) => p >= lo - 2 * se(p) / 100 && p <= hi + 2 * se(p) / 100;
 const floor = (a, b) => 2 * Math.sqrt(se(a) ** 2 + se(b) ** 2) / 100;
 
-function table(module) {
+function table(module, seat) {
   return POLICIES.map((policy) => {
     const ms = [];
-    for (let i = 0; i < RUNS; i++) ms.push(metrics(play(1000 + i, { module, policy })));
+    for (let i = 0; i < RUNS; i++) ms.push(metrics(play(1000 + i, { module, policy, seat })));
     const rate = (k) => ms.filter((m) => m[k]).length / RUNS;
     const mean = (k) => ms.reduce((a, m) => a + m[k], 0) / RUNS;
     return { policy, win: rate('win'), schedule: rate('schedule'), kept: rate('kept'), problem: rate('problem'), starved: rate('starved'),
@@ -46,9 +46,9 @@ function gate(rows) {
 const modules = args.module ? [args.module] : TRACK.modules;
 let pass = true;
 const md = [];
-for (const id of modules) {
-  const rows = table(id);
-  md.push(`\n### ${MODULES[id].title} (\`${id}\`), ${RUNS} seeds per style\n`);
+for (const id of modules) for (const seat of (MODULES[id].seats || ['supervisor']).filter((x) => !args.seat || x === args.seat)) {
+  const rows = table(id, seat);
+  md.push(`\n### ${MODULES[id].title} (\`${id}\`${seat === 'supervisor' ? '' : `, ${seat} seat`}), ${RUNS} seeds per style\n`);
   md.push('| Style | Win | Schedule | Kept everyone | Problem settled | Paint starved | Bottleneck | Shipped / asked | Hours a week | Morale | Trust | Practice score |');
   md.push('|---|---|---|---|---|---|---|---|---|---|---|---|');
   for (const r of rows) md.push(`| ${r.policy} | ${pct(r.win)} | ${pct(r.schedule)} | ${pct(r.kept)} | ${pct(r.problem)} | ${pct(r.starved)} | ${pct(r.bottleneck)} | ${(100 * r.ship).toFixed(0)}% | ${r.hours.toFixed(1)} | ${r.morale.toFixed(2)} | ${r.trust.toFixed(2)} | ${(100 * r.practice).toFixed(0)}% |`);

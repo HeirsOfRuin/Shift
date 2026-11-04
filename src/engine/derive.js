@@ -12,13 +12,20 @@ export function capacity(c) {
   const avail = clamp((5 - c.daysOut - c.lateness) / 5, 0, 1);
   const skillF = (0.6 + 0.5 * c.skill) / 0.9;
   const moraleF = (0.85 + 0.25 * c.morale) / 1.025;
-  return C.rate[c.station] * skillF * moraleF * avail * (c.cramped ? 0.85 : 1);
+  return C.rate[c.station] * skillF * moraleF * avail * (c.cramped ? 0.85 : 1) * (c.tableShare ?? 1);
 }
 
 /** What the booths look good for on Monday, before the week happens. */
 export function weldForecast(s) {
   const weld = s.crew.filter((c) => c.station === 'weld').reduce((a, c) => a + capacity(c), 0) / s.monday.weldContent;
   return round1(weld);
+}
+
+/** The standing week for this run's seat, less what has been handed off. Here
+ *  and not in week.js because cards.js needs it too, and the bundler refuses a
+ *  cycle (week.js already imports cards.js). */
+export function routineFor(s) {
+  return C.routine.filter((it) => (it.seats || ['supervisor']).includes(s.seat || 'supervisor') && !s.dept.routineGone.includes(it.id));
 }
 
 /** A word for a number the player should feel, not read. */

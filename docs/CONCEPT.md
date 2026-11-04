@@ -252,6 +252,15 @@ everything is urgent nothing is strategic; 3 Structure protects good people;
 
 ## 10. Status and the exact next steps
 
+**Update (2026-11-04, latest):** beta 5 adds the lead hand's seat on the
+welding bay (`FRAME-seats.md`): the player works fit-up in Kev's old spot
+with Kev as supervisor; what needs a signature goes to Kev with whatever the
+lead found out; every ticket comes off the table. Eight of eleven modules
+play from the seat and pass the gate; the supervisor seat is unchanged. The
+operations manager's seat is framed, not built, and needs a kill gate for the
+supervisor-capability loop first. **The next step:** the author plays beta 5
+as a lead hand, then the manager's seat kill gate, then *The other side*.
+
 **Update (2026-11-04, later):** beta 4 adds the three modules that cover the
 brief's missing topics: *Where it waits* (finding the bottleneck), *Monday,
 7:00* (running a huddle), *The new hand* (onboarding). Eleven modules, all

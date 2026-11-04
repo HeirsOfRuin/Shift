@@ -11,7 +11,7 @@
 //   12 the record, the end check, and next Monday
 
 import { CONFIG as C } from '../data/config.data.js';
-import { CREW } from '../data/crew.data.js';
+import { CREW, PLAYER_LEAD, ROLES } from '../data/crew.data.js';
 import { PROBLEMS, LANDS_ON } from '../data/problems.data.js';
 import { MODULES } from '../data/modules.data.js';
 import { TYPES } from './problems.js';
@@ -20,7 +20,8 @@ import { buildCards } from './cards.js';
 import { applyEffects } from './effects.js';
 import { say, fill } from './text.js';
 import { judge } from './outcome.js';
-import { clamp, round1, active, person, capacity, weldForecast } from './derive.js';
+import { clamp, round1, active, person, capacity, weldForecast, routineFor } from './derive.js';
+export { routineFor };
 
 // ---------------------------------------------------------------- the kernel
 // What problem types and effects may touch. One place, so a type cannot reach
@@ -72,8 +73,8 @@ export function spawn(s, type, who, { main = false, seen = false, source = 'scri
 // a lead who is out or stretched, and anything you pushed off that came back.
 function interruptions(s) {
   const I = C.interrupts;
-  const items = C.floorLoad.map((f) => ({ label: f.label, hours: f.hours }));
-  if (s.dept.bench >= 0.55) items[0] = { label: `${items[0].label} (Kev takes some)`, hours: items[0].hours - 2 };
+  const items = (s.seat === 'lead' ? C.lead.floorLoad : C.floorLoad).map((f) => ({ label: f.label, hours: f.hours }));
+  if (s.seat !== 'lead' && s.dept.bench >= 0.55) items[0] = { label: `${items[0].label} (Kev takes some)`, hours: items[0].hours - 2 };
   let unseen = 0;
   for (const p of s.problems) {
     let h = 0;
@@ -87,8 +88,8 @@ function interruptions(s) {
   const newHands = s.crew.filter((c) => active(c) && c.skill < 0.45);
   if (newHands.length) items.push({ label: `${newHands.map((c) => c.name).join(' and ')} still ask${newHands.length > 1 ? '' : 's'} before guessing`, hours: newHands.length * I.newHand });
   const kev = person(s, 'kev');
-  if (!active(kev)) items.push({ label: 'Catching what Kev usually catches', hours: I.leadOut });
-  else if (kev.stress >= 3) items.push({ label: 'Kev is stretched; more of it comes to you', hours: I.leadStrained });
+  if (kev && !active(kev)) items.push({ label: 'Catching what Kev usually catches', hours: I.leadOut });
+  else if (kev && kev.stress >= 3) items.push({ label: 'Kev is stretched; more of it comes to you', hours: I.leadStrained });
   for (const f of s.dept.floorExtra || []) if (f.from <= s.week && f.until >= s.week) items.push({ label: f.label, hours: f.hours, pushed: true });
   const total = Math.round(items.reduce((a, it) => a + it.hours, 0) * 2) / 2;
   return { total, items };
@@ -119,11 +120,24 @@ export function startWeek(s) {
 }
 
 // The plan's hours, the one function the UI and the engine both use (rule 1).
+/** The lead hand's hours at the table this week: what the tickets did not take,
+ *  plus whatever they stayed past forty to make up. One derivation (rule 1). */
+export function tableFor(s, plan) {
+  if (s.seat !== 'lead') return null;
+  const hours = hoursFor(s, plan);
+  const skip = plan.skip || [];
+  const routine = routineFor(s).filter((it) => !skip.includes(it.id)).reduce((a, it) => a + it.hours, 0);
+  const chosen = Math.max(0, hours - s.monday.interrupts - s.monday.meetings - routine);
+  // the standing week happens at the edges of the day; the tickets come off the table
+  const worked = clamp(C.lead.table - chosen + Math.max(0, hours - C.hoursCeiling), 0, C.lead.table);
+  return { worked: Math.round(worked * 2) / 2, of: C.lead.table };
+}
+
 export function hoursFor(s, plan) {
   const m = s.monday;
   let h = m.interrupts + m.meetings;
   const skip = plan.skip || [];
-  for (const it of C.routine) if (!s.dept.routineGone.includes(it.id) && !skip.includes(it.id)) h += it.hours;
+  for (const it of routineFor(s)) if (!skip.includes(it.id)) h += it.hours;
   for (const card of m.cards) {
     if (card.kind === 'routine') continue;
     const opt = card.options.find((o) => o.id === (plan.picks?.[card.id] ?? card.pick));
@@ -154,7 +168,7 @@ export function advance(prev, plan = {}) {
     if (!card.options.some((o) => o.id === id)) throw new Error(`no option ${id} on card ${card.id}`);
     picks[card.id] = id;
   }
-  const skip = (plan.skip || []).filter((id) => C.routine.some((it) => it.id === id) && !s.dept.routineGone.includes(id));
+  const skip = (plan.skip || []).filter((id) => routineFor(s).some((it) => it.id === id));
   const P = { skip, picks };
 
   // 1. your hours
@@ -162,13 +176,18 @@ export function advance(prev, plan = {}) {
 
   // 2. routine
   for (const id of skip) {
-    if (id === 'meeting') s.dept.managerTrust = clamp(s.dept.managerTrust - (m.managerAway ? 0.01 : 0.05));
+    if (id === 'meeting' || id === 'handover') s.dept.managerTrust = clamp(s.dept.managerTrust - (m.managerAway ? 0.01 : 0.05));
+    if (id === 'handover') K.score(null, 'E1', -1, `Skipped the ten minutes with ${s.roles.sup.name}`);
     if (id === 'scheduler') s.dept.surprise = true;
     if (id === 'safety') { s.dept.safetyDebt += 0.01; K.score(null, 'C2', -1, 'Let the safety walk go'); }
     if (id === 'timecards') for (const c of s.crew) c.morale = clamp(c.morale - 0.03);
     if (id === 'huddles') { s.week_.capacityMul *= 0.97; for (const c of s.crew) c.morale = clamp(c.morale - 0.01); }
   }
   if (!skip.includes('safety')) s.dept.safetyDebt = Math.max(0, s.dept.safetyDebt - 0.01);
+
+  // the lead hand's table time: leading comes off the table (FRAME-seats.md)
+  const you = person(s, 'you');
+  if (you) { const t = tableFor(s, P); you.tableShare = t.worked / t.of; if (t.worked < t.of * 0.5) lines.push({ kind: 'result', text: say(s, 'lead.table.thin', { n: t.worked }) }); }
 
   // 3. your actions, in card order
   let cover = 0;
@@ -186,6 +205,19 @@ export function advance(prev, plan = {}) {
         continue;
       }
       p.acted = true;
+      if (opt.id === 'takeUp') {
+        // the lead hand's one move for what is not theirs: take it to the supervisor
+        const sup = s.roles.sup;
+        const mine = Object.entries(PROBLEMS[p.type].actions).some(([, a]) => !a.needs && p.told && (a.fits || []).includes(p.told));
+        if (!p.told) K.score(p, 'E1', -1, `Took it to ${sup.name} with nothing but a complaint`);
+        else if (mine) K.score(p, 'E1', 0, `Sent ${sup.name} something that was yours to handle`);
+        else { K.score(p, 'E1', 2, `Took it to ${sup.name} with the facts`); K.score(p, areaFor(p.type), 2, `Fitted the response to the cause, through ${sup.name}`); }
+        if (!p.tried.includes('takeUp')) p.tried.push('takeUp');
+        p.upDue = s.week + 1;
+        s.queue.push({ week: s.week + 1, kind: 'leadUp', data: { id: p.id, told: p.told }, because: { week: s.week, text: '' } });
+        lines.push({ kind: 'result', text: say(s, p.told ? 'lead.up.taken' : 'lead.up.takenBlind', { p }) });
+        continue;
+      }
       // knowing what you know: find out before acting, then act on what you found
       if (!p.told && opt.kind === 'ask') K.score(p, areaFor(p.type), 2, 'Found out before acting');
       else if (!p.told && ['fix', 'hold', 'soft', 'yourself', 'up', 'around'].includes(opt.kind)) K.score(p, areaFor(p.type), -1, 'Acted before finding out why');
@@ -222,7 +254,7 @@ export function advance(prev, plan = {}) {
   // your own load: over forty is a symptom, and it accumulates
   const wasTired = s.dept.tired || 0;
   s.dept.tired = hours > C.hoursCeiling ? wasTired + (hours - C.hoursCeiling) * C.tiredPerHour : Math.max(0, wasTired - C.tiredRecover);
-  const chosen = hours - m.interrupts - m.meetings - C.routine.filter((it) => !s.dept.routineGone.includes(it.id) && !skip.includes(it.id)).reduce((a, it) => a + it.hours, 0);
+  const chosen = hours - m.interrupts - m.meetings - routineFor(s).filter((it) => !skip.includes(it.id)).reduce((a, it) => a + it.hours, 0);
   if (hours > C.tiredAt) K.score(null, 'A2', -1, 'Worked past forty-five');
   else if (hours <= C.hoursCeiling && chosen >= 2) K.score(null, 'A2', 2, 'Kept the week inside forty and still acted');
   else if (hours <= C.hoursCeiling) K.score(null, 'A2', 0, 'Kept the week short by choosing little');
@@ -326,7 +358,7 @@ export function advance(prev, plan = {}) {
   }
   d.standard = clamp(d.standard + (C.standardHome - d.standard) * 0.03);
   const kev = person(s, 'kev');
-  if (!m.away && active(kev) && !s.problems.some((p) => p.type === 'load' && p.who.includes('kev') && p.state !== 'resolved')) kev.stress = Math.max(0, kev.stress - 0.5);
+  if (!m.away && kev && active(kev) && !s.problems.some((p) => p.type === 'load' && p.who.includes('kev') && p.state !== 'resolved')) kev.stress = Math.max(0, kev.stress - 0.5);
 
   // 11. what you will know on Monday
   for (const p of s.problems) {
@@ -463,6 +495,25 @@ function land(s, K, q, lines) {
     lines.push({ kind: 'consequence', text: say(s, 'land.kickbackWar') });
     trace('trace.kickbackWar', {});
   }
+  if (q.kind === 'leadUp') {
+    const p = s.problems.find((x) => x.id === q.data.id);
+    if (!p || p.state === 'resolved') return;
+    p.upDue = null;
+    const sup = s.roles.sup;
+    if (!q.data.told) { d.managerTrust = clamp(d.managerTrust - 0.03); lines.push({ kind: 'told', text: say(s, 'lead.up.noFacts', { p }) }); return; }
+    const fit = Object.entries(PROBLEMS[p.type].actions).find(([, a]) => a.needs && (a.fits || []).includes(q.data.told));
+    if (!fit) { lines.push({ kind: 'told', text: say(s, 'lead.up.yours', { p }) }); return; }
+    // the supervisor does it their way: the action's own lines are in the
+    // player's voice, so they are dropped and one line says what happened
+    const K2 = kernel(s, { outcomes: streamFor(s.seed, s.week, 'sup'), people: streamFor(s.seed, s.week, 'supPeople') }, []);
+    K2.sharp = 1;
+    p.tries[fit[0]] = (p.tries[fit[0]] || 0) + 1;
+    TYPES[p.type].act(K2, p, fit[0]);
+    d.managerTrust = clamp(d.managerTrust + 0.03);
+    if (p.state === 'resolved') { p.how = say(s, 'lead.up.how', { p }); lines.push({ kind: 'result', text: say(s, 'lead.up.done', { p }) }); }
+    else lines.push({ kind: 'result', text: say(s, 'lead.up.tried', { p }) });
+    if (p.state === 'resolved') for (const c of s.crew) if (c.id !== 'you') c.trust = clamp(c.trust + 0.01);
+  }
   if (q.kind === 'constraintMoves') {
     const next = { fit: 'finish', finish: 'weld', weld: 'fit' }[q.data.from];
     const p = spawn(s, 'constraint', [], { source: 'moved', causes: { [next]: 1 } });
@@ -477,9 +528,12 @@ function land(s, K, q, lines) {
 }
 
 // ---------------------------------------------------------------- a new module
-export function newModule(moduleId, seed) {
+export function newModule(moduleId, seed, seat = 'supervisor') {
   const module = MODULES[moduleId];
   if (!module) throw new Error(`no module ${moduleId}`);
+  if (!(module.seats || ['supervisor']).includes(seat)) throw new Error(`${module.title} is not written for the ${seat} seat`);
+  const crew = crewFor(module, seat);
+  const ids = new Set(crew.map((c) => c.id));
   const rs = streamFor(seed >>> 0, 'module', 'script');
   const script = [];
   if (module.main) script.push({ ...module.main, week: module.main.week || 1, main: module.goal === 'main' });
@@ -487,14 +541,15 @@ export function newModule(moduleId, seed) {
     const types = Object.keys(LANDS_ON).filter((t) => !(module.second.not || []).includes(t));
     const type = rs.pick(types);
     const taken = new Set(module.main?.who || []);
-    const options = LANDS_ON[type].filter((w) => !w.some((id) => taken.has(id) || (module.second.avoid || []).includes(id)));
+    const here = LANDS_ON[type].filter((w) => w.every((id) => ids.has(id)));
+    const options = here.filter((w) => !w.some((id) => taken.has(id) || (module.second.avoid || []).includes(id)));
     const [lo, hi] = module.second.weeks || [3, 5];
-    script.push({ type, who: rs.pick(options.length ? options : LANDS_ON[type]), week: rs.range(lo, hi), seen: false });
+    script.push({ type, who: rs.pick(options.length ? options : here), week: rs.range(lo, hi), seen: false });
   }
   const s = {
-    v: 1, seed: seed >>> 0, moduleId, week: 1, weeks: module.weeks, over: false, outcome: null,
+    v: 1, seed: seed >>> 0, moduleId, seat, roles: structuredClone(ROLES[seat]), week: 1, weeks: module.weeks, over: false, outcome: null,
     setup: structuredClone(module.setup || {}),
-    crew: crewFor(module).map((c) => ({ ...structuredClone(c), status: 'active', daysOut: 0, lateness: 0, defectAdd: 0, stress: 0, carryOut: 0, lowMorale: 0, leaving: false, cramped: false })),
+    crew: crew.map((c) => ({ ...structuredClone(c), status: 'active', daysOut: 0, lateness: 0, defectAdd: 0, stress: 0, carryOut: 0, lowMorale: 0, leaving: false, cramped: false })),
     dept: {
       fitBuf: 1.5, weldBuf: 0.5, shipped: 0, demanded: 0, escapes: 0, rework: 0,
       standard: C.standardHome, bench: 0.3, managerTrust: 0.6, peerTrust: 0.5, safetyDebt: 0, fixtureFixed: false, escapeAdd: 0,
@@ -511,10 +566,11 @@ export function newModule(moduleId, seed) {
 
 /** The crew for a module: the bay's seven, with one swapped out if the module
  *  says so (The new hand: Lyle out on leave, Sam in his spot). */
-export function crewFor(module) {
+export function crewFor(module, seat = 'supervisor') {
   const swap = module.setup?.swap;
-  if (!swap) return CREW;
-  return CREW.map((c) => (c.id === swap.out ? { ...swap.in, station: swap.in.station || c.station, slot: swap.in.slot ?? c.slot } : c));
+  let crew = seat === 'lead' ? CREW.map((c) => (c.id === 'kev' ? PLAYER_LEAD : c)) : CREW;
+  if (swap) crew = crew.map((c) => (c.id === swap.out ? { ...swap.in, station: swap.in.station || c.station, slot: swap.in.slot ?? c.slot } : c));
+  return crew;
 }
 
 function biggest(items) {
