@@ -1,7 +1,7 @@
 # Shift: the concept, for a reader who was not there
 
 Written 2026-11-03 as the handoff for any new session. Read this first, then
-`PLAN.md` (the full design), `ORG.md` (the company, the cast, the vehicles)
+`REVIEW.md` (the 2026-11-04 redirect), then `PLAN.md` (the full design), `ORG.md` (the company, the cast, the vehicles)
 and `SPEC.md` (the Supervisor track, one page).
 Everything here was agreed with the author in conversation; his words are
 quoted where they decided something. Where this document and `PLAN.md`
@@ -102,6 +102,8 @@ Google Doc copies of the same things.
 | 2026-11-03 | Voice, second pass: "Make the narrative a bit more realistically human." `PLAN.md` section 7 rewritten with three samples. |
 | 2026-11-03 | The name: "The name is Northern Motors." The cast and vehicles: "The names look good." |
 | 2026-11-03 | Through to a beta: "Continue as you see fit. With until you have a testable beta." The agent runs the gates without stopping for sign-off and reports each gate's numbers with the beta. |
+
+| 2026-11-04 | Not built around EI or the LBA: "I don't want this whole thing to revolve around EI or LBA, It needs to cover a wide array of different topics and focus points, with modules designed to focus on one or two at a time." The review and proposal are in `REVIEW.md`; its section 7 lists what the author still has to decide. Until he does, sections 7 and 8 below describe the current build, not the agreed direction. |
 
 Decisions the agent made and the author has not yet confirmed or struck: the
 work-content table in `ORG.md`; the player runs welding first; the extra
@@ -246,6 +248,12 @@ everything is urgent nothing is strategic; 3 Structure protects good people;
   API key, no server.
 
 ## 10. Status and the exact next steps
+
+**Update (2026-11-04):** beta 2 is built, gated and committed (`f02736d`):
+pressure from open problems, fatigue, a fairer score and a People tab, all
+from the author's beta 1 notes. Then the author redirected the design away
+from the LBA as the backbone. `REVIEW.md` is the current proposal and the
+next-steps list; read it before the list below, which is now history.
 
 **Done (2026-11-03):** the design plan, the organisation and product line,
 the Supervisor spec, the kill gate (`KILLGATE.md`, passed), the stage 3 design
