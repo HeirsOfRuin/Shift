@@ -226,6 +226,21 @@ export const PROBLEMS = {
       blame: { label: 'Tell Dana {erp} is wrong', hours: 0.5, kind: 'up' },
     },
   },
+  // ---- beta 9: It looked great for a week (B2): the 5S event, a week on
+  lean: {
+    label: 'It looked great for a week',
+    causes: { noOwner: 0.3, noAudit: 0.25, forThem: 0.25, moveIn: 0.2 },
+    passing: 'moveIn',
+    stories: { forThem: { noOwner: 0.3 } },
+    actions: {
+      ask: { label: 'Walk the bay with the crew and ask what stopped working', hours: 1, kind: 'ask' },
+      owners: { label: 'Put a name on every area, chosen by the crew', hours: 1, kind: 'fix', fits: ['noOwner'] },
+      audit: { label: 'Start a five-minute audit, Fridays, with whoever owns the area', hours: 1, kind: 'fix', fits: ['noAudit'] },
+      redoWith: { label: 'Re-run the event with the crew: they decide where things go', hours: 4, kind: 'fix', fits: ['forThem'] },
+      redoFor: { label: 'Re-run the event yourself on Saturday', hours: 6, kind: 'yourself' },
+      signs: { label: 'New labels and a memo', hours: 0.5, kind: 'soft' },
+    },
+  },
 };
 
 // Where a problem of each type can land, when a module draws one at random.

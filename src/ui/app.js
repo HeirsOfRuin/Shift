@@ -16,6 +16,7 @@ import {
 import { STORAGE_OK, lsGet, lsSet } from './storage.js';
 import { registerSW, installPrompt } from './sw-register.js';
 import { mountBay, drawPortrait } from './floor.js';
+import { loadNotes, saveNote, sendNotes, noteText } from './feedback.js';
 
 const app = document.getElementById('app');
 let save = null;
@@ -33,6 +34,8 @@ let floorOpen = true;        // the floor's itemised hours, open until folded   
 let busy = false;
 let install = null;
 let draft = null;          // the profile form in progress
+let note = null;           // the feedback form in progress
+let sendState = null;      // { busy, ok, why } after a send
 
 const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 // Hours to the quarter: 0.25 h is a quarter hour, not 0.3.
@@ -53,6 +56,7 @@ function titleScreen() {
     <h1>Shift</h1>
     <p class="lede">A leadership simulator for the shop floor. A few weeks at a time, forty hours a week, a crew with problems whose causes are hidden, and a plant that does not wait for you.</p>
     <div class="bay"><div class="legend"><span>Fit-up</span><span>Body weld</span><span>Finish</span><span>Paint</span></div><canvas data-bay="demo" aria-label="The welding bay at Northern Motors, everyone at work"></canvas><p class="caption" data-caption>Tap someone to see how they look from across the bay.</p></div>
+    <section class="you"><p class="label">For testers</p><p>This is a beta. Make your profile (two minutes), play one module (about twenty), then <strong>Menu &rarr; Your thoughts</strong> and tell the coach what felt true, what felt fake and what was missing. Nothing from your runs leaves this phone unless you send it.</p></section>
     ${STORAGE_OK ? '' : '<p class="warn">This browser will not keep anything for this page, so progress is lost when you leave. Copy a save code from the menu before you go, or open Shift in its own tab.</p>'}
     ${banner ? `<p class="warn">${esc(banner)}</p>` : ''}
     <div class="stack">
@@ -83,7 +87,7 @@ function trackScreen() {
     <div class="ladder">${t.modules.map(rung).join('')}</div>
     ${t.notHere.length ? `<section><p class="label">Not in this seat</p>${t.notHere.map((m) => `<div class="rung locked"><span class="n">&middot;</span><span class="body"><h3>${esc(m.title)}</h3><span class="soft">${esc(m.teaches)}</span><span class="soft">${esc(m.why)}</span></span></div>`).join('')}</section>` : ''}
     <div class="toggle"><button class="btn" data-act="open-all">${t.openAll ? 'Lock modules to the sign-off order' : 'Open every module'}</button><span class="soft">Beta switch. Normally each module opens when the one before it has been debriefed and signed off by a coach.</span></div>
-    <div class="row"><button class="btn" data-act="export">Copy a save code</button><button class="btn quiet" data-act="title">Title screen</button></div>
+    <div class="row"><button class="btn" data-act="feedback">Your thoughts, for the coach</button><button class="btn" data-act="export">Copy a save code</button><button class="btn quiet" data-act="title">Title screen</button></div>
     ${codeBox === 'export' ? exportBox() : ''}
   </main>`;
 }
@@ -95,7 +99,7 @@ function rung(m) {
   if (m.wins) chips.push(`<span class="chip good">Got through ${m.wins}</span>`);
   if (m.debriefed) chips.push('<span class="chip amber">Debriefed</span>');
   if (m.signedOff) chips.push(`<span class="chip good">Signed off: ${esc(m.signedOff.coach)}</span>`);
-  const inner = `<span class="n">${m.n}</span><span class="body"><h3>${esc(m.title)}</h3><span class="soft">${esc(m.teaches)} &middot; ${m.weeks} weeks</span><span class="chips">${m.focus.map((f) => `<span class="chip focus">${esc(f)}</span>`).join('')}</span>${m.because ? `<span class="soft">${esc(m.because)}</span>` : ''}${chips.length ? `<span class="chips">${chips.join('')}</span>` : ''}${m.open ? '' : `<span class="soft">${esc(m.why)}</span>`}</span>`;
+  const inner = `<span class="n">${m.n}</span><span class="body"><h3>${esc(m.title)}</h3><span class="soft">${esc(m.teaches)} &middot; ${m.weeks} weeks</span>${m.purpose ? `<span class="purpose">${esc(m.purpose)}</span>` : ''}<span class="chips">${m.focus.map((f) => `<span class="chip focus">${esc(f)}</span>`).join('')}</span>${m.because ? `<span class="soft">${esc(m.because)}</span>` : ''}${chips.length ? `<span class="chips">${chips.join('')}</span>` : ''}${m.open ? '' : `<span class="soft">${esc(m.why)}</span>`}</span>`;
   return m.open ? `<button class="rung" data-act="brief" data-id="${m.id}">${inner}</button>` : `<div class="rung locked">${inner}</div>`;
 }
 
@@ -157,6 +161,7 @@ function briefScreen() {
   return `<main class="screen">
     <div><button class="btn quiet" data-act="track">Back to the track</button></div>
     <div class="stack"><p class="label">Module ${m.n} &middot; Handbook ${esc(b.handbook)}</p><h2>${esc(b.title)}</h2><p class="soft">${esc(b.teaches)} &middot; ${b.weeks} weeks &middot; played as ${esc(b.playedAs)}</p></div>
+    ${b.purpose ? `<section><p class="label">Why this module</p><p class="purpose">${esc(b.purpose)}</p></section>` : ''}
     ${b.seat ? `<p class="banner info">${esc(b.seat)}</p>` : ''}
     <div class="prose">${b.brief.map((p) => `<p>${esc(p)}</p>`).join('')}</div>
     <section><p class="label">What this module trains</p>${b.focus.map((f) => `<p><strong>${esc(f.label)}${f.seatArea ? ' (your seat)' : ''}.</strong> ${esc(f.about)}${f.seatArea && b.seatAreaNote ? ` ${esc(b.seatAreaNote)}` : ''}</p>`).join('')}</section>
@@ -170,7 +175,7 @@ function briefScreen() {
 
 // ================================================================ the week
 const CUE = { huddle: 'At the huddle', deadline: 'Request &middot; deadline', people: 'Request &middot; one of yours', safety: 'Safety', optional: 'Request', pressure: 'Request &middot; pressure', develop: 'Before you go', shortcut: 'Shortcut offered', overtime: 'Overtime', yours: 'A decision', notYours: 'A decision', plain: 'Request' };
-const TYPE = { late: 'Lateness', rework: 'Rework', load: 'Carrying too much', friction: 'Friction', hazard: 'Safety', recurring: 'The same fire', escalation: 'A decision', standards: 'Two standards', constraint: 'Where it waits', huddle: 'The huddle', newhand: 'The new hand', otherside: 'From the other side', customer: 'Internal customer', infowork: 'Hidden rework', erp: 'The system' };
+const TYPE = { late: 'Lateness', rework: 'Rework', load: 'Carrying too much', friction: 'Friction', hazard: 'Safety', recurring: 'The same fire', escalation: 'A decision', standards: 'Two standards', constraint: 'Where it waits', huddle: 'The huddle', newhand: 'The new hand', otherside: 'From the other side', customer: 'Internal customer', infowork: 'Hidden rework', erp: 'The system', lean: 'The 5S event' };
 
 function weekScreen() {
   const v = weekView(save.run, plan);
@@ -275,6 +280,7 @@ function logTab(v) {
 function menuTab() {
   return `<h2>Menu</h2><div class="stack">
     <button class="btn" data-act="track">Back to the track (the run waits)</button>
+    <button class="btn" data-act="feedback">Your thoughts, for the coach</button>
     <button class="btn" data-act="export">Copy a save code</button>
     ${codeBox === 'export' ? exportBox() : ''}
     ${pending?.act === 'abandon' ? `<p class="warn">Abandon this run? It will not count as played, and the weeks so far are gone.</p><div class="row"><button class="btn" data-act="abandon">Yes, abandon it</button><button class="btn quiet" data-act="cancel">Keep playing</button></div>` : '<button class="btn quiet" data-act="ask-abandon">Abandon this run</button>'}
@@ -315,6 +321,7 @@ function endScreen() {
       ${p.also.length ? `<p class="label">Also on the floor, unrated</p><ul class="notes">${p.also.map((a) => `<li><strong>${esc(a.label)}</strong>: ${a.made} made, ${a.missed} missed${a.notes.length ? `. ${esc(a.notes.map((n) => n.note).join('; '))}.` : ''}</li>`).join('')}</ul>` : ''}
     </section>
     <div class="stack"><button class="btn primary" data-act="debrief" data-id="${s.moduleId}">Debrief with your coach</button>
+    <button class="btn" data-act="feedback">Your thoughts, for the coach</button>
     <button class="btn" data-act="replay" data-id="${s.moduleId}">Play it again (new week, new causes)</button>
     <button class="btn quiet" data-act="track">Back to the track</button></div>
   </main>`;
@@ -350,12 +357,56 @@ function debriefText(id) {
     t.signedOff ? `Signed off by ${t.signedOff.coach}.` : 'Not signed off yet.'].filter(Boolean).join('\n');
 }
 
+// ================================================================ your thoughts
+// What a tester tells the coach. Context is read from the save (the last run,
+// the profile); the words are theirs. Two ways out: send (claude.ai, signed
+// in) and copy (always).
+function feedbackScreen() {
+  const last = save?.run?.over ? save.run : null;
+  const lastModule = last ? MODULES[last.moduleId] : (() => { const ids = Object.keys(save?.track?.modules || {}).filter((id) => save.track.modules[id].plays); return ids.length ? MODULES[ids[ids.length - 1]] : null; })();
+  note = note || { answers: { true: '', fake: '', missing: '', else: '' } };
+  const you = save?.profile ? trackView(save).you : null;
+  const inRun = save?.run && !save.run.over ? `in week ${save.run.week} of ${MODULES[save.run.moduleId].title}` : '';
+  const ctx = [you ? `${you.seat}, ${you.department}` : 'No profile yet', inRun || (lastModule ? lastModule.title : 'No module played yet'), last ? (last.outcome.win ? 'got through it' : 'did not get through it') : ''].filter(Boolean);
+  const notes = loadNotes();
+  return `<main class="screen">
+    <div><button class="btn quiet" data-act="feedback-back">Back</button></div>
+    <div class="stack"><p class="label">For the coach</p><h2>Your thoughts</h2></div>
+    <p class="soft">What you write here goes to the coach, with the module you played, your seat and how it ended. Not your save, not your answers in the debrief. Write it the way you would say it.</p>
+    <p><span class="label">About</span><br>${ctx.map(esc).join(' &middot; ')}</p>
+    <div class="q"><label for="fb-true">What felt true to your floor?</label><textarea id="fb-true" data-fb="true">${esc(note.answers.true)}</textarea></div>
+    <div class="q"><label for="fb-fake">What felt fake, or would never happen?</label><textarea id="fb-fake" data-fb="fake">${esc(note.answers.fake)}</textarea></div>
+    <div class="q"><label for="fb-missing">What was missing: an option you wanted, a question you would have asked?</label><textarea id="fb-missing" data-fb="missing">${esc(note.answers.missing)}</textarea></div>
+    <div class="q"><label for="fb-else">Anything else: the look, the length, the words, how long it took</label><textarea id="fb-else" data-fb="else">${esc(note.answers.else)}</textarea></div>
+    ${sendState?.busy ? '<p class="banner info">Sending&hellip;</p>' : sendState?.ok ? '<p class="signed">Sent. The coach has it. Thank you.</p>' : sendState?.why ? `<p class="warn">${esc(sendState.why)}</p>` : ''}
+    <div class="stack">
+      <button class="btn primary" data-act="feedback-send" ${sendState?.busy ? 'disabled' : ''}>Send to the coach</button>
+      <button class="btn" data-act="feedback-copy">Copy as text to message instead</button>
+    </div>
+    <textarea id="fb-copy" class="code" rows="8" readonly hidden></textarea>
+    ${notes.length ? `<p class="soft">${notes.length} note${notes.length === 1 ? '' : 's'} written on this device so far. Sending sends all of them.</p>` : ''}
+  </main>`;
+}
+
+function readNote() {
+  for (const k of ['true', 'fake', 'missing', 'else']) note.answers[k] = app.querySelector(`[data-fb="${k}"]`)?.value ?? note.answers[k];
+  const last = save?.run?.over ? save.run : null;
+  const you = save?.profile ? trackView(save).you : null;
+  return {
+    at: new Date().toLocaleString(), name: save?.profile?.name || '', seat: you?.seat || '', department: you?.department || '',
+    module: last ? MODULES[last.moduleId].title : save?.run ? `${MODULES[save.run.moduleId].title} (in week ${save.run.week})` : '', outcome: last ? (last.outcome.win ? 'got through it' : 'did not get through it') : '',
+    reads: last ? last.outcome.profile.focus.map((f) => `${f.label}: ${f.read.label}`).join('; ') : '',
+    answers: { ...note.answers },
+  };
+}
+
 // ================================================================ render
 function render() {
   if (!save && screen !== 'title') screen = 'title';
   let html;
   if (screen === 'title') html = titleScreen();
   else if (screen === 'profile') html = profileScreen();
+  else if (screen === 'feedback') html = feedbackScreen();
   else if (screen === 'track' && !save.profile) { screen = 'profile'; html = profileScreen(); }
   else if (screen === 'track') html = trackScreen();
   else if (screen === 'brief') html = briefScreen();
@@ -428,6 +479,17 @@ function act(t) {
     }
     case 'open-all': save = setOpenAll(save, !save.track.openAll); persist(); return;
     case 'export': codeBox = 'export'; return;
+    case 'feedback': note = null; sendState = null; screen = 'feedback'; scrollTo(0, 0); return;
+    case 'feedback-back': note = null; sendState = null; screen = save?.run?.over ? 'end' : save?.run ? 'week' : save?.profile ? 'track' : 'title'; return;
+    case 'feedback-copy': { const n = readNote(); copy(noteText(n), app.querySelector('#fb-copy')); return; }
+    case 'feedback-send': {
+      const n = readNote();
+      if (!Object.values(n.answers).some((t) => t.trim())) { sendState = { why: 'Write something first: one line is plenty.' }; return; }
+      const notes = saveNote(n);
+      sendState = { busy: true };
+      sendNotes(notes).then((r) => { sendState = r.ok ? { ok: true } : { why: r.why }; if (r.ok) note = { answers: { true: '', fake: '', missing: '', else: '' } }; render(); });
+      return;
+    }
     case 'load-code': codeBox = 'load'; return;
     case 'load-go': {
       const code = app.querySelector('#codein')?.value || '';

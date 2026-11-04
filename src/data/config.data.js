@@ -33,10 +33,15 @@ export const CONFIG = {
     { id: 'paint', label: 'Paint handoff', hours: 0.5, why: 'Ten minutes a day at the paint door. Skip it and more of your rework goes over.', seats: ['supervisor', 'lead'] },
     { id: 'huddles', label: 'Morning huddles', hours: 2.5, why: 'Five minutes a day with the crew. Skip them and the day starts without a plan.', seats: ['supervisor', 'lead'] },
     { id: 'handover', label: 'Ten minutes with Kev', hours: 1, why: 'End of each day, at his door. Skip it and he hears about your week from someone else.', seats: ['lead'] },
+    { id: 'audit', label: 'Friday five-minute audit, with the owner', hours: 0.5, why: 'Five minutes with whoever owns the area, on the floor. Skip it and the tape starts to lift.', seats: ['supervisor', 'lead'], needsFlag: 'leanAudit' },
     { id: 'meetingRun', label: 'Production meeting: you run it', hours: 2, why: 'Tuesdays, four supervisors and Jess. Skip it and the week gets built on last week.', seats: ['manager'] },
     { id: 'oneOnOne', label: 'Half an hour with Kev', hours: 0.5, why: "His time, not yours: what he is working on and what he needs. Skip it and he stops bringing you things.", seats: ['manager'] },
     { id: 'russ', label: "Russ's Friday numbers", hours: 1, why: 'Four departments on one page. Skip it and Russ walks down to get them.', seats: ['manager'] },
   ],
+  // Lean tools (KILLGATE-lean.md): how an improvement decays a week without an
+  // owner, with one, and what an audit does. `lost` is the floor hours it
+  // costs when fully dead.
+  lean: { decay: 0.12, decayOwned: 0.04, withCrew: 0.5, auditMul: 0.5, auditTop: 0.08, auditTopNoOwner: 0.03, lost: 3 },
   // The operations manager's seat: the floor is three other departments, Russ,
   // and the welding walk-ups that should have gone to Kev (FRAME-seats.md).
   // Kev starts at 0.25. Left entirely alone he finds out at supCap + foundBonus

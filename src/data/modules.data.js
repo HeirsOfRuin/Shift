@@ -140,13 +140,14 @@ export const TRACK = {
   intro: "You run the welding department at Northern Motors: seven people, three stations, and a paint department that wants six bodies a week. Each module is a few weeks of that job. Nobody tells you the right answer, because there usually isn't one; there is what you knew, what you did, and what it did.",
   introManager: "You're the operations manager for the Metal side at Northern Motors: fabrication, machining, welding and paint. Kev runs welding. Everything on his floor reaches you through him, and your four moves are to ask him, tell him, go down yourself, or leave it with him. What he can do without you at the end is the number that matters.",
   introLead: "You're the lead hand in welding at Northern Motors: fit-up is your table, six people ask you first, and Kev, who had your job until spring, is the supervisor. Every hour you lead comes off the table. Nobody tells you the right answer; there is what you knew, what you did, what you took to Kev, and what it did.",
-  modules: ['the-week', 'late-one', 'loop', 'firefighting', 'pulled', 'upstairs', 'rush', 'across', 'waits', 'monday', 'newhand', 'otherside', 'customers', 'sayitonce', 'system'],
+  modules: ['the-week', 'late-one', 'loop', 'firefighting', 'pulled', 'upstairs', 'rush', 'across', 'waits', 'monday', 'newhand', 'otherside', 'customers', 'sayitonce', 'system', 'greatweek'],
 };
 
 export const MODULES = {
   // -------------------------------------------------------------------- 1
   'the-week': {
     title: 'The week', focus: ['A1', 'A2'], seats: ['supervisor', 'lead'], notManager: "the inbox in it is a supervisor's",
+    purpose: 'To make a week that does not fit feel like a week that does not fit, and to show that what you refuse is a decision.',
     leadBrief: "Kev got the supervisor's job in the spring and you got his: lead hand, fit-up, and the first person everyone asks. The inbox is smaller than Kev's and it still does not fit beside twenty-four hours at the table.", handbook: '2: When everything is urgent, nothing is strategic', weeks: 6, goal: 'main',
     teaches: 'Time, priorities, and what you refuse',
     brief: [
@@ -176,6 +177,7 @@ export const MODULES = {
   // -------------------------------------------------------------------- 2
   'late-one': {
     title: 'The late one', focus: ['D2'], seats: ['supervisor', 'lead', 'manager'],
+    purpose: 'To show that accountability starts with finding out why, and that the crew watches what happens to late, not what you said about it.',
     managerBrief: "You're the operations manager. Kev runs welding now, and Brent's late mornings came up at Tuesday's production meeting, from Theresa, not from Kev. Kev had noticed. He hadn't decided what to do, and he was hoping you wouldn't ask.",
     leadBrief: "You're the lead hand now; Kev is the supervisor. Brent is late and you can see it, and the crew can see you seeing it. Whatever the discipline steps are, they are Kev's to take. What you bring him is yours.", handbook: '7: Culture is what you tolerate under pressure', weeks: 8, goal: 'main',
     teaches: 'Accountability that fits the reason',
@@ -206,6 +208,7 @@ export const MODULES = {
   // -------------------------------------------------------------------- 3
   loop: {
     title: 'The loop', focus: ['D3'], seats: ['supervisor', 'lead', 'manager'],
+    purpose: 'To show that friction that flares and goes quiet has a cause under it, and that telling two people to knock it off treats the flare.',
     managerBrief: "You're the operations manager. The thing between Marisol and Donna is Kev's to settle, and he has mentioned it to you twice in the voice people use when they want someone else to settle it.",
     leadBrief: "You're the lead hand; Kev is the supervisor and he's in the office more than on the floor. The thing between Marisol and Donna happens three metres from your table, every day, and nobody has told Kev about it.", handbook: '7: Culture is what you tolerate under pressure', weeks: 8, goal: 'main',
     teaches: 'Conflict that keeps coming back',
@@ -236,6 +239,7 @@ export const MODULES = {
   // -------------------------------------------------------------------- 4
   firefighting: {
     title: 'Firefighting', focus: ['B3'], seats: ['supervisor', 'lead', 'manager'],
+    purpose: 'To make the fire you can put out yourself in two hours cost more than the three hours it takes to find out why it keeps lighting.',
     managerBrief: "You're the operations manager. Kev re-squares that jig himself every week and is a little proud of it. You could re-square it yourself, faster. You were the welding supervisor once.",
     leadBrief: "You're the lead hand, and the jig is yours to re-square; Kev used to do it and now he asks you to. He means it as a compliment.", handbook: '1: Firefighting is a leadership failure, not a badge of honour', weeks: 8, goal: 'main',
     teaches: 'Fixing the fire, or the thing that keeps lighting it',
@@ -265,7 +269,8 @@ export const MODULES = {
 
   // -------------------------------------------------------------------- 5
   pulled: {
-    title: 'Pulled off the floor', focus: ['A4', 'D1'], seats: ['supervisor'], onlySupervisor: 'it is about leaving the lead in charge', notManager: 'it is about a supervisor leaving his lead in charge', handbook: '6: Leaders build leaders, not just output', weeks: 8, goal: 'held',
+    title: 'Pulled off the floor', focus: ['A4', 'D1'], seats: ['supervisor'], onlySupervisor: 'it is about leaving the lead in charge', notManager: 'it is about a supervisor leaving his lead in charge',
+    purpose: 'To show what a floor does without you, and that the bench you have is the bench you built before you needed it.', handbook: '6: Leaders build leaders, not just output', weeks: 8, goal: 'held',
     teaches: 'The bench: what you built before you left',
     brief: [
       'The customer audit is in three weeks, and Dana has put you on the team. For weeks three, four and five you will be in a room with a binder and an auditor most of every day. You will see the floor at lunch, if you eat lunch.',
@@ -324,7 +329,8 @@ export const MODULES = {
 
   // -------------------------------------------------------------------- 6
   upstairs: {
-    title: 'Nobody upstairs', focus: ['E1'], seats: ['supervisor'], onlySupervisor: "the decisions in it are a supervisor's", notManager: 'you are the one who is away in it', handbook: '4: Ownership without authority creates friction; 8: Leading up', weeks: 8, goal: 'main',
+    title: 'Nobody upstairs', focus: ['E1'], seats: ['supervisor'], onlySupervisor: "the decisions in it are a supervisor's", notManager: 'you are the one who is away in it',
+    purpose: 'To teach decision rights by taking the manager away: which calls are yours, which are not, and the cost of guessing either way.', handbook: '4: Ownership without authority creates friction; 8: Leading up', weeks: 8, goal: 'main',
     teaches: 'Decision rights: what is yours, and what is not',
     brief: [
       'Dana is off for five weeks: a knee, done properly this time. Russ is covering her departments on top of his own, which means Russ is covering nothing very closely.',
@@ -374,6 +380,7 @@ export const MODULES = {
   // -------------------------------------------------------------------- 7
   rush: {
     title: 'Rush week', focus: ['C1'], seats: ['supervisor', 'lead'], notManager: 'the shortcuts in it are offered at the booth',
+    purpose: 'To show that the standard is what you hold on the worst week, and that whatever slides in the rush is the rule in June.',
     leadBrief: "You're the lead hand. The shortcuts get offered to you first, at the table, in the tone of people doing you a favour. Saturdays are Kev's to approve; what slides on a Tuesday afternoon is yours.", handbook: '7: Culture is what you tolerate under pressure', weeks: 8, goal: 'standard',
     teaches: 'Holding the standard when the number is short',
     brief: [
@@ -459,6 +466,7 @@ export const MODULES = {
   // -------------------------------------------------------------------- 8
   across: {
     title: 'Across', focus: ['E2'], seats: ['supervisor', 'manager'], onlySupervisor: 'it is supervisor to supervisor',
+    purpose: 'To show that two departments with two standards become one department with none, and that the fix is a conversation with a peer before a complaint to a manager.',
     managerBrief: "You're the operations manager, and both departments are yours: Kev's welding and Theresa's paint. Two of your supervisors keep two standards and neither has sat down with the other, because there has always been you between them, and you have always sorted it.", handbook: '8: Leading at every level: horizontally', weeks: 8, goal: 'main',
     teaches: 'Peers: going across before going up',
     brief: [
@@ -488,6 +496,7 @@ export const MODULES = {
   // -------------------------------------------------------------------- 9 (beta 4)
   waits: {
     title: 'Where it waits', focus: ['B1'], seats: ['supervisor', 'lead', 'manager'],
+    purpose: 'To show that improving anything but the constraint changes nothing, that everyone\'s opinion of where it is can be wrong, and that a fixed constraint moves.',
     managerBrief: "You're the operations manager, and paint being short is your number as much as Kev's. Russ has asked twice. Everyone upstairs says body weld, and Kev says it too, and nobody has stood in the aisle.",
     leadBrief: "You're the lead hand. Kev has told you to put real hours into fixing it and that he'll back whatever you find, which is generous, and means the hours come off your table.", handbook: '1: Firefighting is a leadership failure, not a badge of honour', weeks: 8, goal: 'main',
     teaches: 'Finding the station that limits everything, and only fixing that one',
@@ -518,6 +527,7 @@ export const MODULES = {
   // -------------------------------------------------------------------- 10 (beta 4)
   monday: {
     title: 'Monday, 7:00', focus: ['F1'], seats: ['supervisor', 'lead'], notManager: "the huddle is Kev's to run",
+    purpose: 'To show that a five-minute huddle is a structure, not a chat, and that the person derailing it has a reason you can only find by asking.',
     leadBrief: "You're the lead hand, and the huddle is yours: Kev handed it over in the spring and stands at the back when he's there at all.", handbook: '2: When everything is urgent, nothing is strategic', weeks: 8, goal: 'main',
     teaches: 'Five minutes, every action with an owner, and the derailer handled without losing the room',
     brief: [
@@ -586,6 +596,7 @@ export const MODULES = {
   // -------------------------------------------------------------------- 11 (beta 4)
   newhand: {
     title: 'The new hand', focus: ['D4'], seats: ['supervisor', 'lead', 'manager'],
+    purpose: 'To show that a new hire who is left alone in the first weeks leaves in the first months, and that teaching the reason is not the same as handing over the sheet.',
     managerBrief: "You're the operations manager. Sam is Kev's hire, in Lyle's spot, and the scrap bin is Kev's to notice. You walked past it on Wednesday and he hadn't.",
     leadBrief: "You're the lead hand, and Sam is at the table beside you all day. Kev asked you to 'keep an eye on him', which is what supervisors say when they mean train him.", handbook: '6: Leaders build leaders, not just output', weeks: 8, goal: 'main',
     teaches: 'Teaching the task and the reason, and checking it landed',
@@ -619,7 +630,8 @@ export const MODULES = {
 
   // -------------------------------------------------------------------- 12 (beta 7)
   otherside: {
-    title: 'The other side', focus: ['E2', 'C3'], seats: ['supervisor'], onlySupervisor: "it is about covering a peer's floor", notManager: 'both floors are already yours', handbook: '8: Leading at every level: horizontally', weeks: 8, goal: 'main',
+    title: 'The other side', focus: ['E2', 'C3'], seats: ['supervisor'], onlySupervisor: "it is about covering a peer's floor", notManager: 'both floors are already yours',
+    purpose: 'To put the player on the receiving end of their own department\'s work, so that paint\'s complaint stops being paint being paint.', handbook: '8: Leading at every level: horizontally', weeks: 8, goal: 'main',
     teaches: "Receiving what you send: four weeks running paint, with your own bodies coming back through the door",
     brief: [
       "Theresa is away for four weeks from next Monday: a wedding, a honeymoon, the first holiday she has taken in six years. Dana has asked you to cover paint as well as welding. Not run it, exactly. Be the person the paint crew brings things to.",
@@ -660,7 +672,8 @@ export const MODULES = {
 
   // -------------------------------------------------------------------- 13 (beta 8)
   customers: {
-    title: 'Who you work for', focus: ['E4'], seats: ['supervisor'], onlySupervisor: "the conversations in it are supervisor to supervisor", notManager: 'both sides of the door are already yours', handbook: '8: Leading at every level: horizontally', weeks: 8, goal: 'main',
+    title: 'Who you work for', focus: ['E4'], seats: ['supervisor'], onlySupervisor: "the conversations in it are supervisor to supervisor", notManager: 'both sides of the door are already yours',
+    purpose: 'To show that paint, the scheduler and maintenance are customers, that what they need is not what they have been asking for, and that nobody finds out without asking.', handbook: '8: Leading at every level: horizontally', weeks: 8, goal: 'main',
     teaches: 'Internal customers: who receives your work, and what they need from it, which is not what they asked for',
     brief: [
       "Welding makes bodies. Paint receives them. That is the whole of the arrangement as far as anyone in welding has ever thought about it, and paint has been unhappy with it for a year in a way that comes out as kickback tickets and Theresa's tone at the production meeting.",
@@ -701,7 +714,8 @@ export const MODULES = {
 
   // -------------------------------------------------------------------- 14 (beta 8)
   sayitonce: {
-    title: 'Say it once', focus: ['B5'], seats: ['supervisor', 'lead'], notManager: 'the questions in it come to the floor, not the office', handbook: '2: When everything is urgent, nothing is strategic', weeks: 8, goal: 'main',
+    title: 'Say it once', focus: ['B5'], seats: ['supervisor', 'lead'], notManager: 'the questions in it come to the floor, not the office',
+    purpose: 'To show that the same question four times a day is rework, that it has a cost nobody counts, and that the fix is where the answer lives, not how fast you give it.', handbook: '2: When everything is urgent, nothing is strategic', weeks: 8, goal: 'main',
     teaches: 'Rework that is not parts: the same question four times a day, the same conversation three times, the hour spent looking',
     leadBrief: "You're the lead hand, and you are the person everyone asks. Where does this go, what rev is this, is it the Hauler or the Hauler 9 today. You know, so they ask, so you know, so they ask.",
     brief: [
@@ -743,7 +757,8 @@ export const MODULES = {
 
   // -------------------------------------------------------------------- 15 (beta 8)
   system: {
-    title: 'What the system sees', focus: ['B6'], seats: ['supervisor', 'lead'], notManager: 'the entries in it are made at the booth', handbook: '3: Structure protects good people', weeks: 8, goal: 'main',
+    title: 'What the system sees', focus: ['B6'], seats: ['supervisor', 'lead'], notManager: 'the entries in it are made at the booth',
+    purpose: 'To show what the system does with a clock-in, a material issue and a closed job after they leave the screen the crew uses, and who downstream builds on them.', handbook: '3: Structure protects good people', weeks: 8, goal: 'main',
     teaches: 'The ERP: what it does with what the floor enters, and what it cannot do with what the floor does not',
     leadBrief: "You're the lead hand, and the clock-in terminal is beside your table. The crew clocks on and off jobs through you more than through {erp}, which is the problem, though nobody has put it that way.",
     brief: [
@@ -780,6 +795,49 @@ export const MODULES = {
         'What would you tell a new hire about why the clock-in matters, in one sentence they would believe?',
       ],
       commitment: "One screen of our plant's system I will sit with the person who owns it to understand this month, and what I will tell the crew after:",
+    },
+  },
+
+  // -------------------------------------------------------------------- 16 (beta 9)
+  greatweek: {
+    title: 'It looked great for a week', focus: ['B2'], seats: ['supervisor', 'lead'], notManager: 'the event and the audit happen on the floor', handbook: '6: Leaders build leaders, not just output', weeks: 8, goal: 'main',
+    teaches: 'Lean tools: why the 5S event died, and what keeps one alive',
+    purpose: 'To show that a tool dropped on a floor that does not own it dies in a week, and that an owner and an audit are the tool.',
+    leadBrief: "You're the lead hand, and the shadow board is beside your table. You watched Priya tape the floor. You watched the tape lift.",
+    brief: [
+      "Priya from manufacturing engineering ran a 5S event in the bay two Fridays ago: shadow boards for the clamps and gauges, tape on the floor for the carts, a place for everything and a laminated map of where. Dana walked through on the Monday and said it was the best the bay had ever looked. It was.",
+      "That was a week ago. The gap gauge is in Brent's pocket again. Two carts are where the tape says they are not. The shadow board has three shadows and one clamp. Nobody did anything wrong. Nobody did anything.",
+      'You could re-run the event. It would look great for a week.',
+    ],
+    goalText: 'The bay still organised at the end of eight weeks for a reason that will outlast you, with the event run at most once more; paint fed; nobody lost.',
+    lose: ['Paint short two weeks running', 'Losing a person', 'Three weeks over 55 hours', 'The bay back to where it was before the event'],
+    setup: { lean: 0.75 },
+    main: { type: 'lean', who: [], seen: true, week: 1 },
+    second: { weeks: [3, 5], not: [] },
+    cards: [
+      { id: 'priya', week: 1, cue: 'pressure', title: "Priya's scoresheet",
+        body: "Priya has the 5S audit sheet from the event: 92 out of 100, laminated. She'd like you to sign it so it can go on the CI board upstairs.",
+        options: [
+          { id: 'who', label: 'Sign it, and ask her who owns each area now', hours: 0.5, kind: 'do', effects: [{ line: "Priya looked at the sheet. 'Owns?' The event had a team, a scoresheet and a map. It did not have a name on anything." }], score: [['B2', 1, 'Asked who owned it before the tape was dry']] },
+          { id: 'sign', label: 'Sign it and get on with the week', hours: 0.25, kind: 'skip', effects: [{ line: 'The sheet went upstairs. 92 out of 100, in a frame, by the lunchroom.' }] },
+        ] },
+      { id: 'danaWalk', week: 6, cue: 'pressure', title: 'Dana is bringing Russ through on Thursday',
+        body: "Dana is walking Russ through the bay Thursday to show him the 5S. She'd like it to look the way it did the first Monday.",
+        options: [
+          { id: 'asIs', label: 'Show them the bay as it is, and say what has held and what has not', hours: 0.5, kind: 'do', effects: [{ managerTrust: 0.03 }, { line: "You walked Russ and Dana through the bay as it stood and said which areas had an owner and which did not. Russ asked why not all of them. Fair question." }], score: [['B2', 2, 'Showed the bay as it was, not as it was for the walkthrough']] },
+          { id: 'blitz', label: 'Blitz it Wednesday night so it looks like the first Monday', hours: 3, kind: 'skip', effects: [{ managerTrust: 0.04 }, { morale: -0.03, who: 'all' }, { line: "The bay looked like the first Monday on Thursday morning and like the fourth Monday by Friday afternoon. Russ was pleased." }], score: [['B2', -1, 'Made it look right for the walkthrough']] },
+        ] },
+    ],
+    pool: { perWeek: [0, 1], cards: pool('vendorDemo', 'townHall', 'supplierCall', 'jessForecast', 'eyewash') },
+    debrief: {
+      questions: [
+        'What had died by the second week, and why? Who did you ask?',
+        'Did you re-run the event? What did it look like the week after?',
+        'Whose name is on each area now, and who checks? What happens the week you are away?',
+        'On your real floor: which improvement from the last two years is still alive? What kept it? Which died, and what was missing?',
+        'When the next event is proposed, what will you ask for before the tape goes down?',
+      ],
+      commitment: 'One improvement on my floor I will give an owner and an audit this month, and the first Friday it will be checked:',
     },
   },
 };

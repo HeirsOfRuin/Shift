@@ -27,7 +27,7 @@ export function trackView(save) {
       const t = save.track.modules[id];
       const open = unlocked(save, id);
       return {
-        id, n: i + 1, title: m.title, teaches: m.teaches, weeks: m.weeks, open,
+        id, n: i + 1, title: m.title, teaches: m.teaches, purpose: m.purpose || '', weeks: m.weeks, open,
         focus: m.focus.map((a) => AREAS[a].label),
         because: path ? path.find((x) => x.id === id).why : '',
         why: open ? '' : `Opens when "${MODULES[ids[i - 1]].title}" is signed off by your coach.`,
@@ -45,7 +45,7 @@ export function briefView(id, profile = null) {
   const focus = [...m.focus, ...(own && !m.focus.includes(own) ? [own] : [])];
   const seatBrief = seat === 'lead' ? m.leadBrief : seat === 'manager' ? m.managerBrief : null;
   return {
-    id, title: m.title, teaches: m.teaches, handbook: m.handbook, weeks: m.weeks, brief: (seatBrief ? [seatBrief, ...m.brief] : m.brief).map((t) => erpName(t, profile?.erp)), goal: erpName(m.goalText, profile?.erp), lose: seat === 'manager' ? [...m.lose, 'Kev less able to run his floor than when you started'] : m.lose,
+    id, title: m.title, teaches: m.teaches, purpose: m.purpose || '', handbook: m.handbook, weeks: m.weeks, brief: (seatBrief ? [seatBrief, ...m.brief] : m.brief).map((t) => erpName(t, profile?.erp)), goal: erpName(m.goalText, profile?.erp), lose: seat === 'manager' ? [...m.lose, 'Kev less able to run his floor than when you started'] : m.lose,
     focus: focus.map((a) => ({ id: a, label: AREAS[a].label, about: AREAS[a].about, moves: AREAS[a].moves, seatArea: !m.focus.includes(a) })),
     seatAreaNote: own && !m.focus.includes(own) ? (seat === 'lead' ? 'Read when something in the run needs Kev\'s signature: what you took up, and what you brought with it.' : 'Read on how you worked through Kev: what you asked, what you told him, what you went down and did yourself.') : '',
     seat: seatNote(profile),

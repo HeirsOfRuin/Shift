@@ -234,6 +234,8 @@ section { display: flex; flex-direction: column; gap: 10px; }
 
 @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; transition: none !important; } }
 
+.purpose { font-style: italic; color: var(--ink-soft); }
+
 /* the profile and the path */
 .you { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; display: grid; gap: 6px; }
 .you p { margin: 0; }

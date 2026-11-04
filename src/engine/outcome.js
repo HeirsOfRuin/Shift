@@ -50,6 +50,7 @@ export function judge(s) {
     { id: 'problem', ok: problemOk, label: problemText },
     { id: 'you', ok: !d.bottleneck, label: say(s, d.bottleneck ? 'end.check.you.no' : 'end.check.you.ok') },
   ];
+  if (s.setup.lean !== undefined && s.setup.lean !== null) checks.push({ id: 'lean', ok: d.lean >= 0.55, label: say(s, d.lean >= 0.55 ? 'end.check.lean.ok' : 'end.check.lean.no') });
   if (s.seat === 'manager') checks.push({ id: 'kev', ok: d.supCap >= C.manager.supCap - 0.05, label: say(s, d.supCap >= C.manager.supCap - 0.05 ? 'end.check.kev.ok' : 'end.check.kev.no') });
   if (d.starved) checks.unshift({ id: 'starved', ok: false, label: say(s, 'end.check.starved', { n: s.week - 1 }) });
   const win = checks.every((c) => c.ok);

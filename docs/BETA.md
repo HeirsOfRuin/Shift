@@ -1,10 +1,17 @@
-# Shift beta 8: fifteen modules, three seats, a profile, a path
+# Shift beta 9: sixteen modules, three seats, a profile, a path, a way to send thoughts
 
 Published 2026-11-04 as a private page, the same link as every beta:
 **https://claude.ai/artifact/4c5QqYTmZdn5iKcutCPZJx**
 (only the author can open it until he shares it from the page's Share menu).
 Rebuild with `npm run build` and republish `dist/shift.embed.html` to the same
 link. The build id is baked in, so an installed copy picks the new one up.
+
+**What changed in beta 9 (2026-11-04):** *It looked great for a week*: the
+5S event two Fridays on, and why it died. A purpose sentence on every module.
+And the testers' screen: *Menu &rarr; Your thoughts, for the coach*, four
+questions, a send button that works when the page is open on claude.ai and
+the tester is signed in, and a copy-as-text button that always works.
+`PLAYTEST.md` is the note to send with the link.
 
 **What changed in beta 8 (2026-11-04):** three modules from your evening
 note. *Who you work for*: paint, Jess and maintenance each need something from
@@ -64,6 +71,16 @@ module is still played in the welding bay; a brief for anyone else says so.
 
 **What changed in beta 2 (2026-11-03):** pressure from open problems, fatigue,
 a People tab, and old saves carried forward.
+
+## Sending it to testers
+
+1. Open the page, use its Share menu, and set it to anyone with the link.
+2. Send the link with the text of `PLAYTEST.md` (edit it first; it is in
+   plain words on purpose).
+3. Their thoughts arrive two ways: in the page's store (ask the agent to
+   read collection `feedback`), and as messages they copy and send you.
+4. Each note carries the module, the seat and how the run ended. Never the
+   save.
 
 ## How to test beta 8
 

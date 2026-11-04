@@ -11,6 +11,7 @@
 // resolve(p, how, opts), score(p, sub, pts, note), week.
 
 import { PROBLEMS } from '../data/problems.data.js';
+import { CONFIG as C } from '../data/config.data.js';
 
 // The right action usually works, not always; a second try works more often.
 const works = (K, p, action, first, again) => K.r.outcomes.next() < ((p.tries[action] || 0) > 1 ? again : first) * (K.sharp ?? 1);
@@ -842,6 +843,73 @@ export const TYPES = {
       if (['clockNow', 'fixOps', 'issueMaterial'].includes(action)) return p.told && (PROBLEMS.erp.actions[action].fits || []).includes(p.told) ? [['B6', 2, 'Fixed the entry where it happens, not the report']] : p.told ? [['B6', 0, 'Fixed an entry that was not the one']] : [['B6', 0, 'Guessed at what the system was missing']];
       if (action === 'ownSheet') return [['B6', -1, 'Kept a second system']];
       if (action === 'blame') return [['B6', -1, 'Blamed the system for what it was told']];
+      return [];
+    },
+  },
+
+  // ------------------------------------------------------------- it looked great for a week (beta 9)
+  // dept.lean is how much of the event is still standing (KILLGATE-lean.md).
+  // A root fix is pending until it has held two weeks; the event re-run
+  // yourself resets it to 0.9 and fixes nothing.
+  lean: {
+    notice() { return true; },
+    act(K, p, action) {
+      const v = { p };
+      const d = K.s.dept;
+      switch (action) {
+        case 'ask': told(p); K.line('told', `lean.told.${p.told}`, v); return;
+        case 'owners':
+          d.leanOwner = true;
+          if (p.cause === 'noOwner') { p.pending = K.week; K.line('result', 'lean.fixed.owners', v); }
+          else { if (p.cause !== 'noOwner') p.ruledOut.push('noOwner'); K.line('result', 'lean.owners.noHelp', v); }
+          return;
+        case 'audit':
+          d.flags.leanAudit = true;
+          if (p.cause === 'noAudit') { p.pending = K.week; K.line('result', 'lean.fixed.audit', v); }
+          else { p.ruledOut.push('noAudit'); K.line('result', d.leanOwner ? 'lean.audit.someHelp' : 'lean.audit.noOwner', v); }
+          return;
+        case 'redoWith':
+          d.lean = 0.9; d.leanWith = true;
+          if (p.cause === 'forThem') { p.pending = K.week; K.line('result', 'lean.fixed.with', v); }
+          else if (p.cause === 'moveIn') K.resolve(p, 'lean.fixed.withMove', { settled: true });
+          else K.line('result', p.cause === 'noOwner' ? 'lean.with.someHelp' : 'lean.with.noHelp', v);
+          return;
+        case 'redoFor':
+          d.lean = 0.9; p.redone = (p.redone || 0) + 1;
+          K.line('result', p.redone === 1 ? 'lean.redoFor.first' : 'lean.redoFor.again', v);
+          return;
+        case 'signs': K.line('result', 'lean.signs', v); return;
+      }
+    },
+    week(K, p) {
+      const v = { p };
+      const d = K.s.dept;
+      const L = C.lean;
+      // what the bay started with, by cause: owners exist when the audit is the gap; the crew owns it when a rack is the gap
+      if (!p.inited) { p.inited = true; if (p.cause === 'noAudit') d.leanOwner = true; if (p.cause === 'moveIn') { d.leanOwner = true; d.leanWith = true; } }
+      if (p.cause === 'moveIn' && K.week - p.since >= 2 && K.r.people.next() < 0.6) { d.lean = Math.max(d.lean, 0.8); K.resolve(p, 'lean.passed.moveIn', { settled: true }); return; }
+      // the decay, as the kill gate had it
+      let decay = d.leanOwner ? L.decayOwned : L.decay;
+      if (d.leanWith) decay *= L.withCrew;
+      if (d.auditedThisWeek) { decay *= L.auditMul; d.lean = Math.min(1, d.lean + (d.leanOwner ? L.auditTop : L.auditTopNoOwner)); }
+      d.lean = Math.max(0, d.lean - decay * (0.7 + 0.6 * K.r.people.next()));
+      K.s.week_.defects += 0.25 * (1 - d.lean);
+      if (p.pending) {
+        if (d.lean < 0.4) { p.pending = null; p.severity++; K.line('consequence', 'lean.fellAgain', v); }
+        else if (K.week - p.pending >= 2 && d.lean >= 0.6) { K.resolve(p, 'lean.held', { root: true }); return; }
+        else K.line('signal', 'lean.pending', v);
+        return;
+      }
+      if (d.lean < 0.5 && (K.week - p.since) % 3 === 2) p.severity++;
+      K.line('signal', d.lean < 0.35 ? 'lean.week.dead' : d.lean < 0.65 ? 'lean.week.slipping' : 'lean.week.fine', v);
+    },
+    score(p, action) {
+      if (action === 'ask') return p.told ? [] : [];
+      if (action === 'owners') return p.told === 'noOwner' ? [['B2', 2, 'Gave every area an owner the crew chose']] : p.pending ? [['B2', 1, 'Put a name on it so the fix would hold']] : [['B2', 0, 'Named owners for a problem that was not ownership']];
+      if (action === 'audit') return p.told === 'noAudit' ? [['B2', 2, 'Set up the audit that keeps it alive']] : p.pending ? [['B2', 1, 'Set up the audit so the fix would hold']] : [['B2', 0, 'Started an audit for a problem that was not the audit']];
+      if (action === 'redoWith') return p.told === 'forThem' ? [['B2', 2, 'Built it with the crew, not for them']] : [['B2', 0, 'Re-ran the event with the crew for a cause that was not theirs']];
+      if (action === 'redoFor') return [['B2', -1, 'Re-ran the event instead of fixing why it died']];
+      if (action === 'signs') return [['B2', 0, 'New labels on the same problem']];
       return [];
     },
   },

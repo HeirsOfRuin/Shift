@@ -25,7 +25,7 @@ export function weldForecast(s) {
  *  and not in week.js because cards.js needs it too, and the bundler refuses a
  *  cycle (week.js already imports cards.js). */
 export function routineFor(s) {
-  return C.routine.filter((it) => (it.seats || ['supervisor']).includes(s.seat || 'supervisor') && !s.dept.routineGone.includes(it.id));
+  return C.routine.filter((it) => (it.seats || ['supervisor']).includes(s.seat || 'supervisor') && !s.dept.routineGone.includes(it.id) && (!it.needsFlag || s.dept.flags?.[it.needsFlag]));
 }
 
 /** A word for a number the player should feel, not read. */

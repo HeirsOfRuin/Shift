@@ -87,6 +87,8 @@ function interruptions(s) {
     else unseen += h;
   }
   if (unseen) items.push({ label: 'More walk-ups than usual, for reasons nobody has told you yet', hours: unseen, problem: true });
+  // what dies of the 5S event comes back as hours looking for things (It looked great for a week)
+  if (s.dept.lean !== null && s.dept.lean !== undefined) { const h = Math.round(C.lean.lost * (1 - s.dept.lean) * 2) / 2; if (h > 0) items.push({ label: 'Looking for the gap gauge, clamps, carts: the event wearing off', hours: h, problem: true }); }
   const newHands = s.crew.filter((c) => active(c) && c.skill < 0.45);
   if (newHands.length) items.push({ label: `${newHands.map((c) => c.name).join(' and ')} still ask${newHands.length > 1 ? '' : 's'} before guessing`, hours: newHands.length * I.newHand });
   const kev = person(s, 'kev');
@@ -187,6 +189,8 @@ export function advance(prev, plan = {}) {
     if (id === 'timecards') for (const c of s.crew) c.morale = clamp(c.morale - 0.03);
     if (id === 'huddles') { s.week_.capacityMul *= 0.97; for (const c of s.crew) c.morale = clamp(c.morale - 0.01); }
   }
+  s.dept.auditedThisWeek = !!s.dept.flags?.leanAudit && !skip.includes('audit');
+  if (skip.includes('audit')) K.score(null, 'B2', -1, 'Skipped the Friday audit');
   if (!skip.includes('safety')) s.dept.safetyDebt = Math.max(0, s.dept.safetyDebt - 0.01);
 
   // the lead hand's table time: leading comes off the table (FRAME-seats.md)
@@ -415,7 +419,7 @@ function triage(card, opt) {
 function areaFor(type, kind = null) {
   if (type === 'otherside' && ['fix', 'hold', 'yourself', 'soft'].includes(kind)) return 'C3';
   return { late: 'D2', rework: 'D1', load: 'D1', friction: 'D3',
-    hazard: 'C2', recurring: 'B3', escalation: 'E1', standards: 'E2', constraint: 'B1', huddle: 'F1', newhand: 'D4', otherside: 'E2', customer: 'E4', infowork: 'B5', erp: 'B6' }[type];
+    hazard: 'C2', recurring: 'B3', escalation: 'E1', standards: 'E2', constraint: 'B1', huddle: 'F1', newhand: 'D4', otherside: 'E2', customer: 'E4', infowork: 'B5', erp: 'B6', lean: 'B2' }[type];
 }
 
 // ---------------------------------------------------------------- the manager's seat
@@ -656,6 +660,7 @@ export function newModule(moduleId, seed, seat = 'supervisor', opts = {}) {
       standard: C.standardHome, bench: 0.3, managerTrust: 0.6, peerTrust: 0.5, safetyDebt: 0, fixtureFixed: false, escapeAdd: 0,
       overStreak: 0, bottleneck: false, tired: 0, floorExtra: [], starvedStreak: 0, starved: false, lost: [], surprise: false, flags: {}, routineGone: [], usedCards: [], improved: {},
       supCap: seat === 'manager' ? C.manager.supCap : null,
+      lean: module.setup?.lean ?? null, leanOwner: false, leanWith: false, auditedThisWeek: false,
     },
     problems: [], queue: [], nextId: 1, script: script.filter(Boolean),
     history: [], decisions: [], trace: [], monday: null,

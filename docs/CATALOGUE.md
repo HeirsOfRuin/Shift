@@ -49,7 +49,7 @@ ERP (`FRAME-three-more.md`). Twenty-three now.
 | A4 | Delegation | Sees what only they are holding; hands over a real piece of the job; does not take it back at the first wobble | ready | Pulled off the floor |
 | **B. Flow and systems** | | | | |
 | B1 | Finding the bottleneck | Looks at where work waits; spends improvement hours on the constraint; rechecks when it moves | ready | Where it waits |
-| B2 | Lean tools | Picks the tool that fits; builds it with the crew; sets up the audit that keeps it alive | new | none yet: *It looked great for a week* |
+| B2 | Lean tools | Picks the tool that fits; builds it with the crew; sets up the audit that keeps it alive | ready | It looked great for a week |
 | B3 | Root-cause problem solving | Investigates before fixing; fixes the cause, not the symptom; changes course when a fix does not hold | ready | Firefighting |
 | B4 | Metrics and data | Reads leading signals; spots a measure being gamed; changes the measure, not just the people | new | none yet: *The number on the board* |
 | B5 | Hidden rework | Counts the rework nobody counts; puts the answer where they would find it; does not do the rework faster | ready | Say it once |
@@ -121,6 +121,10 @@ Both are the scoring telling the truth about that style, not a scoring fault.
 "forcing some people to see the other departments pov from time to time would
 actually be a really good training tool"; `FRAME-other-side.md`), then *Who
 you work for* (E4), *Say it once* (B5) and *What the system sees* (B6) from the
-author's note the same evening (`FRAME-three-more.md`). Next: *It looked
-great for a week* (B2), *The near miss* (C2), *The number on the board* (B4),
-*Nobody asked for this* (E3).
+author's note the same evening (`FRAME-three-more.md`), then *It looked great
+for a week* (B2, kill gate first: `KILLGATE-lean.md`). Next: *The near miss*
+(C2), *The number on the board* (B4), *Nobody asked for this* (E3).
+
+Every module carries a one-sentence `purpose`, shown on its brief and on the
+track, from the author's rule of 2026-11-04: "I want every module for the
+weld department view point well developed and clear in its purpose."
