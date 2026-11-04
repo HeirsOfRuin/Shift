@@ -37,7 +37,7 @@ export function setProfile(save, p) {
   const work = areas(p.work, strengths);
   const tied = [...new Set((p.tied || []).filter((d) => DEPARTMENTS[d] && d !== p.department))];
   const s = structuredClone(save);
-  s.profile = { name: String(p.name || '').trim().slice(0, 60), seat: p.seat, department: p.department, tied, strengths, work, since: p.since || s.profile?.since || null };
+  s.profile = { name: String(p.name || '').trim().slice(0, 60), seat: p.seat, department: p.department, tied, strengths, work, erp: String(p.erp || '').trim().slice(0, 40), since: p.since || s.profile?.since || null };
   return s;
 }
 
@@ -65,7 +65,7 @@ export function unlocked(save, id) {
 export function startRun(save, moduleId, seed) {
   if (!unlocked(save, moduleId)) throw new Error('That module is not open yet: the one before it needs a coach sign-off.');
   const s = structuredClone(save);
-  s.run = newModule(moduleId, seed, seatFor(s.profile));
+  s.run = newModule(moduleId, seed, seatFor(s.profile), { erp: s.profile?.erp });
   s.runs += 1;
   return s;
 }

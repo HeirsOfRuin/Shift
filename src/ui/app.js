@@ -129,6 +129,7 @@ function profileScreen() {
     <p class="soft">This shapes which modules come first and what the screens show. It is not a test. Your coach sees it, and you can change it any time.</p>
     ${banner ? `<p class="warn">${esc(banner)}</p>` : ''}
     <section><p class="label">Your name, for the debrief (optional)</p><input id="pname" type="text" autocomplete="name" value="${esc(draft.name)}" data-draft="name"></section>
+    <section><p class="label">What your plant calls its system (optional)</p><input id="perp" type="text" value="${esc(draft.erp || '')}" placeholder="the system"><p class="soft">The ERP: jobs, operations, clocking, material. One module is about it, and uses the name you give here.</p></section>
     <section><p class="label">Your seat</p><div class="opts">${v.seats.map((x) => `<button class="opt ${draft.seat === x.id ? 'on' : ''}" data-pick="seat" data-id="${x.id}"><span class="dot"></span><span class="t">${esc(x.label)}<span class="why">${esc(x.about)}</span></span></button>`).join('')}</div></section>
     <section><p class="label">Your department</p><div class="opts">${v.departments.map((d) => `<button class="opt ${draft.department === d.id ? 'on' : ''}" data-pick="department" data-id="${d.id}"><span class="dot"></span><span class="t">${esc(d.name)} <span class="soft">&middot; ${esc(d.group)}</span><span class="why">${esc(d.what)}</span></span></button>`).join('')}</div>
       <p class="soft">The modules are written in ${esc(v.writtenBay)} so far. Pick your real department anyway: it sets your neighbours and your path, and it is where the next modules get written.</p></section>
@@ -169,7 +170,7 @@ function briefScreen() {
 
 // ================================================================ the week
 const CUE = { huddle: 'At the huddle', deadline: 'Request &middot; deadline', people: 'Request &middot; one of yours', safety: 'Safety', optional: 'Request', pressure: 'Request &middot; pressure', develop: 'Before you go', shortcut: 'Shortcut offered', overtime: 'Overtime', yours: 'A decision', notYours: 'A decision', plain: 'Request' };
-const TYPE = { late: 'Lateness', rework: 'Rework', load: 'Carrying too much', friction: 'Friction', hazard: 'Safety', recurring: 'The same fire', escalation: 'A decision', standards: 'Two standards', constraint: 'Where it waits', huddle: 'The huddle', newhand: 'The new hand', otherside: 'From the other side' };
+const TYPE = { late: 'Lateness', rework: 'Rework', load: 'Carrying too much', friction: 'Friction', hazard: 'Safety', recurring: 'The same fire', escalation: 'A decision', standards: 'Two standards', constraint: 'Where it waits', huddle: 'The huddle', newhand: 'The new hand', otherside: 'From the other side', customer: 'Internal customer', infowork: 'Hidden rework', erp: 'The system' };
 
 function weekScreen() {
   const v = weekView(save.run, plan);
@@ -468,12 +469,12 @@ app.addEventListener('click', (e) => {
     else if (t.dataset.skip) { const id = t.dataset.skip; plan.skip = plan.skip.includes(id) ? plan.skip.filter((x) => x !== id) : [...plan.skip, id]; keepScroll = true; }
     else if (t.dataset.pick) {
       const f = t.dataset.pick; const id = t.dataset.id;
-      draft.name = app.querySelector('#pname')?.value ?? draft.name;
+      draft.name = app.querySelector('#pname')?.value ?? draft.name; draft.erp = app.querySelector('#perp')?.value ?? draft.erp;
       if (f === 'seat' || f === 'department') { draft[f] = id; if (f === 'department') draft.tied = draft.tied.filter((d) => d !== id); }
       else draft[f] = draft[f].includes(id) ? draft[f].filter((x) => x !== id) : [...draft[f], id];
       keepScroll = true;
     }
-    else { if (t.dataset.act === 'profile-save' && draft) draft.name = app.querySelector('#pname')?.value ?? draft.name; act(t); if (/^(routine-|floor-|howto-)/.test(t.dataset.act || '')) keepScroll = true; }
+    else { if (t.dataset.act === 'profile-save' && draft) { draft.name = app.querySelector('#pname')?.value ?? draft.name; draft.erp = app.querySelector('#perp')?.value ?? draft.erp; } act(t); if (/^(routine-|floor-|howto-)/.test(t.dataset.act || '')) keepScroll = true; }
     const y = scrollY;
     render();
     if (keepScroll) scrollTo(0, y);

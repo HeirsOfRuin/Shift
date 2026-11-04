@@ -106,6 +106,7 @@ Google Doc copies of the same things.
 | 2026-11-04 | Not built around EI or the LBA: "I don't want this whole thing to revolve around EI or LBA, It needs to cover a wide array of different topics and focus points, with modules designed to focus on one or two at a time." The review and proposal are in `REVIEW.md`. |
 | 2026-11-04 | The review's six decisions: "yes to all, go ahead with the catalogue and scoring." Built the same day (`CATALOGUE.md`). Sections 7 and 8 below are now history: the LBA is a lookup table on each focus area, not the frame. |
 | 2026-11-04 | A profile and a path: "make it more customizable. when you start your shift game up, you 'log in' or 'create a profile' that determines your position, which departments are directly tied to you, and what your self-determined strengths and weaknesses are. this will allow the simulator to determine the best path to help the coach in the users mentorship, as well as personalize the worker screens shown to you so a paint supervisor isn't forced to use the same screen as the welder lead or metal fab manager screen." The profile, the path and the framing are built; the department-specific floors are costed in `FRAME-departments.md`. |
+| 2026-11-04 | Three more topics: "More I want this to cover is helping people explain the idea of internal customers, rework being beyond parts (like have to have the same conversation multiple times or causing people to search for information they should have had), how ERPs work and how much more work there is beyond the interface production staff can see and manipulate (this one should be aimed at Epicor and how PhiBer uses it)". Built as beta 8 (`FRAME-three-more.md`): three catalogue areas and three modules. The ERP module uses Epicor's structure and vocabulary in the fictional plant and takes the system's name from the trainee's profile; how the author's plant uses it stays out of the repository (`CLAUDE.md`) and belongs to the coach at the debrief. The author has not yet confirmed that reading of the rule. |
 | 2026-11-04 | The order of build, and a new module idea: "1 and then 2. keep this project moving. I think forcing some people to see the other departments pov from time to time would actually be a really good training tool as well!" The three new modules first (built the same day as beta 4: *Where it waits*, *Monday, 7:00*, *The new hand*), then the three seats. The other-department point of view goes in the catalogue as a module (*The other side*), not as a gap. |
 
 Decisions the agent made and the author has not yet confirmed or struck: the
@@ -251,6 +252,14 @@ everything is urgent nothing is strategic; 3 Structure protects good people;
   API key, no server.
 
 ## 10. Status and the exact next steps
+
+**Update (2026-11-04, beta 8):** three modules from the author's evening
+note: *Who you work for* (E4 Internal customers), *Say it once* (B5 Hidden
+rework), *What the system sees* (B6 The system, with the ERP's name from the
+profile). Fifteen modules, 23 focus areas, three seats, all through the gate.
+**Decision needed from the author:** the ERP module's reading of the
+employer rule (Epicor's structure and vocabulary, the plant's name and
+practice kept out).
 
 **Update (2026-11-04, beta 7):** *The other side* (`FRAME-other-side.md`),
 from the author's point-of-view note: the welding supervisor covers paint for

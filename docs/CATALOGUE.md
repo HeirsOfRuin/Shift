@@ -36,6 +36,10 @@ copy. If they disagree, the data file wins and this page is stale.
 
 ## The areas
 
+Twenty areas on the morning of 2026-11-04; B5, B6 and E4 added the same
+evening from the author's note on internal customers, hidden rework and the
+ERP (`FRAME-three-more.md`). Twenty-three now.
+
 | Id | Area | The moves | Engine | Modules |
 |---|---|---|---|---|
 | **A. Running the work** | | | | |
@@ -48,6 +52,8 @@ copy. If they disagree, the data file wins and this page is stale.
 | B2 | Lean tools | Picks the tool that fits; builds it with the crew; sets up the audit that keeps it alive | new | none yet: *It looked great for a week* |
 | B3 | Root-cause problem solving | Investigates before fixing; fixes the cause, not the symptom; changes course when a fix does not hold | ready | Firefighting |
 | B4 | Metrics and data | Reads leading signals; spots a measure being gamed; changes the measure, not just the people | new | none yet: *The number on the board* |
+| B5 | Hidden rework | Counts the rework nobody counts; puts the answer where they would find it; does not do the rework faster | ready | Say it once |
+| B6 | The system | Traces a job past the screen they use; fixes the entry where it happens, not the report; does not keep a second system | ready | What the system sees |
 | **C. Quality and safety** | | | | |
 | C1 | Holding the standard | Keeps the standard when the number is short; makes an exception visible and temporary; takes it back when the pressure ends | ready | Rush week |
 | C2 | Safety | Goes and looks on the first report; makes it safe before it is fixed; closes the action | ready | none yet: *The near miss* (scored in The week, unrated) |
@@ -61,6 +67,7 @@ copy. If they disagree, the data file wins and this page is stale.
 | E1 | Leading up and decision rights | Finds out whose call it is; makes the calls that are theirs; uses the chain | ready | Nobody upstairs |
 | E2 | Working across | Goes across before going up; fixes the handoff, not the blame; agrees one standard at the interface | ready | Across; The other side |
 | E3 | Leading change | Explains the why before the what; involves the sceptics; keeps the change alive | new | none yet: *Nobody asked for this* |
+| E4 | Internal customers | Asks the receiver what they need; delivers what was needed, not what was asked for; measures by the receiver's week | ready | Who you work for |
 | **F. Meetings and self** | | | | |
 | F1 | Running a huddle | Starts on time; every action gets an owner; handles the derailer | ready | Monday, 7:00 |
 | F2 | Self-management under pressure | Notices own load and pulls back; does not grind past useful; recovers the week | ready | (scored in every module, unrated) |
@@ -112,6 +119,8 @@ Both are the scoring telling the truth about that style, not a scoring fault.
 2026-11-04 (`FRAME-three-modules.md`), then the three seats
 (`FRAME-seats.md`), then *The other side* (E2 and C3, from the author's note:
 "forcing some people to see the other departments pov from time to time would
-actually be a really good training tool"; `FRAME-other-side.md`). Next: *It
-looked great for a week* (B2), *The near miss* (C2), *The number on the board*
-(B4), *Nobody asked for this* (E3).
+actually be a really good training tool"; `FRAME-other-side.md`), then *Who
+you work for* (E4), *Say it once* (B5) and *What the system sees* (B6) from the
+author's note the same evening (`FRAME-three-more.md`). Next: *It looked
+great for a week* (B2), *The near miss* (C2), *The number on the board* (B4),
+*Nobody asked for this* (E3).

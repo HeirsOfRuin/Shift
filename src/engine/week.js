@@ -75,6 +75,8 @@ function interruptions(s) {
   const I = C.interrupts;
   const items = (s.seat === 'lead' ? C.lead.floorLoad : s.seat === 'manager' ? C.manager.floorLoad : C.floorLoad).map((f) => ({ label: f.label, hours: f.hours }));
   if (s.seat !== 'lead' && s.dept.bench >= 0.55) items[0] = { label: `${items[0].label} (Kev takes some)`, hours: items[0].hours - 2 };
+  // the answers live where people find them now (Say it once): fewer walk-ups
+  if (s.dept.walkupsCut) { const w = items.find((it) => /walk-ups/i.test(it.label)); if (w) { w.hours = Math.max(1, w.hours - s.dept.walkupsCut); w.label = `${w.label} (fewer: the answers are on the board)`; } }
   let unseen = 0;
   for (const p of s.problems) {
     let h = 0;
@@ -413,7 +415,7 @@ function triage(card, opt) {
 function areaFor(type, kind = null) {
   if (type === 'otherside' && ['fix', 'hold', 'yourself', 'soft'].includes(kind)) return 'C3';
   return { late: 'D2', rework: 'D1', load: 'D1', friction: 'D3',
-    hazard: 'C2', recurring: 'B3', escalation: 'E1', standards: 'E2', constraint: 'B1', huddle: 'F1', newhand: 'D4', otherside: 'E2' }[type];
+    hazard: 'C2', recurring: 'B3', escalation: 'E1', standards: 'E2', constraint: 'B1', huddle: 'F1', newhand: 'D4', otherside: 'E2', customer: 'E4', infowork: 'B5', erp: 'B6' }[type];
 }
 
 // ---------------------------------------------------------------- the manager's seat
@@ -627,7 +629,7 @@ function land(s, K, q, lines) {
 }
 
 // ---------------------------------------------------------------- a new module
-export function newModule(moduleId, seed, seat = 'supervisor') {
+export function newModule(moduleId, seed, seat = 'supervisor', opts = {}) {
   const module = MODULES[moduleId];
   if (!module) throw new Error(`no module ${moduleId}`);
   if (!(module.seats || ['supervisor']).includes(seat)) throw new Error(`${module.title} is not written for the ${seat} seat`);
@@ -646,7 +648,7 @@ export function newModule(moduleId, seed, seat = 'supervisor') {
     script.push({ type, who: rs.pick(options.length ? options : here), week: rs.range(lo, hi), seen: false });
   }
   const s = {
-    v: 1, seed: seed >>> 0, moduleId, seat, roles: structuredClone(ROLES[seat]), week: 1, weeks: module.weeks, over: false, outcome: null,
+    v: 1, seed: seed >>> 0, moduleId, seat, roles: { ...structuredClone(ROLES[seat]), erp: { name: opts.erp || 'the system', full: opts.erp || 'the system', pronoun: 'it' } }, week: 1, weeks: module.weeks, over: false, outcome: null,
     setup: structuredClone(module.setup || {}),
     crew: crew.map((c) => ({ ...structuredClone(c), status: 'active', daysOut: 0, lateness: 0, defectAdd: 0, stress: 0, carryOut: 0, lowMorale: 0, leaving: false, cramped: false })),
     dept: {

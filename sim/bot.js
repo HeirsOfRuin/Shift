@@ -16,7 +16,8 @@ const PROBLEM = {
   firefighter(c) {
     return { late: 'remind', rework: 'fixYourself', load: 'carry', friction: 'warning', hazard: c.waiting ? 'leave' : 'workOrder',
       recurring: 'fixYourself', escalation: 'decide', standards: 'matchThem',
-      constraint: c.ruledOut.includes('weld') ? 'improveFit' : 'improveWeld', huddle: 'shutDown', newhand: 'fixHis', otherside: 'fixInPaint' }[c.type];
+      constraint: c.ruledOut.includes('weld') ? 'improveFit' : 'improveWeld', huddle: 'shutDown', newhand: 'fixHis', otherside: 'fixInPaint',
+      customer: 'pushMore', infowork: 'faster', erp: 'ownSheet' }[c.type];
   },
   documenter(c) {
     if (c.type === 'late' || c.type === 'rework') return c.weeks % 2 === 0 ? 'document' : 'leave';
@@ -30,6 +31,9 @@ const PROBLEM = {
     if (c.type === 'huddle') return 'parkingLot';
     if (c.type === 'newhand') return c.weeks === 0 ? 'sheet' : c.weeks >= 2 && !c.tried.includes('document') ? 'document' : 'leave';
     if (c.type === 'otherside') return 'sendBack';
+    if (c.type === 'customer') return c.weeks === 0 ? 'defend' : 'leave';
+    if (c.type === 'infowork') return c.tried.includes('memo') ? (c.tried.includes('board') ? 'leave' : 'board') : 'memo';
+    if (c.type === 'erp') return c.tried.includes('blame') ? 'leave' : 'blame';
     return 'leave';
   },
   coach(c) {
@@ -49,6 +53,10 @@ const PROBLEM = {
       case 'newhand': return !t ? 'watch' : { untaught: 'teach', afraid: 'pair', rushed: 'slowDown', settling: 'watch' }[t];
       // the coach goes to the people first: Tyler, then paint's side
       case 'otherside': return c.pending ? 'checkPaint' : !t ? (c.tried.includes('slowTyler') ? 'lookPaint' : 'slowTyler') : { wire: 'swapWire', rushing: 'slowTyler', noStandard: 'writeStandard', careful: 'leave' }[t];
+      case 'customer': return !t ? 'askPaint' : { timing: 'fixTiming', order: 'fixOrder', info: 'fixInfo', theirs: 'askPaint' }[t];
+      // the coach answers people: points them at the answer before counting anything
+      case 'infowork': return !t ? (c.tried.includes('point') ? 'tally' : 'point') : { board: 'board', travellers: 'travellers', youAnswer: 'point', newMix: 'leave' }[t];
+      case 'erp': return !t ? 'trace' : { lateEntries: 'clockNow', wrongOps: 'fixOps', noIssue: 'issueMaterial', upgrade: 'trace' }[t];
     }
     return 'leave';
   },
@@ -110,6 +118,15 @@ const PROBLEM = {
         if (c.pending) return 'checkPaint';
         if (!t) return 'lookPaint';
         return { wire: 'swapWire', rushing: 'slowTyler', noStandard: 'writeStandard', careful: 'leave' }[t];
+      case 'customer':
+        if (!t) return 'askPaint';
+        return { timing: 'fixTiming', order: 'fixOrder', info: 'fixInfo', theirs: 'leave' }[t];
+      case 'infowork':
+        if (!t) return 'tally';
+        return { board: 'board', travellers: 'travellers', youAnswer: 'point', newMix: 'leave' }[t];
+      case 'erp':
+        if (!t) return 'trace';
+        return { lateEntries: 'clockNow', wrongOps: 'fixOps', noIssue: 'issueMaterial', upgrade: 'leave' }[t];
     }
     return 'leave';
   },

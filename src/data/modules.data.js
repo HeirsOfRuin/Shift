@@ -140,7 +140,7 @@ export const TRACK = {
   intro: "You run the welding department at Northern Motors: seven people, three stations, and a paint department that wants six bodies a week. Each module is a few weeks of that job. Nobody tells you the right answer, because there usually isn't one; there is what you knew, what you did, and what it did.",
   introManager: "You're the operations manager for the Metal side at Northern Motors: fabrication, machining, welding and paint. Kev runs welding. Everything on his floor reaches you through him, and your four moves are to ask him, tell him, go down yourself, or leave it with him. What he can do without you at the end is the number that matters.",
   introLead: "You're the lead hand in welding at Northern Motors: fit-up is your table, six people ask you first, and Kev, who had your job until spring, is the supervisor. Every hour you lead comes off the table. Nobody tells you the right answer; there is what you knew, what you did, what you took to Kev, and what it did.",
-  modules: ['the-week', 'late-one', 'loop', 'firefighting', 'pulled', 'upstairs', 'rush', 'across', 'waits', 'monday', 'newhand', 'otherside'],
+  modules: ['the-week', 'late-one', 'loop', 'firefighting', 'pulled', 'upstairs', 'rush', 'across', 'waits', 'monday', 'newhand', 'otherside', 'customers', 'sayitonce', 'system'],
 };
 
 export const MODULES = {
@@ -655,6 +655,131 @@ export const MODULES = {
         'What will you say to the next supervisor downstream who tells you your work is costing them an hour a day?',
       ],
       commitment: 'One morning this month I will spend on the receiving end of my own department\'s work, and what I will bring back:',
+    },
+  },
+
+  // -------------------------------------------------------------------- 13 (beta 8)
+  customers: {
+    title: 'Who you work for', focus: ['E4'], seats: ['supervisor'], onlySupervisor: "the conversations in it are supervisor to supervisor", notManager: 'both sides of the door are already yours', handbook: '8: Leading at every level: horizontally', weeks: 8, goal: 'main',
+    teaches: 'Internal customers: who receives your work, and what they need from it, which is not what they asked for',
+    brief: [
+      "Welding makes bodies. Paint receives them. That is the whole of the arrangement as far as anyone in welding has ever thought about it, and paint has been unhappy with it for a year in a way that comes out as kickback tickets and Theresa's tone at the production meeting.",
+      "Paint has never once said what it needs. Welding has never once asked. Jess needs something from you every week and gets your version of it. Maintenance gets work orders from you written the way you'd say them out loud. Each of them is a customer, and each of them is getting what you decided to send.",
+      "This month, find out what they actually need. It will not be what they have been asking for.",
+    ],
+    goalText: "Paint getting what it needs from welding, settled with Theresa for a reason you can name; paint fed; nobody lost.",
+    lose: ['Paint short two weeks running', 'Losing a person', 'Three weeks over 55 hours'],
+    setup: {},
+    main: { type: 'customer', who: [], seen: true, week: 1 },
+    second: { weeks: [3, 5], not: ['standards'] },
+    cards: [
+      { id: 'jess', week: 2, cue: 'pressure', title: 'Jess wants your numbers, again',
+        body: "Every Monday you give Jess next week's bodies: one number. Every Monday she comes back with a question about which ones. You have started to find this annoying.",
+        options: [
+          { id: 'ask', label: 'Ask her what she does with the number', hours: 0.5, kind: 'do', effects: [{ line: "Jess builds the paint schedule, the tire order and Corey's promises off your number, and she needs it by vehicle, not by body, because a Rescue is not a Drayman to any of those three. You had been giving her one number for two years." }], score: [['E4', 2, 'Asked the receiver what they do with it']] },
+          { id: 'give', label: 'Give her the number, the way you always have', hours: 0.25, kind: 'skip', effects: [{ floorLoad: { label: "Jess's questions about which bodies", hours: 1, weeks: 3 } }], score: [['E4', -1, 'Delivered what was asked for, the way it has always been delivered']] },
+        ] },
+      { id: 'workorder', week: 3, cue: 'pressure', title: 'A work order for maintenance',
+        body: "The crane on bay two needs maintenance. You can write 'crane noisy' on the work order, which is what welding has always written, and what maintenance has always put at the bottom of the pile.",
+        options: [
+          { id: 'proper', label: 'Write what maintenance can act on: which crane, what noise, since when, what you ruled out', hours: 0.5, kind: 'do', effects: [{ line: 'Maintenance had the crane done Thursday. The tech said it was the first work order from welding he could read.' }], score: [['E4', 2, "Delivered what the receiver needed to act"]] },
+          { id: 'usual', label: "Write 'crane noisy'", hours: 0.25, kind: 'skip', effects: [{ safetyDebt: 0.01 }, { floorLoad: { label: 'Chasing maintenance about the crane', hours: 1, weeks: 3 } }], score: [['E4', -1, "Sent the receiver something they could not act on"]] },
+        ] },
+    ],
+    pool: { perWeek: [0, 1], cards: pool('vendorDemo', 'townHall', 'supplierCall', 'danaPage', 'eyewash') },
+    debrief: {
+      questions: [
+        'What did Theresa say paint needed, in her words? How far was it from what you thought she had been complaining about?',
+        'Who else receives your work every week? Name three. What does each of them do with it after it leaves you?',
+        'When did you deliver more of what was asked for instead of what was needed? What did it cost the receiver?',
+        'On your real floor: who is your internal customer that you have never asked? What would you ask them tomorrow?',
+        'Who treats you as their customer? What do you need from them that you have never said?',
+      ],
+      commitment: 'One internal customer I will sit down with this month, and the question I will ask them:',
+    },
+  },
+
+  // -------------------------------------------------------------------- 14 (beta 8)
+  sayitonce: {
+    title: 'Say it once', focus: ['B5'], seats: ['supervisor', 'lead'], notManager: 'the questions in it come to the floor, not the office', handbook: '2: When everything is urgent, nothing is strategic', weeks: 8, goal: 'main',
+    teaches: 'Rework that is not parts: the same question four times a day, the same conversation three times, the hour spent looking',
+    leadBrief: "You're the lead hand, and you are the person everyone asks. Where does this go, what rev is this, is it the Hauler or the Hauler 9 today. You know, so they ask, so you know, so they ask.",
+    brief: [
+      "Seven hours of your week are walk-ups. Where does this go. What rev is this drawing. Is paint taking Draymans first today. Did Saturday get approved. Nobody counts these hours because they are three minutes each and three minutes is not work.",
+      "They are rework. Not the kind QC tags: the kind where someone asks you something they should already have known, and you answer it, and tomorrow someone else asks it, and you answer that. Marisol spent an hour on Tuesday looking for a drawing revision. Brent has asked about Saturday three times.",
+      'Nobody is wrong to ask. The question is why the answer is only in your head.',
+    ],
+    goalText: 'The walk-up hours down and staying down, because the answers live where people find them; paint fed; nobody lost.',
+    lose: ['Paint short two weeks running', 'Losing a person', 'Three weeks over 55 hours'],
+    setup: {},
+    main: { type: 'infowork', who: [], seen: true, week: 1 },
+    second: { weeks: [3, 5], not: [] },
+    cards: [
+      { id: 'saturday', week: 3, cue: 'pressure', who: 'brent', title: '{c} asks about Saturday, for the third time',
+        body: "{c} wants to know if Saturday is on. He asked Monday, and Tuesday, and now it's Wednesday and he's asking again, because you told him, and he forgot, and nobody wrote it anywhere.",
+        options: [
+          { id: 'board', label: 'Put it on the board, with the date, and point', hours: 0.25, kind: 'do', effects: [{ line: 'Saturday went on the board with the date and the names. Nobody asked again. Tyler read it and asked to be on it.' }], score: [['B5', 2, 'Said it once, where everyone could see it']] },
+          { id: 'again', label: 'Tell him again', hours: 0.25, kind: 'skip', effects: [{ floorLoad: { label: 'Saturday, asked and answered, by everyone', hours: 1, weeks: 2 } }], score: [['B5', -1, 'Had the same conversation a third time']] },
+        ] },
+      { id: 'drawing', week: 4, cue: 'pressure', who: 'marisol', title: '{c} spent an hour looking for a drawing',
+        body: "{c} needed the Hauler roof rev and spent an hour finding it: the shared drive, Ben's desk, the old binder, your office. She found it in your truck. She did not say anything about that.",
+        options: [
+          { id: 'fix', label: 'Fix where the drawings live, and tell everyone once', hours: 1, kind: 'do', effects: [{ line: 'The current revs live in the rack by the board now, one folder per vehicle, and Ben drops new ones there. Nobody has been in your truck since.' }], score: [['B5', 2, 'Fixed where the information lives']] },
+          { id: 'find', label: 'Find it for her, next time she asks', hours: 0.5, kind: 'skip', effects: [{ floorLoad: { label: 'Finding drawings for people', hours: 1, weeks: 3 } }], score: [['B5', -1, 'Did the searching for her, faster']] },
+        ] },
+    ],
+    pool: { perWeek: [0, 1], cards: pool('vendorDemo', 'townHall', 'joelGauge', 'jessForecast', 'supplierCall') },
+    debrief: {
+      questions: [
+        'What did the tally say: who asked what, and how often? Which question surprised you?',
+        'How many hours a week were the questions costing you? What were they costing the people who had to come and ask?',
+        'Where did the answers live before, and where do they live now? Who keeps them current?',
+        'On your real floor: what is the question you answer most often? Why is the answer only in your head?',
+        'What conversation have you had three times this month? What would make it once?',
+      ],
+      commitment: 'One answer I will put where people find it this week, and who will keep it current:',
+    },
+  },
+
+  // -------------------------------------------------------------------- 15 (beta 8)
+  system: {
+    title: 'What the system sees', focus: ['B6'], seats: ['supervisor', 'lead'], notManager: 'the entries in it are made at the booth', handbook: '3: Structure protects good people', weeks: 8, goal: 'main',
+    teaches: 'The ERP: what it does with what the floor enters, and what it cannot do with what the floor does not',
+    leadBrief: "You're the lead hand, and the clock-in terminal is beside your table. The crew clocks on and off jobs through you more than through {erp}, which is the problem, though nobody has put it that way.",
+    brief: [
+      "Jess built next week on what {erp} said. {erp} said welding was a day ahead on the Hauler jobs. Welding is not a day ahead on the Hauler jobs; welding is behind, and paint's schedule, the tire order and Corey's delivery promise are now built on a day that does not exist.",
+      "The crew sees one screen of {erp}: clock on, clock off, the job number. What they do not see is everything downstream of it: the schedule Jess builds off the labour entries, the steel purchasing reorders off the material issues, the costing Marion runs off the closed jobs, the dates Corey promises off all of it. A job clocked off on Friday for work done Tuesday is a lie the whole building reads as the truth.",
+      "Dana would like to know why the schedule and the floor disagree. {erp} does not know. It only knows what it was told.",
+    ],
+    goalText: "{erp}'s picture of welding matching the floor, for a reason you fixed at the booth; paint fed; nobody lost.",
+    lose: ['Paint short two weeks running', 'Losing a person', 'Three weeks over 55 hours'],
+    setup: {},
+    main: { type: 'erp', who: [], seen: true, week: 1 },
+    second: { weeks: [3, 5], not: [] },
+    cards: [
+      { id: 'stock', week: 2, cue: 'pressure', title: "{erp} says forty brackets in stock",
+        body: "Jess has {erp} open: forty Drayman brackets in stock. The rack is empty; you can see it from here. Purchasing will not reorder what the system says is on the shelf.",
+        options: [
+          { id: 'count', label: 'Walk over with Jess and count, then find out where the forty went in the system', hours: 0.5, kind: 'do', effects: [{ line: 'The forty were on the floor, in bodies, never issued to the jobs. Jess fixed the count; purchasing reordered Thursday; you now know what a material issue is for.' }], score: [['B6', 1, 'Saw what the system sees and why']] },
+          { id: 'wrong', label: "Tell her the system's wrong", hours: 0, kind: 'skip', effects: [{ capacity: -0.5 }, { line: "You said the system was wrong. It was: it had been told nothing. Fit-up ran out of brackets Thursday and the steel came in the week after." }], score: [['B6', -1, 'Called the system wrong instead of finding what it had been told']] },
+        ] },
+      { id: 'closing', week: 5, cue: 'pressure', title: 'Eleven jobs still open',
+        body: "Marion's month-end is Friday and {erp} shows eleven welding jobs open that are in paint, two in assembly. Open jobs carry no cost and ship no vehicles, as far as the system knows.",
+        options: [
+          { id: 'close', label: 'Close them properly now, with the real hours and dates', hours: 1, kind: 'do', effects: [{ managerTrust: 0.04 }, { line: 'The eleven jobs closed with their real hours. Marion\'s month-end was the first in a year where welding\'s costs were welding\'s.' }], score: [['B6', 2, 'Closed the jobs the way the system needs them closed']] },
+          { id: 'office', label: 'Let the office close them at month end', hours: 0, kind: 'skip', effects: [{ managerTrust: -0.05 }, { line: 'The office closed the eleven jobs with estimated hours. Welding looks forty percent over on labour this month, and Dana has the report.' }], score: [['B6', -1, 'Let someone else guess the entries']] },
+        ] },
+    ],
+    pool: { perWeek: [0, 1], cards: pool('vendorDemo', 'townHall', 'jessForecast', 'supplierCall', 'danaPage') },
+    debrief: {
+      questions: [
+        'What did you find when you traced one job through the system, screen by screen? Which screens had you never seen?',
+        'What does a labour entry made on Friday for Tuesday\'s work do to the schedule, the purchasing, the costing, the delivery date? Who reads each of those?',
+        'On your real floor: which entries does your crew make, and when? Who downstream builds on them?',
+        "What does your plant's system do with a material issue, a clocked operation, a closed job? Ask the person who runs it to show you.",
+        'What would you tell a new hire about why the clock-in matters, in one sentence they would believe?',
+      ],
+      commitment: "One screen of our plant's system I will sit with the person who owns it to understand this month, and what I will tell the crew after:",
     },
   },
 };

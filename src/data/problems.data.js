@@ -181,6 +181,51 @@ export const PROBLEMS = {
       waveThrough: { label: 'Wave them through; Theresa can sort it when she is back', hours: 0, kind: 'soft' },
     },
   },
+  // ---- beta 8: Who you work for (E4): what paint actually needs from welding
+  customer: {
+    label: 'What paint needs',
+    causes: { timing: 0.3, order: 0.25, info: 0.25, theirs: 0.2 },
+    passing: 'theirs',
+    stories: { timing: { order: 0.3 } },
+    actions: {
+      askPaint: { label: 'Ask Theresa what paint needs from welding, in her words', hours: 1, kind: 'ask' },
+      fixTiming: { label: 'Move the handoff to two: finish the last body first thing', hours: 1, kind: 'fix', fits: ['timing'] },
+      fixOrder: { label: "Send bodies in the schedule's order, not the easy order", hours: 0.5, kind: 'fix', fits: ['order'] },
+      fixInfo: { label: 'Fill in every traveller before the door: colour code, rework notes', hours: 1, kind: 'fix', fits: ['info'] },
+      pushMore: { label: 'Send more bodies, earlier in the week', hours: 2, kind: 'yourself' },
+      defend: { label: 'Tell Dana paint is never happy', hours: 0.5, kind: 'up' },
+    },
+  },
+  // ---- beta 8: Say it once (B5): the same question, four times a day
+  infowork: {
+    label: 'The same question',
+    causes: { board: 0.3, travellers: 0.25, youAnswer: 0.25, newMix: 0.2 },
+    passing: 'newMix',
+    stories: { youAnswer: { board: 0.3 } },
+    actions: {
+      tally: { label: 'Keep a tally for a week: who asks what, and how often', hours: 1, kind: 'ask' },
+      board: { label: "Put the day's plan and the drawing revs on the board, every morning", hours: 1, kind: 'fix', fits: ['board'] },
+      travellers: { label: 'Get engineering to put the rev on every traveller', hours: 1.5, kind: 'fix', fits: ['travellers'] },
+      point: { label: "Answer with 'where would you find that?' for a week", hours: 0.5, kind: 'fix', fits: ['youAnswer'] },
+      faster: { label: 'Answer faster; keep the day moving', hours: 0, kind: 'yourself' },
+      memo: { label: 'Send a memo', hours: 0.25, kind: 'soft' },
+    },
+  },
+  // ---- beta 8: What the system sees (B6): Jess built next week on what the system said
+  erp: {
+    label: 'What the system sees',
+    causes: { lateEntries: 0.3, wrongOps: 0.25, noIssue: 0.25, upgrade: 0.2 },
+    passing: 'upgrade',
+    stories: { noIssue: { lateEntries: 0.3 } },
+    actions: {
+      trace: { label: 'Sit with Jess and trace one job through {erp}, screen by screen', hours: 2, kind: 'ask' },
+      clockNow: { label: 'Clock on and off at the booth, every operation, the day it happens: show them why', hours: 1.5, kind: 'fix', fits: ['lateEntries'] },
+      fixOps: { label: 'Get Ben to fix the operation sequence on the Hauler jobs', hours: 1, kind: 'fix', fits: ['wrongOps'] },
+      issueMaterial: { label: 'Issue the steel to the jobs when it is cut, with the lead', hours: 1, kind: 'fix', fits: ['noIssue'] },
+      ownSheet: { label: 'Keep your own spreadsheet and give Jess that', hours: 1, kind: 'yourself' },
+      blame: { label: 'Tell Dana {erp} is wrong', hours: 0.5, kind: 'up' },
+    },
+  },
 };
 
 // Where a problem of each type can land, when a module draws one at random.

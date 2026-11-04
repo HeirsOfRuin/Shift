@@ -103,4 +103,5 @@ export const CAST_ABOUT = {
 export const PRONOUNS = {
   he: { he: 'he', him: 'him', his: 'his', He: 'He', His: 'His', Him: 'Him', hes: "he's", Hes: "He's" },
   she: { he: 'she', him: 'her', his: 'her', He: 'She', His: 'Her', Him: 'Her', hes: "she's", Hes: "She's" },
+  it: { he: 'it', him: 'it', his: 'its', He: 'It', His: 'Its', Him: 'It', hes: "it's", Hes: "It's" },
 };

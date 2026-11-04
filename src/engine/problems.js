@@ -711,6 +711,140 @@ export const TYPES = {
       return [];
     },
   },
+
+  // ------------------------------------------------------------- what paint needs (beta 8)
+  customer: {
+    notice() { return true; },
+    act(K, p, action) {
+      const v = { p };
+      const d = K.s.dept;
+      switch (action) {
+        case 'askPaint': told(p); d.peerTrust = K.clamp(d.peerTrust + 0.04); K.line('told', `customer.told.${p.told}`, v); return;
+        case 'fixTiming':
+          if (p.cause === 'timing' && works(K, p, action, 0.85, 0.95)) { d.peerTrust = K.clamp(d.peerTrust + 0.06); K.resolve(p, 'customer.fixed.timing', { root: true }); }
+          else { if (p.cause !== 'timing') p.ruledOut.push('timing'); K.line('result', p.cause === 'timing' ? 'customer.timing.notYet' : 'customer.timing.noHelp', v); }
+          return;
+        case 'fixOrder':
+          if (p.cause === 'order' && works(K, p, action, 0.85, 0.95)) { d.peerTrust = K.clamp(d.peerTrust + 0.06); K.resolve(p, 'customer.fixed.order', { root: true }); }
+          else { if (p.cause !== 'order') p.ruledOut.push('order'); K.line('result', p.cause === 'order' ? 'customer.order.notYet' : 'customer.order.noHelp', v); }
+          return;
+        case 'fixInfo':
+          if (p.cause === 'info' && works(K, p, action, 0.8, 0.9)) { d.peerTrust = K.clamp(d.peerTrust + 0.06); K.resolve(p, 'customer.fixed.info', { root: true }); }
+          else { if (p.cause !== 'info') p.ruledOut.push('info'); K.line('result', p.cause === 'info' ? 'customer.info.notYet' : 'customer.info.noHelp', v); }
+          return;
+        case 'pushMore': K.s.week_.capacity += 0.4; for (const c of K.crew()) if (K.active(c)) c.morale = K.clamp(c.morale - 0.02); d.peerTrust = K.clamp(d.peerTrust - 0.02); K.line('result', 'customer.pushMore', v); return;
+        case 'defend': d.peerTrust = K.clamp(d.peerTrust - 0.1); d.managerTrust = K.clamp(d.managerTrust - 0.03); K.line('result', 'customer.defend', v); return;
+      }
+    },
+    week(K, p) {
+      const v = { p };
+      if (p.cause === 'theirs' && K.week - p.since >= 2 && K.r.people.next() < 0.6) { K.resolve(p, 'customer.passed.theirs', { settled: true }); return; }
+      // bodies that arrive when paint cannot use them wait at the door
+      K.s.week_.capacityMul *= 0.96;
+      K.s.dept.peerTrust = K.clamp(K.s.dept.peerTrust - 0.02);
+      p.extraInterrupts = 1;
+      if ((K.week - p.since) % 3 === 2) p.severity++;
+      K.line('signal', `customer.week.${p.severity >= 2 ? 'worse' : 'open'}`, v);
+    },
+    score(p, action) {
+      if (action === 'askPaint') return p.told ? [] : [['E4', 2, 'Asked the receiver what they need']];
+      if (['fixTiming', 'fixOrder', 'fixInfo'].includes(action)) return p.told && (PROBLEMS.customer.actions[action].fits || []).includes(p.told) ? [['E4', 2, 'Delivered what paint needed']] : p.told ? [['E4', -1, 'Changed something paint had not asked for']] : [['E4', 0, 'Guessed at what paint needed']];
+      if (action === 'pushMore') return [['E4', -1, 'Delivered more of what was asked for instead of what was needed']];
+      if (action === 'defend') return [['E4', -1, 'Argued with the customer instead of asking them']];
+      return [];
+    },
+  },
+
+  // ------------------------------------------------------------- the same question (beta 8)
+  // The walk-up hours on the bar are the symptom. Fixed at the root, they drop
+  // and stay down (dept.walkupsCut, read by interruptions()).
+  infowork: {
+    notice() { return true; },
+    act(K, p, action) {
+      const v = { p };
+      const d = K.s.dept;
+      switch (action) {
+        case 'tally': told(p); K.line('told', `infowork.told.${p.told}`, v); return;
+        case 'board':
+          d.boardUp = true;
+          if (p.cause === 'board' && works(K, p, action, 0.85, 0.95)) { d.walkupsCut = 3; K.resolve(p, 'infowork.fixed.board', { root: true }); }
+          else if (p.cause === 'newMix') { d.walkupsCut = 1; K.resolve(p, 'infowork.fixed.boardMix', { settled: true }); }
+          else { d.walkupsCut = Math.max(d.walkupsCut || 0, 1); K.line('result', p.cause === 'board' ? 'infowork.board.notYet' : 'infowork.board.noHelp', v); }
+          return;
+        case 'travellers':
+          if (p.cause === 'travellers' && works(K, p, action, 0.75, 0.9)) { d.walkupsCut = 3; K.resolve(p, 'infowork.fixed.travellers', { root: true }); }
+          else { if (p.cause !== 'travellers') p.ruledOut.push('travellers'); K.line('result', p.cause === 'travellers' ? 'infowork.travellers.notYet' : 'infowork.travellers.noHelp', v); }
+          return;
+        case 'point':
+          if (p.cause === 'youAnswer' && works(K, p, action, 0.8, 0.9)) { d.walkupsCut = 3; K.resolve(p, 'infowork.fixed.point', { root: true }); }
+          else { if (p.cause !== 'youAnswer') { p.ruledOut.push('youAnswer'); for (const c of K.crew()) if (K.active(c)) c.trust = K.clamp(c.trust - 0.01); } K.line('result', p.cause === 'youAnswer' ? 'infowork.point.notYet' : 'infowork.point.noHelp', v); }
+          return;
+        case 'faster': p.fasterThisWeek = true; K.line('result', 'infowork.faster', v); return;
+        case 'memo': K.line('result', 'infowork.memo', v); return;
+      }
+    },
+    week(K, p) {
+      const v = { p };
+      if (p.cause === 'newMix' && K.week - p.since >= 2 && K.r.people.next() < 0.6) { K.resolve(p, 'infowork.passed.newMix', { settled: true }); return; }
+      // the questions eat the week: two or three hours a week beyond the walk-ups
+      p.extraInterrupts = p.fasterThisWeek ? 2 : 3;
+      p.fasterThisWeek = false;
+      if (p.cause === 'travellers' && K.r.outcomes.next() < 0.25) K.s.week_.defects += 0.4;
+      if ((K.week - p.since) % 3 === 2) p.severity++;
+      K.line('signal', `infowork.week.${p.severity >= 2 ? 'worse' : 'open'}`, v);
+    },
+    score(p, action) {
+      if (action === 'tally') return p.told ? [] : [['B5', 2, 'Counted the rework nobody counts']];
+      if (['board', 'travellers', 'point'].includes(action)) return p.told && (PROBLEMS.infowork.actions[action].fits || []).includes(p.told) ? [['B5', 2, 'Put the answer where they would find it']] : p.told ? [['B5', 0, 'Fixed where a different answer lives']] : [['B5', 0, 'Guessed where the answer should live']];
+      if (action === 'faster') return [['B5', -1, 'Did the rework faster']];
+      if (action === 'memo') return [['B5', 0, 'Sent a memo nobody will find when they need it']];
+      return [];
+    },
+  },
+
+  // ------------------------------------------------------------- what the system sees (beta 8)
+  erp: {
+    notice() { return true; },
+    act(K, p, action) {
+      const v = { p };
+      const d = K.s.dept;
+      switch (action) {
+        case 'trace': told(p); K.line('told', `erp.told.${p.told}`, v); return;
+        case 'clockNow':
+          if (p.cause === 'lateEntries' && works(K, p, action, 0.8, 0.9)) K.resolve(p, 'erp.fixed.clock', { root: true });
+          else { if (p.cause !== 'lateEntries') p.ruledOut.push('lateEntries'); K.line('result', p.cause === 'lateEntries' ? 'erp.clock.notYet' : 'erp.clock.noHelp', v); }
+          return;
+        case 'fixOps':
+          if (p.cause === 'wrongOps' && works(K, p, action, 0.75, 0.9)) K.resolve(p, 'erp.fixed.ops', { root: true });
+          else { if (p.cause !== 'wrongOps') p.ruledOut.push('wrongOps'); K.line('result', p.cause === 'wrongOps' ? 'erp.ops.notYet' : 'erp.ops.noHelp', v); }
+          return;
+        case 'issueMaterial':
+          if (p.cause === 'noIssue' && works(K, p, action, 0.8, 0.9)) K.resolve(p, 'erp.fixed.issue', { root: true });
+          else { if (p.cause !== 'noIssue') p.ruledOut.push('noIssue'); K.line('result', p.cause === 'noIssue' ? 'erp.issue.notYet' : 'erp.issue.noHelp', v); }
+          return;
+        case 'ownSheet': p.sheetThisWeek = true; d.secondSystem = true; K.line('result', 'erp.ownSheet', v); return;
+        case 'blame': d.managerTrust = K.clamp(d.managerTrust - 0.05); K.line('result', 'erp.blame', v); return;
+      }
+    },
+    week(K, p) {
+      const v = { p };
+      if (p.cause === 'upgrade' && K.week - p.since >= 2 && K.r.people.next() < 0.6) { K.resolve(p, 'erp.passed.upgrade', { settled: true }); return; }
+      // Jess builds on what the system says; purchasing buys on it; the floor chases steel the system thinks is there
+      if (!p.sheetThisWeek && (K.week - p.since) % 2 === 1) K.s.dept.surprise = true;
+      p.sheetThisWeek = false;
+      p.extraInterrupts = 2;
+      if (p.cause === 'noIssue' && K.r.outcomes.next() < 0.3) { K.s.week_.capacity -= 0.5; K.line('event', 'erp.steelShort', v); }
+      if ((K.week - p.since) % 3 === 2) p.severity++;
+      K.line('signal', `erp.week.${p.severity >= 2 ? 'worse' : 'open'}`, v);
+    },
+    score(p, action) {
+      if (action === 'trace') return p.told ? [] : [['B6', 2, 'Traced a job past the screen you use']];
+      if (['clockNow', 'fixOps', 'issueMaterial'].includes(action)) return p.told && (PROBLEMS.erp.actions[action].fits || []).includes(p.told) ? [['B6', 2, 'Fixed the entry where it happens, not the report']] : p.told ? [['B6', 0, 'Fixed an entry that was not the one']] : [['B6', 0, 'Guessed at what the system was missing']];
+      if (action === 'ownSheet') return [['B6', -1, 'Kept a second system']];
+      if (action === 'blame') return [['B6', -1, 'Blamed the system for what it was told']];
+      return [];
+    },
+  },
 };
 
 export function actionsFor(type) { return PROBLEMS[type].actions; }

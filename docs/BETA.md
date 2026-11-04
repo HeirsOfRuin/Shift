@@ -1,10 +1,20 @@
-# Shift beta 7: twelve modules, three seats, a profile, a path
+# Shift beta 8: fifteen modules, three seats, a profile, a path
 
 Published 2026-11-04 as a private page, the same link as every beta:
 **https://claude.ai/artifact/4c5QqYTmZdn5iKcutCPZJx**
 (only the author can open it until he shares it from the page's Share menu).
 Rebuild with `npm run build` and republish `dist/shift.embed.html` to the same
 link. The build id is baked in, so an installed copy picks the new one up.
+
+**What changed in beta 8 (2026-11-04):** three modules from your evening
+note. *Who you work for*: paint, Jess and maintenance each need something from
+welding that is not what they asked for; find out what, in their words. *Say
+it once*: the seven hours of walk-ups on your bar are rework; keep a tally,
+then put the answers where people find them, and watch the bar drop. *What
+the system sees*: Jess built next week on what the system said, and the
+system was told late, wrong, or nothing; trace one job past the screen your
+crew uses. The profile has a new optional field for what your plant calls
+its system; the module uses the name you give it.
 
 **What changed in beta 7 (2026-11-04):** *The other side*, from your note
 about seeing other departments' point of view. Theresa is away for four
@@ -54,6 +64,14 @@ module is still played in the welding bay; a brief for anyone else says so.
 
 **What changed in beta 2 (2026-11-03):** pressure from open problems, fatigue,
 a People tab, and old saves carried forward.
+
+## How to test beta 8
+
+Put your plant's system name on the profile and play *What the system sees*.
+The question: does the chain from a Friday clock-in to Corey's promise read
+true, and what would you add from how your plant actually runs it (that is
+the coach's part of the debrief, on purpose)? Then *Say it once*: is the
+tally the thing you'd do, and does the bar dropping feel earned?
 
 ## How to test beta 7
 

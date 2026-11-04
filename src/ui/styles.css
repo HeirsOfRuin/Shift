@@ -241,7 +241,7 @@ section { display: flex; flex-direction: column; gap: 10px; }
 .chip.focus { background: var(--arc); color: var(--ground); }
 .opt .why, .check .why { display: block; font-size: 0.85em; color: var(--ink-soft); margin-top: 2px; }
 .check[disabled] { opacity: 0.4; }
-#pname { width: 100%; box-sizing: border-box; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--line); background: var(--ground); color: inherit; font: inherit; }
+#pname, #perp { width: 100%; box-sizing: border-box; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--line); background: var(--ground); color: inherit; font: inherit; }
 .score.read-solid { color: var(--good); }
 .score.read-getting { color: var(--amber); }
 .score.read-notyet { color: var(--tag); }

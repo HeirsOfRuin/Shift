@@ -45,13 +45,16 @@ export function briefView(id, profile = null) {
   const focus = [...m.focus, ...(own && !m.focus.includes(own) ? [own] : [])];
   const seatBrief = seat === 'lead' ? m.leadBrief : seat === 'manager' ? m.managerBrief : null;
   return {
-    id, title: m.title, teaches: m.teaches, handbook: m.handbook, weeks: m.weeks, brief: seatBrief ? [seatBrief, ...m.brief] : m.brief, goal: m.goalText, lose: seat === 'manager' ? [...m.lose, 'Kev less able to run his floor than when you started'] : m.lose,
+    id, title: m.title, teaches: m.teaches, handbook: m.handbook, weeks: m.weeks, brief: (seatBrief ? [seatBrief, ...m.brief] : m.brief).map((t) => erpName(t, profile?.erp)), goal: erpName(m.goalText, profile?.erp), lose: seat === 'manager' ? [...m.lose, 'Kev less able to run his floor than when you started'] : m.lose,
     focus: focus.map((a) => ({ id: a, label: AREAS[a].label, about: AREAS[a].about, moves: AREAS[a].moves, seatArea: !m.focus.includes(a) })),
     seatAreaNote: own && !m.focus.includes(own) ? (seat === 'lead' ? 'Read when something in the run needs Kev\'s signature: what you took up, and what you brought with it.' : 'Read on how you worked through Kev: what you asked, what you told him, what you went down and did yourself.') : '',
     seat: seatNote(profile),
     playedAs: seat === 'lead' ? 'the lead hand, at fit-up, with Kev as your supervisor' : seat === 'manager' ? 'the operations manager, with Kev running welding for you' : 'the welding supervisor',
   };
 }
+
+/** The system's name, from the profile, wherever a module names it. */
+const erpName = (t, name) => t.split('{erp}').join(name || 'the system');
 
 /** Every module is written in the welding supervisor's seat so far. A trainee in
  *  another seat or department plays it there; the brief says so plainly rather
@@ -104,7 +107,7 @@ export function weekView(s, plan = {}) {
   const limit = hours > C.bottleneckAt ? say(s, 'limit.bottleneck') : hours > C.fatigueAt ? say(s, 'limit.fatigue') : hours > C.tiredAt ? say(s, 'limit.tired') : hours > C.hoursCeiling ? say(s, 'limit.over') : say(s, 'limit.ok', { n: Math.max(0, Math.round((C.hoursCeiling - hours) * 2) / 2) });
   const last = s.history[s.history.length - 1];
   return {
-    module: { id: s.moduleId, title: module.title, goal: module.goalText }, seat: s.seat || 'supervisor',
+    module: { id: s.moduleId, title: module.title, goal: erpName(module.goalText, s.roles?.erp?.name) }, seat: s.seat || 'supervisor',
     week: Math.min(s.week, s.weeks), weeks: s.weeks, over: s.over, outcome: s.outcome,
     floorItems: s.over ? [] : m.floorItems,
     tired: s.dept.tired >= C.tiredHome ? 'Run down: it is starting to show at home' : s.dept.tired >= C.tiredSlips ? 'Running down: your fixes land less often until you get a few normal weeks' : s.dept.tired > 0 ? 'A little tired from last week' : '',
