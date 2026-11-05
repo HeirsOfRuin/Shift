@@ -31,8 +31,9 @@ const clean = (s, n) => String(s || '').trim().slice(0, n);
 
 // ---------------------------------------------------------------- the coach
 
-/** Make this save a coach's. A coach has no track of their own to play (they
- *  can switch to a trainee profile to try a module); they have a roster. */
+/** Make this save a coach's. One save holds both sides: the roster stays when
+ *  the person switches to their own track (becomeTrainee) and the track stays
+ *  when they switch back. The role only says which screen opens. */
 export function becomeCoach(save, p = {}) {
   const s = structuredClone(save);
   s.role = 'coach';

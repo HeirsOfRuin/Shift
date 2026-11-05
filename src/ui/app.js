@@ -67,7 +67,7 @@ function titleScreen() {
     ${banner ? `<p class="warn">${esc(banner)}</p>` : ''}
     <div class="stack">
       ${saved ? '<button class="btn primary" data-act="continue">Continue</button>' : '<button class="btn primary" data-act="new">Start: who are you here?</button>'}
-      ${saved ? '' : '<button class="btn" data-act="new-coach">I am a coach: set up my trainees</button>'}
+      <button class="btn" data-act="new-coach">${saved ? 'Coach screen: my trainees and group sessions' : 'I am a coach: set up my trainees'}</button>
       ${saved ? (pending?.act === 'new' ? `<p class="warn">This wipes the track on this device: every module played, every debrief. A save code from the menu keeps a copy.</p><div class="row"><button class="btn" data-act="new">Yes, start over</button><button class="btn quiet" data-act="cancel">Keep it</button></div>` : '<button class="btn" data-act="ask-new">Start over</button>') : ''}
       <button class="btn" data-act="load-code">Paste a code: from your coach, or a save code</button>
       ${install ? '<button class="btn" data-act="install">Install on this device</button>' : ''}
@@ -94,7 +94,7 @@ function trackScreen() {
     <div class="ladder">${t.modules.map(rung).join('')}</div>
     ${t.notHere.length && !t.assignment ? `<details class="fold"><summary>${t.notHere.length} module${t.notHere.length === 1 ? '' : 's'} not in this seat: ${esc(t.notHere.map((m) => m.title).join(', '))}</summary><ul class="notes">${t.notHere.map((m) => `<li><strong>${esc(m.title)}</strong>: ${esc(m.why)}</li>`).join('')}</ul></details>` : ''}
     ${t.assignment ? '' : `<div class="toggle"><button class="btn" data-act="open-all">${t.openAll ? 'Lock to the sign-off order' : 'Open every module'}</button><span class="soft">Beta switch. Normally the next opens on a coach's sign-off.</span></div>`}
-    <div class="row"><button class="btn" data-act="progress">Progress code, for your coach</button><button class="btn" data-act="feedback">Your thoughts, for the coach</button><button class="btn" data-act="export">Copy a save code</button><button class="btn quiet" data-act="title">Title screen</button></div>
+    <div class="row"><button class="btn" data-act="progress">Progress code, for your coach</button><button class="btn" data-act="feedback">Your thoughts, for the coach</button><button class="btn" data-act="export">Copy a save code</button><button class="btn" data-act="new-coach">Coach screen</button><button class="btn quiet" data-act="title">Title screen</button></div>
     ${codeBox === 'export' ? exportBox() : codeBox === 'progress' ? progressBox() : ''}
   </main>`;
 }
@@ -182,7 +182,7 @@ function coachScreen() {
     ${banner ? `<p class="banner">${esc(banner)}</p>` : ''}
     <nav class="tabs">${tabs.map(([id, label]) => `<button data-ctab="${id}" class="${coachTab === id ? 'on' : ''}">${label}</button>`).join('')}</nav>
     ${coachTab === 'trainees' ? traineesTab(r) : coachTab === 'add' ? addTab(r) : groupsTab()}
-    <div class="row"><button class="btn" data-act="coach-profile">Your name and department</button><button class="btn" data-act="export">Copy a save code</button><button class="btn quiet" data-act="title">Title screen</button></div>
+    <div class="row"><button class="btn" data-act="my-track">My own track</button><button class="btn" data-act="coach-profile">Your name and department</button><button class="btn" data-act="export">Copy a save code</button><button class="btn quiet" data-act="title">Title screen</button></div>
     ${codeBox === 'export' ? exportBox() : codeBox === 'load' ? loadBox() : ''}
   </main>`;
 }
@@ -615,7 +615,8 @@ function act(t) {
   if (a !== 'cancel' && !a.startsWith('ask-')) pending = null;
   switch (a) {
     case 'new': save = becomeTrainee(newSave()); persist(); draft = null; screen = 'profile'; codeBox = null; banner = null; return;
-    case 'new-coach': save = becomeCoach(newSave()); persist(); draft = null; screen = 'coach-profile'; codeBox = null; banner = null; return;
+    case 'new-coach': { const had = loadSaved(); save = becomeCoach(had || newSave()); persist(); draft = null; screen = had?.coach ? 'coach' : 'coach-profile'; codeBox = null; banner = null; return; }
+    case 'my-track': save = becomeTrainee(save); persist(); screen = save.run && !save.run.over && !save.room ? 'week' : 'track'; banner = null; return;
     case 'coach': screen = 'coach'; draft = null; codeBox = null; banner = null; return;
     case 'coach-profile': draft = null; screen = 'coach-profile'; banner = null; scrollTo(0, 0); return;
     case 'coach-profile-save': {
