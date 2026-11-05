@@ -1,10 +1,24 @@
-# Shift beta 11: seventeen modules, three seats, and the flow rounds
+# Shift beta 12: seventeen modules, three seats, a coach's screen
 
-Published 2026-11-04 as a private page, the same link as every beta:
+Published 2026-11-05 as a private page, the same link as every beta:
 **https://claude.ai/artifact/4c5QqYTmZdn5iKcutCPZJx**
 (only the author can open it until he shares it from the page's Share menu).
 Rebuild with `npm run build` and republish `dist/shift.embed.html` to the same
 link. The build id is baked in, so an installed copy picks the new one up.
+
+**What changed in beta 12 (2026-11-05):** the coach's side. The title
+screen asks whether you are a trainee or a coach. A coach keeps a roster:
+each trainee's seat and department, the modules assigned in the order they
+should be played, opening one at a time or all at once. Each trainee gets an
+assignment code (about 200 characters) to paste on the title screen; their
+track then shows only what was assigned, under the coach's name. They hand
+back a progress code (plays, reads, commitment, sign-off; never the save or
+the debrief answers), or send it from the page when signed in on claude.ai;
+the coach pastes it, or fetches the sent ones, and the roster shows each
+module's state. A third tab holds six group sessions to run with a room,
+each built on a module that exists, with the plan, the questions, the reveal
+and the commitment card (`GROUPS.md`). `FRAME-coach.md` has the breadth
+audit the author asked for and its verdict.
 
 **What changed in beta 11 (2026-11-04):** *Round two*, from the plane
 exercise. Priya runs the bay as rounds: three rules (rack of six or batch of

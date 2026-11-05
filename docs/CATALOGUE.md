@@ -124,8 +124,13 @@ actually be a really good training tool"; `FRAME-other-side.md`), then *Who
 you work for* (E4), *Say it once* (B5) and *What the system sees* (B6) from the
 author's note the same evening (`FRAME-three-more.md`), then *It looked great
 for a week* (B2, kill gate first: `KILLGATE-lean.md`), then *Round two* (B7,
-from the plane exercise, kill gate first: `KILLGATE-flow.md`). Next: *The near miss*
-(C2), *The number on the board* (B4), *Nobody asked for this* (E3).
+from the plane exercise, kill gate first: `KILLGATE-flow.md`). The three areas without a
+module (C2, B4, E3) stay listed as "none yet" on purpose: on 2026-11-05 the
+author asked for a check against covering everything and showing nothing,
+and the verdict (`FRAME-coach.md`) was to freeze the catalogue at 24 and
+build no new area until the leads' playtest is read. Depth first: a seed
+field on the brief, then *Pulled off the floor* rebuilt on the problem-type
+pattern.
 
 Every module carries a one-sentence `purpose`, shown on its brief and on the
 track, from the author's rule of 2026-11-04: "I want every module for the

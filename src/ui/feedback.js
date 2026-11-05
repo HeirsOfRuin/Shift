@@ -38,6 +38,39 @@ export async function sendNotes(notes) {
   }
 }
 
+/** Send the trainee's progress (engine/coach.js progressOf: tallies, reads,
+ *  commitments; never the save or the debrief answers) to the page's store,
+ *  under the same rule as the notes: each viewer writes their own, the owner
+ *  reads them. */
+export async function sendProgress(progress) {
+  try {
+    const claude = globalThis.claude;
+    if (!claude?.use) return { ok: false, why: 'This copy of Shift is not on claude.ai, so there is nothing to send to. Copy the code instead.' };
+    const [db, user] = await Promise.all([claude.use('db'), claude.use('user')]);
+    if (!db || !user) return { ok: false, why: 'Sending needs you signed in on claude.ai. Copy the code instead and message it.' };
+    const id = await user.id();
+    await db.collection('progress').doc(id).set({ ...progress, updated: new Date().toISOString() });
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, why: `It did not send (${e?.code || e?.message || 'unknown'}). Copy the code instead.` };
+  }
+}
+
+/** The coach's side of the store: every progress record sent to this page.
+ *  Only the page's owner can read them (the rule is read: admin). */
+export async function fetchProgress() {
+  try {
+    const claude = globalThis.claude;
+    if (!claude?.use) return { ok: false, why: 'This copy of Shift is not on claude.ai; progress arrives as codes here.' };
+    const db = await claude.use('db');
+    if (!db) return { ok: false, why: 'Reading the store needs you signed in on claude.ai as the page\'s owner.' };
+    const snap = await db.collection('progress').get();
+    return { ok: true, records: snap.docs.map((d) => d.data()) };
+  } catch (e) {
+    return { ok: false, why: `The store could not be read (${e?.code || e?.message || 'unknown'}).` };
+  }
+}
+
 /** The note as text, for a message to the coach. */
 export function noteText(n) {
   return [

@@ -13,7 +13,7 @@ import { newModule, advance as advanceWeek } from './week.js';
 import { pathFor } from './path.js';
 
 export const SAVE_KEY = 'shift.save.v1'; // never rename
-export const SAVE_VERSION = 3;
+export const SAVE_VERSION = 4;
 export const CODE_PREFIX = 'SHFT1.';
 
 export function newSave() {
@@ -23,6 +23,9 @@ export function newSave() {
     profile: null,
     run: null,
     runs: 0,
+    role: null,         // 'trainee' | 'coach' | null (not chosen yet)
+    assignment: null,   // a trainee's assignment from a coach (engine/coach.js)
+    coach: null,        // a coach's roster (engine/coach.js)
   };
 }
 
@@ -49,7 +52,8 @@ export const supports = (id, seat) => (MODULES[id].seats || ['supervisor']).incl
 
 export function order(save) {
   const seat = seatFor(save.profile);
-  const ids = save.profile ? pathFor(save.profile).map((x) => x.id) : TRACK.modules;
+  // an assigned trainee plays what the coach assigned, in the coach's order
+  const ids = save.assignment ? save.assignment.modules : save.profile ? pathFor(save.profile).map((x) => x.id) : TRACK.modules;
   return ids.filter((id) => supports(id, seat));
 }
 
@@ -58,7 +62,7 @@ export function unlocked(save, id) {
   const ids = order(save);
   const i = ids.indexOf(id);
   if (i < 0) return false;
-  if (i === 0 || save.track.openAll) return true;
+  if (i === 0 || save.track.openAll || save.assignment?.open === 'all') return true;
   return !!save.track.modules[ids[i - 1]].signedOff;
 }
 
@@ -136,6 +140,11 @@ export const MIGRATIONS = {
     return { ...s, v: 3, profile: null, track: { ...s.track, modules }, run: heal(s.run) };
   },
 };
+
+// Beta 11 to 12: the coach's side. A save is a trainee's or a coach's; a
+// trainee may carry an assignment. Old saves are trainees without one, and
+// nothing about their track changes.
+MIGRATIONS[3] = (s) => ({ ...s, v: 4, role: s.profile ? 'trainee' : null, assignment: null, coach: null });
 
 export function migrate(save) {
   let s = save;

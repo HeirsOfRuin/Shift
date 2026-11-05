@@ -12,11 +12,12 @@
 import {
   newSave, setProfile, seatFor, startRun, playWeek, saveDebrief, signOff, setOpenAll, SAVE_KEY, serialize, deserialize, toCode, fromCode,
   trackView, briefView, weekView, demoFloor, crewStrip, peopleView, profileView, markSeen, MODULES, TRACK,
+  becomeCoach, becomeTrainee, setTrainee, removeTrainee, assignmentCode, kindOf, takeAssignment, progressOf, progressCode, recordProgress, rosterView, assignable, GROUP_SESSIONS, GROUP_ORDER,
 } from '../engine/game.js';
 import { STORAGE_OK, lsGet, lsSet } from './storage.js';
 import { registerSW, installPrompt } from './sw-register.js';
 import { mountBay, drawPortrait } from './floor.js';
-import { loadNotes, saveNote, sendNotes, noteText } from './feedback.js';
+import { loadNotes, saveNote, sendNotes, noteText, sendProgress, fetchProgress } from './feedback.js';
 
 const app = document.getElementById('app');
 let save = null;
@@ -36,6 +37,10 @@ let install = null;
 let draft = null;          // the profile form in progress
 let note = null;           // the feedback form in progress
 let sendState = null;      // { busy, ok, why } after a send
+let coachTab = 'trainees'; // the coach's screen: trainees | add | groups
+let tdraft = null;         // the trainee form on the coach's screen
+let openCode = null;       // the trainee whose assignment code is showing
+let groupOpen = null;      // the group session whose plan is open
 
 const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 // Hours to the quarter: 0.25 h is a quarter hour, not 0.3.
@@ -56,13 +61,14 @@ function titleScreen() {
     <h1>Shift</h1>
     <p class="lede">A leadership simulator for the shop floor. A few weeks at a time, forty hours a week, a crew with problems whose causes are hidden, and a plant that does not wait for you.</p>
     <div class="bay"><div class="legend"><span>Fit-up</span><span>Body weld</span><span>Finish</span><span>Paint</span></div><canvas data-bay="demo" aria-label="The welding bay at Northern Motors, everyone at work"></canvas><p class="caption" data-caption>Tap someone to see how they look from across the bay.</p></div>
-    <section class="you"><p class="label">For testers</p><p>This is a beta. Make your profile (two minutes), play one module (about twenty), then <strong>Menu &rarr; Your thoughts</strong> and tell the coach what felt true, what felt fake and what was missing. Nothing from your runs leaves this phone unless you send it.</p></section>
+    <section class="you"><p class="label">For testers</p><p>This is a beta. If your coach gave you a code, paste it below and your modules are set. Otherwise make your profile (two minutes). Play one module (about twenty), then <strong>Menu &rarr; Your thoughts</strong> and tell the coach what felt true, what felt fake and what was missing. Nothing from your runs leaves this phone unless you send it.</p></section>
     ${STORAGE_OK ? '' : '<p class="warn">This browser will not keep anything for this page, so progress is lost when you leave. Copy a save code from the menu before you go, or open Shift in its own tab.</p>'}
     ${banner ? `<p class="warn">${esc(banner)}</p>` : ''}
     <div class="stack">
       ${saved ? '<button class="btn primary" data-act="continue">Continue</button>' : '<button class="btn primary" data-act="new">Start: who are you here?</button>'}
+      ${saved ? '' : '<button class="btn" data-act="new-coach">I am a coach: set up my trainees</button>'}
       ${saved ? (pending?.act === 'new' ? `<p class="warn">This wipes the track on this device: every module played, every debrief. A save code from the menu keeps a copy.</p><div class="row"><button class="btn" data-act="new">Yes, start over</button><button class="btn quiet" data-act="cancel">Keep it</button></div>` : '<button class="btn" data-act="ask-new">Start over</button>') : ''}
-      <button class="btn" data-act="load-code">Load a save code</button>
+      <button class="btn" data-act="load-code">Paste a code: from your coach, or a save code</button>
       ${install ? '<button class="btn" data-act="install">Install on this device</button>' : ''}
     </div>
     ${codeBox === 'load' ? loadBox() : ''}
@@ -70,8 +76,8 @@ function titleScreen() {
 }
 
 function loadBox() {
-  return `<div class="codebox"><label class="label" for="codein">Paste a save code</label><textarea id="codein" class="code" rows="4" placeholder="SHFT1."></textarea>
-    <div class="row"><button class="btn primary" data-act="load-go">Load it</button><button class="btn quiet" data-act="cancel">Cancel</button></div></div>`;
+  return `<div class="codebox"><label class="label" for="codein">Paste a code</label><textarea id="codein" class="code" rows="4" placeholder="SHFTA1. from a coach, SHFTP1. from a trainee, SHFT1. a save"></textarea>
+    <div class="row"><button class="btn primary" data-act="load-go">Use it</button><button class="btn quiet" data-act="cancel">Cancel</button></div></div>`;
 }
 
 // ================================================================ the track
@@ -81,14 +87,14 @@ function trackScreen() {
     <div class="stack"><p class="label">Northern Motors &middot; ${esc(t.title)}</p><h2>${t.you ? `${esc(t.you.seat)}, ${esc(t.you.department)}` : 'The welding department'}</h2></div>
     ${t.you ? youCard(t.you) : ''}
     ${t.you ? '' : `<p class="lede">${esc(t.intro)}</p>`}
-    ${t.you ? `<p class="soft">In your order: what you want to work on first, what your seat leans on next, your strengths last as a check. Each module is about twenty minutes.</p>` : ''}
+    ${t.assignment ? `<p class="banner info"><strong>Assigned by ${esc(t.assignment.coach)}</strong>: ${t.assignment.count} module${t.assignment.count === 1 ? '' : 's'}, in your coach's order${t.assignment.open === 'all' ? ', all open' : ', each opening on the sign-off of the one before'}. When you have played one, send your coach a progress code from below.</p>` : t.you ? `<p class="soft">In your order: what you want to work on first, what your seat leans on next, your strengths last as a check. Each module is about twenty minutes.</p>` : ''}
     ${banner ? `<p class="banner">${esc(banner)}</p>` : ''}
     ${t.inRun ? `<div class="banner info row"><span>${t.inRun.over ? `Your last run of ${esc(t.inRun.title)} has ended.` : `You are in week ${t.inRun.week} of ${esc(t.inRun.title)}.`}</span><button class="btn" data-act="resume">${t.inRun.over ? 'See how it went' : 'Back to it'}</button></div>` : ''}
     <div class="ladder">${t.modules.map(rung).join('')}</div>
-    ${t.notHere.length ? `<details class="fold"><summary>${t.notHere.length} module${t.notHere.length === 1 ? '' : 's'} not in this seat: ${esc(t.notHere.map((m) => m.title).join(', '))}</summary><ul class="notes">${t.notHere.map((m) => `<li><strong>${esc(m.title)}</strong>: ${esc(m.why)}</li>`).join('')}</ul></details>` : ''}
-    <div class="toggle"><button class="btn" data-act="open-all">${t.openAll ? 'Lock to the sign-off order' : 'Open every module'}</button><span class="soft">Beta switch. Normally the next opens on a coach's sign-off.</span></div>
-    <div class="row"><button class="btn" data-act="feedback">Your thoughts, for the coach</button><button class="btn" data-act="export">Copy a save code</button><button class="btn quiet" data-act="title">Title screen</button></div>
-    ${codeBox === 'export' ? exportBox() : ''}
+    ${t.notHere.length && !t.assignment ? `<details class="fold"><summary>${t.notHere.length} module${t.notHere.length === 1 ? '' : 's'} not in this seat: ${esc(t.notHere.map((m) => m.title).join(', '))}</summary><ul class="notes">${t.notHere.map((m) => `<li><strong>${esc(m.title)}</strong>: ${esc(m.why)}</li>`).join('')}</ul></details>` : ''}
+    ${t.assignment ? '' : `<div class="toggle"><button class="btn" data-act="open-all">${t.openAll ? 'Lock to the sign-off order' : 'Open every module'}</button><span class="soft">Beta switch. Normally the next opens on a coach's sign-off.</span></div>`}
+    <div class="row"><button class="btn" data-act="progress">Progress code, for your coach</button><button class="btn" data-act="feedback">Your thoughts, for the coach</button><button class="btn" data-act="export">Copy a save code</button><button class="btn quiet" data-act="title">Title screen</button></div>
+    ${codeBox === 'export' ? exportBox() : codeBox === 'progress' ? progressBox() : ''}
   </main>`;
 }
 
@@ -137,8 +143,9 @@ function profileScreen() {
     ${banner ? `<p class="warn">${esc(banner)}</p>` : ''}
     <section><p class="label">Your name, for the debrief (optional)</p><input id="pname" type="text" autocomplete="name" value="${esc(draft.name)}" data-draft="name"></section>
     <section><p class="label">What your plant calls its system (optional)</p><input id="perp" type="text" value="${esc(draft.erp || '')}" placeholder="the system"><p class="soft">The ERP. One module is about it and uses this name.</p></section>
-    <section><p class="label">Your seat</p><div class="chips grid">${v.seats.map((x) => `<button class="chip pick ${draft.seat === x.id ? 'on' : ''}" data-pick="seat" data-id="${x.id}">${esc(x.label)}</button>`).join('')}</div>${draft.seat ? `<p class="soft">${esc(v.seats.find((x) => x.id === draft.seat).about)}</p>` : ''}</section>
-    <section><p class="label">Your department</p><div class="chips grid">${v.departments.map((d) => `<button class="chip pick ${draft.department === d.id ? 'on' : ''}" data-pick="department" data-id="${d.id}">${esc(d.name)}</button>`).join('')}</div>
+    ${save?.assignment ? `<p class="banner info">Your seat and department were set by ${esc(save.assignment.coach)}'s assignment. The rest is yours.</p>` : ''}
+    <section><p class="label">Your seat</p><div class="chips grid">${v.seats.map((x) => `<button class="chip pick ${draft.seat === x.id ? 'on' : ''}" data-pick="seat" data-id="${x.id}" ${save?.assignment ? 'disabled' : ''}>${esc(x.label)}</button>`).join('')}</div>${draft.seat ? `<p class="soft">${esc(v.seats.find((x) => x.id === draft.seat).about)}</p>` : ''}</section>
+    <section><p class="label">Your department</p><div class="chips grid">${v.departments.map((d) => `<button class="chip pick ${draft.department === d.id ? 'on' : ''}" data-pick="department" data-id="${d.id}" ${save?.assignment ? 'disabled' : ''}>${esc(d.name)}</button>`).join('')}</div>
       ${dept ? `<p class="soft">${esc(dept.what)}${v.byLine.length ? ` On the line with ${v.byLine.map((d) => esc(d.name)).join(' and ')}.` : ''}</p>` : `<p class="soft">The modules are written in ${esc(v.writtenBay)}; your real department sets your neighbours and your path.</p>`}</section>
     ${draft.department ? `<section><p class="label">Also tied to you (optional)</p><div class="chips grid">${v.others.map((d) => `<button class="chip pick ${chosen(draft.tied, d.id) ? 'on' : ''}" data-pick="tied" data-id="${d.id}" aria-pressed="${chosen(draft.tied, d.id)}">${esc(d.name)}</button>`).join('')}</div></section>` : ''}
     <section><p class="label">Want to work on (up to ${v.limit}; these come first)</p>${areas('work')}</section>
@@ -151,6 +158,99 @@ function profileScreen() {
 function exportBox() {
   return `<div class="codebox"><label class="label" for="codeout">Save code: paste it into Load a save code on any device</label><textarea id="codeout" class="code" rows="5" readonly>${esc(toCode(save))}</textarea>
     <div class="row"><button class="btn primary" data-act="copy" data-target="codeout">Copy</button><button class="btn quiet" data-act="cancel">Done</button></div></div>`;
+}
+
+function progressBox() {
+  const p = progressOf(save);
+  return `<div class="codebox"><label class="label" for="progout">Progress code: what you played, how it read, what you committed to. Not your save, not your debrief answers.</label>
+    <p class="soft">${p.m.length ? `${p.m.length} module${p.m.length === 1 ? '' : 's'} played.` : 'Nothing played yet; the code says so.'}</p>
+    <textarea id="progout" class="code" rows="4" readonly>${esc(progressCode(save))}</textarea>
+    ${sendState?.busy ? '<p class="banner info">Sending&hellip;</p>' : sendState?.ok ? '<p class="signed">Sent. Your coach can read it from the page.</p>' : sendState?.why ? `<p class="warn">${esc(sendState.why)}</p>` : ''}
+    <div class="row"><button class="btn primary" data-act="copy" data-target="progout">Copy</button><button class="btn" data-act="progress-send" ${sendState?.busy ? 'disabled' : ''}>Send from this page</button><button class="btn quiet" data-act="cancel">Done</button></div></div>`;
+}
+
+// ================================================================ the coach
+// The coach's screen: who is assigned to them, what each can play, the codes
+// that carry it, and the group sessions to run with a room.
+function coachScreen() {
+  const r = rosterView(save);
+  const tabs = [['trainees', `Trainees${r.rows.length ? ` (${r.rows.length})` : ''}`], ['add', tdraft?.id ? 'Edit' : 'Add a trainee'], ['groups', 'Group sessions']];
+  return `<main class="screen">
+    <div class="stack"><p class="label">Northern Motors &middot; Coach</p><h2>${r.coach ? esc(r.coach) : 'Your trainees'}</h2></div>
+    ${r.department ? `<p class="soft">Coaching from ${esc(r.department)}.</p>` : ''}
+    ${banner ? `<p class="banner">${esc(banner)}</p>` : ''}
+    <nav class="tabs">${tabs.map(([id, label]) => `<button data-ctab="${id}" class="${coachTab === id ? 'on' : ''}">${label}</button>`).join('')}</nav>
+    ${coachTab === 'trainees' ? traineesTab(r) : coachTab === 'add' ? addTab(r) : groupsTab()}
+    <div class="row"><button class="btn" data-act="coach-profile">Your name and department</button><button class="btn" data-act="export">Copy a save code</button><button class="btn quiet" data-act="title">Title screen</button></div>
+    ${codeBox === 'export' ? exportBox() : codeBox === 'load' ? loadBox() : ''}
+  </main>`;
+}
+
+const STATE_CHIP = { 'not started': '', played: 'amber', 'got through': 'amber', debriefed: 'amber', 'signed off': 'good' };
+function traineesTab(r) {
+  if (!r.rows.length) return `<section class="you"><p>Nobody yet. <strong>Add a trainee</strong>: their name, seat and department, and the modules you want them to play. You get a code to send them; they paste it on the title screen and the track shows only what you assigned.</p><p class="soft">Progress comes back the same way: they tap <em>Progress code, for your coach</em> on their track and send it to you, or send it from the page when both of you are signed in on claude.ai.</p></section>
+    <div class="row"><button class="btn primary" data-act="coach-add">Add a trainee</button></div>`;
+  return `<div class="stack">
+    ${r.rows.map((t) => `<section class="you roster">
+      <div class="row" style="justify-content:space-between"><p class="label">${esc(t.name)} &middot; ${esc(t.seat)}, ${esc(t.department)}</p><span class="chip ${t.done === t.modules.length ? 'good' : ''}">${t.done} of ${t.modules.length} signed off</span></div>
+      ${t.note ? `<p class="soft">${esc(t.note)}</p>` : ''}
+      <ol class="notes">${t.modules.map((m) => `<li><strong>${esc(m.title)}</strong> <span class="chip ${STATE_CHIP[m.state]}">${esc(m.state)}</span>${m.plays ? ` <span class="soft">played ${m.plays}, got through ${m.wins}</span>` : ''}${m.reads.length ? `<br><span class="soft">${m.reads.map((x) => `${esc(x.area)}: ${esc(x.read)}`).join('; ')}</span>` : ''}${m.commitment ? `<br><em>&ldquo;${esc(m.commitment)}&rdquo;</em>${m.by ? ` <span class="soft">by ${esc(m.by)}</span>` : ''}` : ''}${m.signedOff ? `<br><span class="soft">Signed off by ${esc(m.signedOff)}</span>` : ''}</li>`).join('')}</ol>
+      <p class="soft">${t.lastHeard ? `Last progress code ${esc(t.lastHeard)}.` : 'No progress code yet.'} Assigned ${esc(t.issued)}${t.open === 'all' ? ', all open at once' : ', in order'}.</p>
+      <div class="row"><button class="btn small" data-act="coach-code" data-id="${t.id}">${openCode === t.id ? 'Hide the code' : 'Assignment code'}</button><button class="btn small" data-act="coach-paste" data-id="${t.id}">Paste a progress code</button><button class="btn small quiet" data-act="coach-edit" data-id="${t.id}">Edit</button>${pending?.act === 'coach-remove' && pending.id === t.id ? `<button class="btn small" data-act="coach-remove" data-id="${t.id}">Yes, remove</button><button class="btn small quiet" data-act="cancel">Keep</button>` : `<button class="btn small quiet" data-act="ask-coach-remove" data-id="${t.id}">Remove</button>`}</div>
+      ${openCode === t.id ? `<div class="codebox"><label class="label" for="acode-${t.id}">Send this to ${esc(t.name)}. They paste it on the title screen.</label><textarea id="acode-${t.id}" class="code" rows="4" readonly>${esc(assignmentCode(save, t.id))}</textarea><div class="row"><button class="btn primary small" data-act="copy" data-target="acode-${t.id}">Copy</button></div></div>` : ''}
+      ${codeBox === `paste-${t.id}` ? `<div class="codebox"><label class="label" for="pcode-${t.id}">Paste ${esc(t.name)}'s progress code</label><textarea id="pcode-${t.id}" class="code" rows="4" placeholder="SHFTP1."></textarea><div class="row"><button class="btn primary small" data-act="coach-paste-go" data-id="${t.id}">Read it</button><button class="btn quiet small" data-act="cancel">Cancel</button></div></div>` : ''}
+    </section>`).join('')}
+    <div class="row"><button class="btn primary" data-act="coach-add">Add a trainee</button><button class="btn" data-act="coach-fetch" ${sendState?.busy ? 'disabled' : ''}>Fetch progress sent from the page</button></div>
+    ${sendState?.busy ? '<p class="banner info">Reading the store&hellip;</p>' : sendState?.ok ? `<p class="signed">${esc(sendState.ok)}</p>` : sendState?.why ? `<p class="warn">${esc(sendState.why)}</p>` : ''}
+  </div>`;
+}
+
+function addTab(r) {
+  tdraft = tdraft || { name: '', seat: '', department: '', modules: [], open: 'inorder', note: '' };
+  const v = profileView({});
+  const mods = tdraft.seat ? assignable(tdraft.seat) : [];
+  const chip = (field, id, label, on) => `<button class="chip pick ${on ? 'on' : ''}" data-tpick="${field}" data-id="${id}" aria-pressed="${on}">${esc(label)}</button>`;
+  return `<div class="stack">
+    <section><p class="label">Name</p><input id="tname" type="text" value="${esc(tdraft.name)}"></section>
+    <section><p class="label">Seat</p><div class="chips grid">${v.seats.map((x) => chip('seat', x.id, x.label, tdraft.seat === x.id)).join('')}</div></section>
+    <section><p class="label">Department</p><div class="chips grid">${v.departments.map((d) => chip('department', d.id, d.name, tdraft.department === d.id)).join('')}</div></section>
+    <section><p class="label">Modules to assign${tdraft.seat ? `, written for a ${esc(v.seats.find((x) => x.id === tdraft.seat).label.toLowerCase())}` : ''} (tap in the order you want them played)</p>
+      ${tdraft.seat ? `<div class="stack">${mods.map((m) => { const i = tdraft.modules.indexOf(m.id); return `<button class="rung compact ${i >= 0 ? 'on' : ''}" data-tpick="modules" data-id="${m.id}" aria-pressed="${i >= 0}"><span class="n">${i >= 0 ? i + 1 : '&middot;'}</span><span class="body"><h3>${esc(m.title)}</h3><span class="soft">${esc(m.purpose)}</span><span class="chips">${m.focus.map((f) => `<span class="chip focus">${esc(f)}</span>`).join('')}</span></span></button>`; }).join('')}</div>` : '<p class="soft">Pick a seat first; the list is what is written for it.</p>'}
+      ${tdraft.modules.length > 4 ? `<p class="warn">${tdraft.modules.length} modules. Three to five is a term\'s worth; a long list is a shelf, not a path.</p>` : ''}</section>
+    <section><p class="label">Opening</p><div class="chips grid">${chip('open', 'inorder', 'In order, each on the sign-off of the one before', tdraft.open === 'inorder')}${chip('open', 'all', 'All open at once', tdraft.open === 'all')}</div></section>
+    <section><p class="label">A note for yourself (optional)</p><input id="tnote" type="text" value="${esc(tdraft.note)}" placeholder="why these modules"></section>
+    <div class="row"><button class="btn primary" data-act="coach-save">${tdraft.id ? 'Save the changes' : 'Add and make the code'}</button><button class="btn quiet" data-act="coach-cancel">Cancel</button></div>
+  </div>`;
+}
+
+function groupsTab() {
+  return `<div class="stack">
+    <p class="soft">Sessions to run with a room, each built on a module everyone plays on their own phone with the same seed. Ninety minutes to two hours, four to ten people, a flip chart, and a commitment each person reads aloud. The plan is for you; the reveal stays with you until the debrief.</p>
+    ${GROUP_ORDER.map((id) => { const g = GROUP_SESSIONS[id]; const open = groupOpen === id; return `<section class="you">
+      <div class="row" style="justify-content:space-between"><h3>${esc(g.title)}</h3><span class="chip">${g.minutes} min</span></div>
+      <p>${esc(g.purpose)}</p>
+      <p class="soft">Played: <strong>${esc(MODULES[g.module].title)}</strong>. ${esc(g.size)}. From: ${esc(g.from)}.</p>
+      <div class="row"><button class="btn small" data-act="group-open" data-id="${id}">${open ? 'Close the plan' : 'The plan'}</button></div>
+      ${open ? `<table class="plan"><tbody>${g.blocks.map(([m, w, how]) => `<tr><td class="min">${m}</td><td><strong>${esc(w)}</strong><br>${esc(how)}</td></tr>`).join('')}</tbody></table>
+        <p class="label">Debrief questions</p><ol class="notes">${g.questions.map((q) => `<li>${esc(q)}</li>`).join('')}</ol>
+        <details class="fold"><summary>For you, not the room: the reveal</summary><p>${esc(g.reveal)}</p></details>
+        <p class="label">The commitment card</p><p>${esc(g.commitment)}</p>` : ''}
+    </section>`; }).join('')}
+  </div>`;
+}
+
+function coachProfileScreen() {
+  draft = draft || { name: save.coach?.name || '', department: save.coach?.department || '' };
+  const v = profileView({});
+  return `<main class="screen">
+    <div><button class="btn quiet" data-act="coach">Back</button></div>
+    <div class="stack"><p class="label">Northern Motors</p><h2>You, the coach</h2></div>
+    <p class="soft">Your name goes on the codes you hand out, so a trainee sees who assigned them. Nothing else.</p>
+    ${banner ? `<p class="warn">${esc(banner)}</p>` : ''}
+    <section><p class="label">Your name</p><input id="pname" type="text" autocomplete="name" value="${esc(draft.name)}"></section>
+    <section><p class="label">Your department (optional)</p><div class="chips grid">${v.departments.map((d) => `<button class="chip pick ${draft.department === d.id ? 'on' : ''}" data-pick="department" data-id="${d.id}">${esc(d.name)}</button>`).join('')}</div></section>
+    <button class="btn primary block" data-act="coach-profile-save">Save</button>
+  </main>`;
 }
 
 // ================================================================ the brief
@@ -441,6 +541,8 @@ function render() {
   if (screen === 'title') html = titleScreen();
   else if (screen === 'profile') html = profileScreen();
   else if (screen === 'feedback') html = feedbackScreen();
+  else if (screen === 'coach-profile' && save.role === 'coach') html = coachProfileScreen();
+  else if ((screen === 'coach' || screen === 'track') && save.role === 'coach') { screen = 'coach'; html = coachScreen(); }
   else if (screen === 'track' && !save.profile) { screen = 'profile'; html = profileScreen(); }
   else if (screen === 'track') html = trackScreen();
   else if (screen === 'brief') html = briefScreen();
@@ -479,7 +581,48 @@ function act(t) {
   const a = t.dataset.act;
   if (a !== 'cancel' && !a.startsWith('ask-')) pending = null;
   switch (a) {
-    case 'new': save = newSave(); persist(); draft = null; screen = 'profile'; codeBox = null; banner = null; return;
+    case 'new': save = becomeTrainee(newSave()); persist(); draft = null; screen = 'profile'; codeBox = null; banner = null; return;
+    case 'new-coach': save = becomeCoach(newSave()); persist(); draft = null; screen = 'coach-profile'; codeBox = null; banner = null; return;
+    case 'coach': screen = 'coach'; draft = null; codeBox = null; banner = null; return;
+    case 'coach-profile': draft = null; screen = 'coach-profile'; banner = null; scrollTo(0, 0); return;
+    case 'coach-profile-save': {
+      draft.name = app.querySelector('#pname')?.value ?? draft.name;
+      save = becomeCoach(save, draft); persist(); draft = null; banner = null; screen = 'coach'; scrollTo(0, 0); return;
+    }
+    case 'coach-add': tdraft = null; coachTab = 'add'; banner = null; scrollTo(0, 0); return;
+    case 'coach-edit': { const row = save.coach.roster.find((x) => x.id === t.dataset.id); tdraft = row ? { ...row, modules: [...row.modules] } : null; coachTab = 'add'; banner = null; scrollTo(0, 0); return; }
+    case 'coach-cancel': tdraft = null; coachTab = 'trainees'; banner = null; return;
+    case 'coach-save': {
+      readTdraft();
+      try { save = setTrainee(save, tdraft); persist(); openCode = tdraft.id || save.coach.roster.at(-1).id; tdraft = null; coachTab = 'trainees'; banner = null; scrollTo(0, 0); } catch (e) { banner = e.message; }
+      return;
+    }
+    case 'coach-code': openCode = openCode === t.dataset.id ? null : t.dataset.id; codeBox = null; return;
+    case 'coach-paste': codeBox = `paste-${t.dataset.id}`; openCode = null; sendState = null; return;
+    case 'coach-paste-go': {
+      const code = app.querySelector(`#pcode-${t.dataset.id}`)?.value || '';
+      try { const r = recordProgress(save, code); save = r.save; persist(); codeBox = null; banner = `Read: ${r.trainee.name}'s progress.`; } catch (e) { banner = e.message; }
+      return;
+    }
+    case 'ask-coach-remove': pending = { act: 'coach-remove', id: t.dataset.id }; return;
+    case 'coach-remove': save = removeTrainee(save, t.dataset.id); persist(); return;
+    case 'coach-fetch': {
+      sendState = { busy: true };
+      fetchProgress().then((r) => {
+        if (!r.ok) { sendState = { why: r.why }; render(); return; }
+        let read = 0;
+        for (const rec of r.records) { try { save = recordProgress(save, progressCodeOf(rec)).save; read++; } catch { /* a record for nobody on the roster */ } }
+        persist(); sendState = { ok: `${r.records.length} record${r.records.length === 1 ? '' : 's'} in the store; ${read} matched someone on your roster.` }; render();
+      });
+      return;
+    }
+    case 'group-open': groupOpen = groupOpen === t.dataset.id ? null : t.dataset.id; return;
+    case 'progress': codeBox = codeBox === 'progress' ? null : 'progress'; sendState = null; return;
+    case 'progress-send': {
+      sendState = { busy: true };
+      sendProgress(progressOf(save)).then((r) => { sendState = r.ok ? { ok: true } : { why: r.why }; render(); });
+      return;
+    }
     case 'profile': draft = null; screen = 'profile'; banner = null; scrollTo(0, 0); return;
     case 'profile-save': {
       try { save = setProfile(save, { ...draft, since: save.profile?.since || new Date().toISOString().slice(0, 10) }); persist(); draft = null; banner = null; screen = 'track'; scrollTo(0, 0); } catch (e) { banner = e.message; }
@@ -488,7 +631,7 @@ function act(t) {
     case 'ask-new': pending = { act: 'new' }; return;
     case 'ask-abandon': pending = { act: 'abandon' }; return;
     case 'cancel': pending = null; codeBox = null; return;
-    case 'continue': save = loadSaved(); screen = save?.run && !save.run.over ? 'week' : save?.profile ? 'track' : 'profile'; tab = 'week'; return;
+    case 'continue': save = loadSaved(); screen = save?.role === 'coach' ? 'coach' : save?.run && !save.run.over ? 'week' : save?.profile ? 'track' : 'profile'; tab = 'week'; return;
     case 'title': screen = 'title'; codeBox = null; return;
     case 'track': screen = 'track'; modal = null; codeBox = null; return;
     case 'resume': screen = save.run.over ? 'end' : 'week'; tab = 'week'; return;
@@ -527,7 +670,12 @@ function act(t) {
     case 'load-code': codeBox = 'load'; return;
     case 'load-go': {
       const code = app.querySelector('#codein')?.value || '';
-      try { save = fromCode(code); persist(); codeBox = null; banner = null; screen = 'track'; } catch (e) { banner = e.message; }
+      try {
+        const kind = kindOf(code);
+        if (kind === 'assignment') { save = takeAssignment(save || newSave(), code); persist(); codeBox = null; banner = `Assigned by ${save.assignment.coach}. Your seat and department are set; add what you want to work on if you like.`; draft = null; screen = 'profile'; }
+        else if (kind === 'progress') { if (save?.role !== 'coach') throw new Error('That is a trainee\'s progress code. Only a coach profile can read it: start as a coach, add the trainee, then paste it.'); const r = recordProgress(save, code); save = r.save; persist(); codeBox = null; banner = `Read: ${r.trainee.name}'s progress.`; screen = 'coach'; }
+        else { save = fromCode(code); persist(); codeBox = null; banner = null; screen = save.role === 'coach' ? 'coach' : 'track'; }
+      } catch (e) { banner = e.message; }
       return;
     }
     case 'copy': copy(app.querySelector(`#${t.dataset.target}`)?.value || '', app.querySelector(`#${t.dataset.target}`)); return;
@@ -538,6 +686,10 @@ function act(t) {
     case 'routine-close': routineOpen = false; return;
   }
 }
+
+function readTdraft() { tdraft.name = app.querySelector('#tname')?.value ?? tdraft.name; tdraft.note = app.querySelector('#tnote')?.value ?? tdraft.note; }
+/** A store record back into a code, so one reader handles both routes. */
+function progressCodeOf(rec) { const { updated, ...p } = rec; return 'SHFTP1.' + btoa(unescape(encodeURIComponent(JSON.stringify(p)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
 
 function copy(text, box) {
   const show = () => { if (box) { box.hidden = false; box.value = text; box.focus(); box.select(); } };
@@ -553,20 +705,28 @@ function run() {
 }
 
 app.addEventListener('click', (e) => {
-  const t = e.target.closest('[data-act],[data-tab],[data-action],[data-opt],[data-skip],[data-pick]');
+  const t = e.target.closest('[data-act],[data-tab],[data-action],[data-opt],[data-skip],[data-pick],[data-ctab],[data-tpick]');
   if (!t || busy) return;
   if (t.tagName === 'SUMMARY') e.preventDefault();   // the page owns the open state
   busy = true;
   let keepScroll = false;
   try {
     if (t.dataset.tab) { tab = t.dataset.tab; codeBox = null; pending = null; scrollTo(0, 0); }
+    else if (t.dataset.ctab) { if (coachTab === 'add' && tdraft) readTdraft(); coachTab = t.dataset.ctab; codeBox = null; pending = null; banner = null; scrollTo(0, 0); }
+    else if (t.dataset.tpick) {
+      readTdraft();
+      const f = t.dataset.tpick; const id = t.dataset.id;
+      if (f === 'modules') tdraft.modules = tdraft.modules.includes(id) ? tdraft.modules.filter((x) => x !== id) : [...tdraft.modules, id];
+      else { tdraft[f] = id; if (f === 'seat') tdraft.modules = tdraft.modules.filter((m) => assignable(id).some((x) => x.id === m)); }
+      keepScroll = true;
+    }
     else if (t.dataset.action === 'run') run();
     else if (t.dataset.opt) { plan.picks[t.dataset.card] = t.dataset.opt; keepScroll = true; }
     else if (t.dataset.skip) { const id = t.dataset.skip; plan.skip = plan.skip.includes(id) ? plan.skip.filter((x) => x !== id) : [...plan.skip, id]; keepScroll = true; }
     else if (t.dataset.pick) {
       const f = t.dataset.pick; const id = t.dataset.id;
       draft.name = app.querySelector('#pname')?.value ?? draft.name; draft.erp = app.querySelector('#perp')?.value ?? draft.erp;
-      if (f === 'seat' || f === 'department') { draft[f] = id; if (f === 'department') draft.tied = draft.tied.filter((d) => d !== id); }
+      if (f === 'seat' || f === 'department') { draft[f] = id; if (f === 'department' && draft.tied) draft.tied = draft.tied.filter((d) => d !== id); }
       else draft[f] = draft[f].includes(id) ? draft[f].filter((x) => x !== id) : [...draft[f], id];
       keepScroll = true;
     }

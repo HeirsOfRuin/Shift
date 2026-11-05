@@ -293,3 +293,12 @@ section { display: flex; flex-direction: column; gap: 10px; }
 .score.read-getting { color: var(--amber); }
 .score.read-notyet { color: var(--tag); }
 .score.read-thin { color: var(--ink-faint); }
+
+/* the coach's screen */
+.rung.on { border-color: var(--amber); background: var(--amber-soft); }
+.rung.on .n { color: var(--amber); }
+.rung.compact .n { font-size: 22px; }
+.plan { width: 100%; border-collapse: collapse; font-size: 14px; }
+.plan td { padding: 8px 6px; border-top: 1px solid var(--line); vertical-align: top; }
+.plan td.min { font: 700 14px/1.3 var(--mono); color: var(--amber); white-space: nowrap; }
+.roster ol.notes li { margin-bottom: 6px; }

@@ -21,6 +21,9 @@ what you typed, not your runs.
 
 **What to do.**
 
+0. If you were sent a code with the link (it starts with SHFTA1.), tap
+   *Paste a code* on the first screen and paste it. Your modules are set by
+   whoever sent it; skip to step 2.
 1. Open the link. Tap *Start: who are you here?* and fill in the profile:
    your seat, your department, what you would call a strength, what you
    would want to work on. Two minutes. Be honest; it only decides the order
@@ -31,6 +34,8 @@ what you typed, not your runs.
    true to your floor, what felt fake, what was missing, anything else. One
    line each is plenty. Tap *Send*, or copy the text and message it.
 4. If you have another twenty minutes, play it again. It draws new causes.
+5. If you came in on a code, tap *Progress code, for your coach* on your
+   track when you are done, and send it the same way as your thoughts.
 
 **What we most want to know.** Which bits would never happen on a real floor.
 Which option you wanted and could not find. Whether the Friday report sounds

@@ -35,6 +35,7 @@ export function trackView(save) {
       };
     }),
     inRun: save.run ? { moduleId: save.run.moduleId, title: MODULES[save.run.moduleId].title, week: save.run.week, over: save.run.over } : null,
+    assignment: save.assignment ? { coach: save.assignment.coach, taken: save.assignment.taken, open: save.assignment.open, count: ids.length } : null,
   };
 }
 
