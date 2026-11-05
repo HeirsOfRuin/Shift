@@ -18,6 +18,8 @@
 import { MODULES, TRACK } from '../data/modules.data.js';
 import { AREAS } from '../data/focus.data.js';
 import { SEATS, DEPARTMENTS } from '../data/departments.data.js';
+import { GROUPS } from '../data/groups.data.js';
+import { newModule } from './week.js';
 
 export const ASSIGN_PREFIX = 'SHFTA1.';   // never rename: codes in the wild
 export const PROGRESS_PREFIX = 'SHFTP1.'; // never rename
@@ -170,4 +172,30 @@ export function rosterView(save) {
  *  track's written order. */
 export function assignable(seat) {
   return TRACK.modules.filter((id) => (MODULES[id].seats || ['supervisor']).includes(seat)).map((id) => ({ id, title: MODULES[id].title, purpose: MODULES[id].purpose || '', focus: MODULES[id].focus.map((a) => AREAS[a].label), weeks: MODULES[id].weeks }));
+}
+
+// ---------------------------------------------------------------- a session on one screen
+
+/** Start a group session: one run of the session's module on this screen,
+ *  driven by the facilitator, with the room deciding out loud. The run is an
+ *  ordinary run (the engine does not know about the room); `save.room` says
+ *  which session it belongs to, so the screens show the facilitator's lines. */
+export function startSession(save, sessionId, seed) {
+  const g = GROUPS[sessionId];
+  if (!g) throw new Error(`no session ${sessionId}`);
+  const s = structuredClone(save);
+  s.run = newModule(g.module, seed, 'supervisor', { erp: s.profile?.erp });
+  s.room = { session: sessionId, started: new Date().toISOString().slice(0, 10) };
+  s.runs += 1;
+  return s;
+}
+
+export function endSession(save) { const s = structuredClone(save); s.run = null; s.room = null; return s; }
+
+/** What the facilitator's strip on the week screen says for this week. */
+export function roomView(save) {
+  if (!save.room) return null;
+  const g = GROUPS[save.room.session];
+  const week = save.run?.week || 0;
+  return { id: save.room.session, title: g.title, module: MODULES[g.module].title, over: !!save.run?.over, open: g.room.open, each: g.room.each, line: g.room.weeks[week] || '', close: g.room.close, questions: g.questions, reveal: g.reveal, commitment: g.commitment, blocks: g.blocks, minutes: g.minutes };
 }

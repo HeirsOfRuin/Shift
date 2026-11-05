@@ -4,7 +4,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { SAVE_KEY, SAVE_VERSION, newSave, setProfile, order, pathFor, startRun, playWeek, serialize, deserialize, toCode, fromCode, signOff, saveDebrief, unlocked, setOpenAll, TRACK, MODULES, becomeCoach, setTrainee, assignmentCode, readAssignment, takeAssignment, progressCode, readProgress, recordProgress, rosterView, kindOf, assignable, GROUP_SESSIONS } from '../src/engine/game.js';
+import { SAVE_KEY, SAVE_VERSION, newSave, setProfile, order, pathFor, startRun, playWeek, serialize, deserialize, toCode, fromCode, signOff, saveDebrief, unlocked, setOpenAll, TRACK, MODULES, becomeCoach, setTrainee, assignmentCode, readAssignment, takeAssignment, progressCode, readProgress, recordProgress, rosterView, kindOf, assignable, GROUP_SESSIONS, startSession, endSession, roomView } from '../src/engine/game.js';
 import { decide } from '../sim/bot.js';
 
 test('the save key has not been renamed', () => assert.equal(SAVE_KEY, 'shift.save.v1'));
@@ -67,11 +67,27 @@ test('a coach assigns modules by code, the trainee takes them, and progress come
   assert.throws(() => recordProgress(becomeCoach(newSave(), {}), pcode), /Nobody on the roster/);
 });
 
+test('a coach runs a session on one screen: an ordinary run with the facilitator\'s lines beside it', () => {
+  let s = becomeCoach(newSave(), { name: 'R. Okafor' });
+  s = startSession(s, 'whose', 11);
+  assert.equal(s.run.moduleId, 'upstairs');
+  assert.equal(roomView(s).title, 'Whose call is it');
+  assert.ok(roomView(s).open && roomView(s).each);
+  while (!s.run.over) s = playWeek(s, decide(s.run, 'balanced')).save;
+  assert.ok(roomView(s).over);
+  assert.equal(roomView(s).questions.length, 4);
+  s = endSession(s);
+  assert.equal(s.run, null); assert.equal(s.room, null);
+  assert.throws(() => startSession(s, 'nope', 1), /no session/);
+});
+
 test('every group session is built on a module that exists and is gated', () => {
   for (const [id, g] of Object.entries(GROUP_SESSIONS)) {
     assert.ok(MODULES[g.module], `${id}: module ${g.module}`);
     assert.ok(TRACK.modules.includes(g.module), `${id}: on the track`);
     assert.ok(g.blocks.length >= 4 && g.questions.length >= 3 && g.reveal && g.commitment && g.purpose, `${id}: complete`);
+    assert.ok(g.room.open && g.room.each && g.room.close && Object.keys(g.room.weeks).every((w) => Number(w) <= MODULES[g.module].weeks), `${id}: lines for the screen, on weeks the module has`);
+    assert.ok((MODULES[g.module].seats || ['supervisor']).includes('supervisor'), `${id}: runs from the supervisor's seat`);
     const minutes = g.blocks.reduce((a, [m]) => a + Number(m), 0);
     assert.equal(minutes, g.minutes, `${id}: the blocks add up to ${g.minutes} minutes`);
   }

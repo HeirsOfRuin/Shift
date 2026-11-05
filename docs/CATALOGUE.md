@@ -128,9 +128,8 @@ from the plane exercise, kill gate first: `KILLGATE-flow.md`). The three areas w
 module (C2, B4, E3) stay listed as "none yet" on purpose: on 2026-11-05 the
 author asked for a check against covering everything and showing nothing,
 and the verdict (`FRAME-coach.md`) was to freeze the catalogue at 24 and
-build no new area until the leads' playtest is read. Depth first: a seed
-field on the brief, then *Pulled off the floor* rebuilt on the problem-type
-pattern.
+build no new area until the leads' playtest is read. Depth first: *Pulled off the
+floor* rebuilt on the problem-type pattern.
 
 Every module carries a one-sentence `purpose`, shown on its brief and on the
 track, from the author's rule of 2026-11-04: "I want every module for the

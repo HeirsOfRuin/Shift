@@ -99,7 +99,7 @@ save, and what crosses between coach and trainee is text.
 | **Assignment code** | `SHFTA1.` plus the roster row, about 200 characters: fits a text message. The trainee pastes it on the title screen. Their profile is made or changed to the assigned seat and department (they still add what they want to work on); their track shows only the assigned modules, in the coach's order, with "Assigned by R. Okafor" at the top. The seat and department chips are locked while an assignment stands. |
 | **Progress code** | `SHFTP1.`, from *Progress code, for your coach* on the track: per assigned module, plays, wins, the last read on each focus area, the commitment and its date, the sign-off. About 300 characters. Not the save, and not the debrief answers; those stay on the trainee's phone. The coach pastes it on the trainee's roster card and sees each module as not started, played, got through, debriefed or signed off. |
 | **The page's store** | When the page is open on claude.ai and the trainee is signed in, *Send from this page* writes the same progress to the store under the testers'-thoughts rule (each writes their own; the owner reads). The coach's *Fetch progress sent from the page* reads them all and matches by trainee id. The code is the route that always works; the store is the one-tap route when both are on claude.ai. |
-| **Group sessions** | A third tab on the coach's screen: the six sessions, each with its module, size, minutes, the plan by block, the debrief questions, the reveal (folded: "For you, not the room") and the commitment card. |
+| **Group sessions** | A third tab on the coach's screen: the six sessions, each with its module, size, minutes, the plan by block, the debrief questions, the reveal (folded: "For you, not the room") and the commitment card. *Run it on this screen* starts the module as a session (section 3); *Notes to print* is the facilitator's page. |
 
 What was measured. The save contract test loads a v4 fixture (an assigned
 trainee mid-run) and the three older ones; the coach test round-trips an
@@ -117,6 +117,35 @@ decision to log first.
 
 ## 3. The group sessions
 
+Redirected the same day. The first draft had everyone in the room playing
+on their own phone with the same seed. The author: "I want the group event
+to be a facilitator using one screen to work through problems or theories
+with the group watching, conversing, participating, etc. the facilitator
+would have printed out notes to go off of, or something like that."
+
+So a session is **one run of one module on one screen**, driven by the
+facilitator, with the room deciding out loud. Built in beta 13:
+
+- *Run it on this screen* on the coach's sessions tab starts the module as
+  an ordinary run (the engine does not know about the room) and marks the
+  save with the session. On a screen wider than 900 px the page widens and
+  the type grows for a projector.
+- A facilitator's strip above the week: what to say before the brief, the
+  line for this particular week where the session has one (the Saturday
+  call, Theresa's note, the week the tack check comes back), and the standing
+  rule for every week folded under it. The room sees the ticket and the
+  options; the facilitator takes hands and taps what the room picks.
+- The end screen in a session shows the close, the debrief questions for the
+  room, the reveal folded until the room has answered, the commitment card,
+  and *End the session*.
+- *Notes to print*: a page laid out for the browser's print with the buttons
+  off the paper; the same notes for all six are `GROUPS.md`. The page cannot
+  call print itself (framed hosts refuse it), so the facilitator prints from
+  the browser menu.
+
+The "same seed on every phone" gap from the first draft is gone with the
+draft: one screen is one seed.
+
 Outlined from the author's own material: the cohort session shape (ninety
 minutes: open on last time's commitment, the teachable, pairs, a
 self-rating, the commitments, one pattern named at the close), the
@@ -127,8 +156,8 @@ leading-at-every-level kit ("Whose job is it?", the peer-alignment check),
 and the plane exercise as the rounds. `PLAN.md` section 5 listed six
 leadership-team modules for a later group mode with a shared plant; those
 need a mechanic that does not exist (several players on one plant). These
-six do not: everyone plays the same module on their own phone with the same
-seed, and the room is the mechanic.
+six do not: the room runs one module on one screen, and the room is the
+mechanic.
 
 | Session | Built on | Minutes | From |
 |---|---|---|---|
@@ -140,12 +169,8 @@ seed, and the room is the mechanic.
 | Where the week went | The week | 90 | Handbook 2 |
 
 The full plans are in `src/data/groups.data.js` (the source of truth, shown
-on the coach's screen) and `GROUPS.md` (the readable copy for printing).
-The seed: the brief shows it, and the coach reads it out; everyone types it.
-That needs one addition the next beta should make: a seed field on the
-brief. Today a run draws its own seed, so "the same seed on every phone" is
-true only for a coach who starts each phone from a save code. Logged as the
-first thing beta 13 does.
+on the coach's screen and on the screen while a session runs) and
+`GROUPS.md` (the facilitator's copy for printing).
 
 ## What the author should decide
 

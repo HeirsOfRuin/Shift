@@ -1,10 +1,20 @@
-# Shift beta 12: seventeen modules, three seats, a coach's screen
+# Shift beta 13: seventeen modules, three seats, sessions on one screen
 
 Published 2026-11-05 as a private page, the same link as every beta:
 **https://claude.ai/artifact/4c5QqYTmZdn5iKcutCPZJx**
 (only the author can open it until he shares it from the page's Share menu).
 Rebuild with `npm run build` and republish `dist/shift.embed.html` to the same
 link. The build id is baked in, so an installed copy picks the new one up.
+
+**What changed in beta 13 (2026-11-05):** group sessions run on one screen.
+On the coach's *Group sessions* tab, *Run it on this screen* starts the
+session's module with a facilitator's strip above the week: what to say
+before the brief, the line for this week where there is one, the standing
+rule folded. The room watches the ticket, the facilitator takes hands and
+taps what the room picks, Friday is read aloud. The end screen carries the
+close, the debrief questions, the reveal (folded until the room has
+answered) and the commitment card. *Notes to print* is the facilitator's
+page; on a laptop the page widens for a projector.
 
 **What changed in beta 12 (2026-11-05):** the coach's side. The title
 screen asks whether you are a trainee or a coach. A coach keeps a roster:

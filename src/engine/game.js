@@ -5,7 +5,7 @@ export { newSave, setProfile, order, seatFor, supports, startRun, playWeek, endR
 export { newModule, advance, hoursFor, tableFor, routineFor, crewFor } from './week.js';
 export { trackView, briefView, weekView, floorView, crewView, demoFloor, crewStrip, peopleView, profileView, MODULES, TRACK } from './view.js';
 export { pathFor } from './path.js';
-export { becomeCoach, becomeTrainee, setTrainee, removeTrainee, assignmentCode, kindOf, readAssignment, takeAssignment, dropAssignment, progressOf, progressCode, readProgress, recordProgress, rosterView, assignable, ASSIGN_PREFIX, PROGRESS_PREFIX } from './coach.js';
+export { becomeCoach, becomeTrainee, setTrainee, removeTrainee, assignmentCode, kindOf, readAssignment, takeAssignment, dropAssignment, progressOf, progressCode, readProgress, recordProgress, rosterView, assignable, startSession, endSession, roomView, ASSIGN_PREFIX, PROGRESS_PREFIX } from './coach.js';
 export { GROUPS as GROUP_SESSIONS, GROUP_ORDER } from '../data/groups.data.js';
 export { SEAT_AREA } from './outcome.js';
 export { AREAS, FAMILIES } from '../data/focus.data.js';

@@ -12,7 +12,7 @@
 import {
   newSave, setProfile, seatFor, startRun, playWeek, saveDebrief, signOff, setOpenAll, SAVE_KEY, serialize, deserialize, toCode, fromCode,
   trackView, briefView, weekView, demoFloor, crewStrip, peopleView, profileView, markSeen, MODULES, TRACK,
-  becomeCoach, becomeTrainee, setTrainee, removeTrainee, assignmentCode, kindOf, takeAssignment, progressOf, progressCode, recordProgress, rosterView, assignable, GROUP_SESSIONS, GROUP_ORDER,
+  becomeCoach, becomeTrainee, setTrainee, removeTrainee, assignmentCode, kindOf, takeAssignment, progressOf, progressCode, recordProgress, rosterView, assignable, GROUP_SESSIONS, GROUP_ORDER, startSession, endSession, roomView,
 } from '../engine/game.js';
 import { STORAGE_OK, lsGet, lsSet } from './storage.js';
 import { registerSW, installPrompt } from './sw-register.js';
@@ -41,6 +41,7 @@ let coachTab = 'trainees'; // the coach's screen: trainees | add | groups
 let tdraft = null;         // the trainee form on the coach's screen
 let openCode = null;       // the trainee whose assignment code is showing
 let groupOpen = null;      // the group session whose plan is open
+let notesId = null;        // the session whose notes are showing
 
 const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 // Hours to the quarter: 0.25 h is a quarter hour, not 0.3.
@@ -225,18 +226,41 @@ function addTab(r) {
 
 function groupsTab() {
   return `<div class="stack">
-    <p class="soft">Sessions to run with a room, each built on a module everyone plays on their own phone with the same seed. Ninety minutes to two hours, four to ten people, a flip chart, and a commitment each person reads aloud. The plan is for you; the reveal stays with you until the debrief.</p>
+    <p class="soft">Sessions to run with a room on one screen: you drive, the room decides out loud, the game says what it cost. Ninety minutes to two hours, four to ten people, a flip chart, and a commitment each person reads aloud. The notes are for you; the reveal stays with you until the debrief.</p>
+    ${save.run && save.room ? `<div class="banner info row"><span>A session is running: ${esc(GROUP_SESSIONS[save.room.session].title)}, week ${save.run.week}.</span><button class="btn" data-act="resume">Back to it</button></div>` : ''}
     ${GROUP_ORDER.map((id) => { const g = GROUP_SESSIONS[id]; const open = groupOpen === id; return `<section class="you">
       <div class="row" style="justify-content:space-between"><h3>${esc(g.title)}</h3><span class="chip">${g.minutes} min</span></div>
       <p>${esc(g.purpose)}</p>
       <p class="soft">Played: <strong>${esc(MODULES[g.module].title)}</strong>. ${esc(g.size)}. From: ${esc(g.from)}.</p>
-      <div class="row"><button class="btn small" data-act="group-open" data-id="${id}">${open ? 'Close the plan' : 'The plan'}</button></div>
+      <div class="row"><button class="btn primary small" data-act="session-start" data-id="${id}">Run it on this screen</button><button class="btn small" data-act="group-open" data-id="${id}">${open ? 'Close the plan' : 'The plan'}</button><button class="btn small quiet" data-act="notes" data-id="${id}">Notes to print</button></div>
       ${open ? `<table class="plan"><tbody>${g.blocks.map(([m, w, how]) => `<tr><td class="min">${m}</td><td><strong>${esc(w)}</strong><br>${esc(how)}</td></tr>`).join('')}</tbody></table>
         <p class="label">Debrief questions</p><ol class="notes">${g.questions.map((q) => `<li>${esc(q)}</li>`).join('')}</ol>
         <details class="fold"><summary>For you, not the room: the reveal</summary><p>${esc(g.reveal)}</p></details>
         <p class="label">The commitment card</p><p>${esc(g.commitment)}</p>` : ''}
     </section>`; }).join('')}
   </div>`;
+}
+
+// The facilitator's notes for one session, laid out to print (the browser's
+// own print; the page cannot call print() in a framed host). Buttons hide
+// under @media print.
+function notesScreen() {
+  const g = GROUP_SESSIONS[notesId];
+  const m = MODULES[g.module];
+  return `<main class="screen notes-print">
+    <div class="noprint"><button class="btn quiet" data-act="coach">Back</button></div>
+    <div class="stack"><p class="label">Shift &middot; group session &middot; facilitator's notes</p><h2>${esc(g.title)}</h2></div>
+    <p>${esc(g.purpose)}</p>
+    <p class="soft">Built on <strong>${esc(m.title)}</strong>: ${esc(m.purpose || m.teaches)} ${esc(g.size)}. ${g.minutes} minutes. From: ${esc(g.from)}.</p>
+    <p class="label">The plan</p>
+    <table class="plan"><tbody>${g.blocks.map(([min, w, how]) => `<tr><td class="min">${min}</td><td><strong>${esc(w)}</strong><br>${esc(how)}</td></tr>`).join('')}</tbody></table>
+    <p class="label">At the screen</p>
+    <ul class="notes"><li><strong>Open:</strong> ${esc(g.room.open)}</li><li><strong>Every week:</strong> ${esc(g.room.each)}</li>${Object.entries(g.room.weeks).map(([w, t]) => `<li><strong>Week ${w}:</strong> ${esc(t)}</li>`).join('')}<li><strong>Close:</strong> ${esc(g.room.close)}</li></ul>
+    <p class="label">Debrief questions</p><ol class="notes">${g.questions.map((q) => `<li>${esc(q)}</li>`).join('')}</ol>
+    <p class="label">The reveal: yours until the room has answered</p><p>${esc(g.reveal)}</p>
+    <p class="label">The commitment card</p><p>${esc(g.commitment)}</p>
+    <p class="soft noprint">Print this page from the browser's menu; the buttons stay off the paper. The same notes for all six sessions are in GROUPS.md in the repository.</p>
+  </main>`;
 }
 
 function coachProfileScreen() {
@@ -280,7 +304,9 @@ function weekScreen() {
   const last = v.paint.lastShipped === null ? 'no week yet' : `${v.paint.lastShipped} of ${v.paint.lastAsked} last week`;
   const tabs = [['week', 'Week'], ['crew', 'People'], ['log', 'Log'], ['menu', 'Menu']];
   const body = tab === 'week' ? weekTab(v) : tab === 'crew' ? crewTab(v) : tab === 'log' ? logTab(v) : menuTab();
+  const room = roomView(save);
   return `<header class="hud"><span class="turn">Week ${v.week} of ${v.weeks}</span><span class="mod">${esc(v.module.title)}</span><span class="paint">Paint: ${esc(last)}</span></header>
+    ${room ? `<section class="facil"><p class="label">Facilitator &middot; ${esc(room.title)}</p>${v.week === 1 && !v.paint.lastAsked ? `<p><strong>Open:</strong> ${esc(room.open)}</p>` : ''}${room.line ? `<p><strong>This week:</strong> ${esc(room.line)}</p>` : ''}<details class="fold"><summary>Every week</summary><p>${esc(room.each)}</p></details></section>` : ''}
     <nav class="tabs">${tabs.map(([id, label]) => `<button data-tab="${id}" class="${tab === id ? 'on' : ''}">${label}</button>`).join('')}</nav>
     <main class="screen">${body}</main>
     ${tab === 'week' ? `<div class="runbar"><div class="inner"><span class="hrs">${h(v.hours.total)}</span><button class="btn primary" data-action="run">Run the week</button></div></div>` : ''}`;
@@ -439,6 +465,7 @@ function endScreen() {
   const o = s.outcome;
   const m = MODULES[s.moduleId];
   const p = o.profile;
+  const room = roomView(save);
   return `<main class="screen">
     <p class="label">${esc(m.title)} &middot; ended after week ${s.history.length}</p>
     <div class="verdict ${o.win ? 'win' : ''}"><h2>${o.win ? 'You got through it' : 'Not this time'}</h2><p>${esc(o.summary)}</p></div>
@@ -454,10 +481,14 @@ function endScreen() {
         ${!f.made.length && !f.missed.length ? '<p class="soft">Nothing clear either way: you did not touch the thing the module is about. Worth a question.</p>' : ''}</div>`; }).join('')}
       ${p.also.length ? `<details class="fold"><summary>Also on the floor, unrated: ${esc(p.also.map((a) => a.label).join(', '))}</summary><ul class="notes small">${p.also.map((a) => `<li><strong>${esc(a.label)}</strong>: ${a.made} made, ${a.missed} missed${a.notes.length ? `. ${esc(a.notes.map((n) => n.note).join('; '))}.` : ''}</li>`).join('')}</ul></details>` : ''}
     </section>
-    <div class="stack"><button class="btn primary" data-act="debrief" data-id="${s.moduleId}">Debrief with your coach</button>
+    ${room ? `<section class="facil"><p class="label">Facilitator &middot; ${esc(room.title)}</p><p><strong>Close:</strong> ${esc(room.close)}</p>
+      <p class="label">Debrief questions, for the room</p><ol class="notes">${room.questions.map((q) => `<li>${esc(q)}</li>`).join('')}</ol>
+      <details class="fold"><summary>The reveal (for you, until the room has answered)</summary><p>${esc(room.reveal)}</p></details>
+      <p class="label">The commitment card</p><p>${esc(room.commitment)}</p></section>
+    <div class="stack"><button class="btn primary" data-act="session-end">End the session</button><button class="btn" data-act="notes" data-id="${room.id}">The notes</button></div>` : `<div class="stack"><button class="btn primary" data-act="debrief" data-id="${s.moduleId}">Debrief with your coach</button>
     <button class="btn" data-act="feedback">Your thoughts, for the coach</button>
     <button class="btn" data-act="replay" data-id="${s.moduleId}">Play it again (new week, new causes)</button>
-    <button class="btn quiet" data-act="track">Back to the track</button></div>
+    <button class="btn quiet" data-act="track">Back to the track</button></div>`}
   </main>`;
 }
 
@@ -542,6 +573,7 @@ function render() {
   else if (screen === 'profile') html = profileScreen();
   else if (screen === 'feedback') html = feedbackScreen();
   else if (screen === 'coach-profile' && save.role === 'coach') html = coachProfileScreen();
+  else if (screen === 'notes' && notesId) html = notesScreen();
   else if ((screen === 'coach' || screen === 'track') && save.role === 'coach') { screen = 'coach'; html = coachScreen(); }
   else if (screen === 'track' && !save.profile) { screen = 'profile'; html = profileScreen(); }
   else if (screen === 'track') html = trackScreen();
@@ -551,6 +583,7 @@ function render() {
   else if (save.run?.over) { screen = 'end'; html = endScreen(); }
   else { screen = 'track'; html = trackScreen(); }
   app.innerHTML = html + (modal ? `<div class="scrim" role="dialog" aria-modal="true"><div class="sheet">${modal}</div></div>` : '');
+  app.classList.toggle('room', !!(save?.room && save?.run));
   mountArt();
 }
 
@@ -617,6 +650,12 @@ function act(t) {
       return;
     }
     case 'group-open': groupOpen = groupOpen === t.dataset.id ? null : t.dataset.id; return;
+    case 'notes': notesId = t.dataset.id; screen = 'notes'; scrollTo(0, 0); return;
+    case 'session-start': {
+      if (save.run && !save.run.over) { banner = 'A run is already in progress. Finish it or abandon it from its menu first.'; return; }
+      save = startSession(save, t.dataset.id, (Math.random() * 2 ** 31) >>> 0); persist(); plan = { picks: {}, skip: [] }; tab = 'week'; screen = 'week'; scrollTo(0, 0); return;
+    }
+    case 'session-end': save = endSession(save); persist(); coachTab = 'groups'; screen = 'coach'; scrollTo(0, 0); return;
     case 'progress': codeBox = codeBox === 'progress' ? null : 'progress'; sendState = null; return;
     case 'progress-send': {
       sendState = { busy: true };
@@ -640,7 +679,7 @@ function act(t) {
       save = startRun(save, t.dataset.id || briefId, (Math.random() * 2 ** 31) >>> 0);
       persist(); plan = { picks: {}, skip: [] }; tab = 'week'; screen = 'week'; scrollTo(0, 0); return;
     }
-    case 'abandon': save = { ...save, run: null }; persist(); screen = 'track'; return;
+    case 'abandon': save = { ...save, run: null, room: null }; persist(); screen = save.role === 'coach' ? 'coach' : 'track'; return;
     case 'close': modal = null; if (save?.run?.over) { screen = 'end'; scrollTo(0, 0); } return;
     case 'debrief': debriefId = t.dataset.id; screen = 'debrief'; scrollTo(0, 0); return;
     case 'signoff': {

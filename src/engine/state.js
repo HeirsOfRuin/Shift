@@ -26,6 +26,7 @@ export function newSave() {
     role: null,         // 'trainee' | 'coach' | null (not chosen yet)
     assignment: null,   // a trainee's assignment from a coach (engine/coach.js)
     coach: null,        // a coach's roster (engine/coach.js)
+    room: null,         // a group session being run on this screen (engine/coach.js)
   };
 }
 
@@ -144,7 +145,7 @@ export const MIGRATIONS = {
 // Beta 11 to 12: the coach's side. A save is a trainee's or a coach's; a
 // trainee may carry an assignment. Old saves are trainees without one, and
 // nothing about their track changes.
-MIGRATIONS[3] = (s) => ({ ...s, v: 4, role: s.profile ? 'trainee' : null, assignment: null, coach: null });
+MIGRATIONS[3] = (s) => ({ ...s, v: 4, role: s.profile ? 'trainee' : null, assignment: null, coach: null, room: null });
 
 export function migrate(save) {
   let s = save;
