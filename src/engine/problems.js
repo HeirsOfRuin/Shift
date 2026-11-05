@@ -643,6 +643,80 @@ export const TYPES = {
   // The player covers paint and receives their own department's spatter. Open,
   // it costs paint's rework hours and welding's defects; waved through, it
   // goes quiet and Theresa finds it her first week back.
+  // ------------------------------------------------------------- the bench (Pulled off the floor)
+  // Kev will run the floor for three weeks and has never run it. Why he is
+  // not ready is hidden: never shown the pieces, never seen as in charge by
+  // the crew, won't say what he doesn't know, or ready and the problem is you.
+  // Every right move raises dept.bench, which is what leadWhileAway runs on.
+  bench: {
+    notice() { return true; },
+    act(K, p, action) {
+      const [a] = p.who.map(K.person);
+      const v = { p };
+      const d = K.s.dept;
+      const up = (n) => { d.bench = K.clamp(d.bench + n); };
+      switch (action) {
+        case 'ask':
+          told(p); a.trust = K.clamp(a.trust + 0.05);
+          K.line('told', `bench.told.${p.told}`, v);
+          if (p.cause === 'ready') { up(0.3); K.resolve(p, 'bench.passed.ready', { settled: true }); }
+          return;
+        case 'handover':
+          if (!d.routineGone.includes('scheduler')) d.routineGone.push('scheduler');
+          if (!d.routineGone.includes('huddles')) d.routineGone.push('huddles');
+          if (p.cause === 'unshown' && works(K, p, action, 0.85, 0.95)) { up(0.35); a.morale = K.clamp(a.morale + 0.05); K.resolve(p, 'bench.fixed.handover', { root: true }); }
+          else if (p.cause === 'ready') { up(0.3); K.resolve(p, 'bench.passed.handoverReady', { settled: true }); }
+          else { up(0.08); if (p.cause !== 'unshown') p.ruledOut.push('unshown'); K.line('result', p.cause === 'unshown' ? 'bench.handover.notYet' : 'bench.handover.noHelp', v); }
+          return;
+        case 'announce':
+          if (p.cause === 'unseen' && works(K, p, action, 0.85, 0.95)) { up(0.35); for (const c of K.crew()) c.trust = K.clamp(c.trust + 0.02); K.resolve(p, 'bench.fixed.announce', { root: true }); }
+          else if (p.cause === 'ready') { up(0.3); K.resolve(p, 'bench.passed.announceReady', { settled: true }); }
+          else { up(0.05); if (p.cause !== 'unseen') p.ruledOut.push('unseen'); K.line('result', p.cause === 'unseen' ? 'bench.announce.notYet' : 'bench.announce.noHelp', v); }
+          return;
+        case 'steps':
+          d.flags.kevSteps = true;
+          if (p.cause === 'wontAsk' && works(K, p, action, 0.8, 0.9)) { up(0.35); a.trust = K.clamp(a.trust + 0.05); K.resolve(p, 'bench.fixed.steps', { root: true }); }
+          else if (p.cause === 'ready') { up(0.3); K.resolve(p, 'bench.passed.stepsReady', { settled: true }); }
+          else { up(0.05); if (p.cause !== 'wontAsk') p.ruledOut.push('wontAsk'); K.line('result', p.cause === 'wontAsk' ? 'bench.steps.notYet' : 'bench.steps.noHelp', v); }
+          return;
+        case 'sheet': up(p.cause === 'unshown' ? 0.08 : 0.02); K.line('result', `bench.sheet.${p.cause === 'unshown' ? 'some' : 'none'}`, v); return;
+        case 'doItAll':
+          // the floor is tidy for a week and the lead has learned that you do it
+          up(-0.05); K.s.week_.capacity += 0.4; a.morale = K.clamp(a.morale - 0.03);
+          K.line('result', 'bench.doItAll', v);
+          return;
+        case 'callMe':
+          up(-0.05); p.callMe = true; a.trust = K.clamp(a.trust - 0.02);
+          K.line('result', 'bench.callMe', v);
+          return;
+      }
+    },
+    week(K, p) {
+      const [a] = p.who.map(K.person);
+      const v = { p };
+      // a ready lead shows it by the second week whether you asked or not
+      if (p.cause === 'ready' && K.week - p.since >= 2) { K.s.dept.bench = K.clamp(K.s.dept.bench + 0.25); K.resolve(p, 'bench.passed.ready', { settled: true }); return; }
+      // in the audit room, the gap you did not find lands on him: what he was never shown
+      // goes wrong, what the crew never saw lands back on you, what he would not ask goes unhandled
+      if (K.s.monday?.away && p.state === 'active') {
+        a.stress += 0.4; K.s.week_.capacityMul *= 0.92;
+        if (K.r.outcomes.next() < 0.45) { K.s.trace.push({ week: K.week, text: K.say(`trace.bench.${p.cause}`, v), because: K.say('because.benchGap', v) }); K.line('consequence', `bench.away.${p.cause}`, v); }
+        else if (p.callMe) { K.s.week_.interrupts = (K.s.week_.interrupts || 0) + 2; K.line('event', 'bench.week.calls', v); }
+        return;
+      }
+      if (K.week - p.since >= 1 && p.neglect >= 1) K.line('event', 'bench.week.quiet', v);
+    },
+    // the generic moves (find out first, act on what you found, change course) score; these are the module's own
+    score(p, action) {
+      const out = [];
+      if (action === 'doItAll') out.push(['A4', -1, 'Did the job yourself instead of handing it over']);
+      if (action === 'callMe') out.push(['A4', -1, 'Planned to be reachable instead of replaceable']);
+      if (action === 'handover') out.push(['A4', 1, 'Handed over a real piece of the job']);
+      if (action === 'steps') out.push(['D1', 1, 'Prepared the lead for the hard part']);
+      if (action === 'announce') out.push(['A4', 1, 'Made the handover visible']);
+      return out;
+    },
+  },
   otherside: {
     notice() { return true; },
     act(K, p, action) {

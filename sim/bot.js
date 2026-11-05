@@ -16,7 +16,7 @@ const PROBLEM = {
   firefighter(c) {
     return { late: 'remind', rework: 'fixYourself', load: 'carry', friction: 'warning', hazard: c.waiting ? 'leave' : 'workOrder',
       recurring: 'fixYourself', escalation: 'decide', standards: 'matchThem',
-      constraint: c.ruledOut.includes('weld') ? 'improveFit' : 'improveWeld', huddle: 'shutDown', newhand: 'fixHis', otherside: 'fixInPaint',
+      constraint: c.ruledOut.includes('weld') ? 'improveFit' : 'improveWeld', huddle: 'shutDown', newhand: 'fixHis', otherside: 'fixInPaint', bench: c.weeks === 0 ? 'doItAll' : 'callMe',
       customer: 'pushMore', infowork: 'faster', erp: 'ownSheet', lean: 'redoFor', flow: 'leave' }[c.type];
   },
   documenter(c) {
@@ -30,6 +30,7 @@ const PROBLEM = {
     if (c.type === 'constraint') return c.weeks === 0 ? 'askCrew' : c.ruledOut.includes('weld') ? 'leave' : 'improveWeld';
     if (c.type === 'huddle') return 'parkingLot';
     if (c.type === 'newhand') return c.weeks === 0 ? 'sheet' : c.weeks >= 2 && !c.tried.includes('document') ? 'document' : 'leave';
+    if (c.type === 'bench') return c.tried.includes('sheet') ? 'leave' : 'sheet';
     if (c.type === 'otherside') return 'sendBack';
     if (c.type === 'customer') return c.weeks === 0 ? 'defend' : 'leave';
     if (c.type === 'infowork') return c.tried.includes('memo') ? (c.tried.includes('board') ? 'leave' : 'board') : 'memo';
@@ -54,6 +55,8 @@ const PROBLEM = {
       case 'constraint': return !c.tried.includes('askCrew') ? 'askCrew' : c.ruledOut.includes('weld') ? 'leave' : 'improveWeld';
       case 'huddle': return !t ? 'talk' : { habit: 'parkingLot', parts: 'fixParts', unheard: 'giveFloor', newRoute: 'talk' }[t];
       case 'newhand': return !t ? 'watch' : { untaught: 'teach', afraid: 'pair', rushed: 'slowDown', settling: 'watch' }[t];
+      // the coach hands over first and asks second
+      case 'bench': return !t ? (c.tried.includes('handover') ? 'ask' : 'handover') : { unshown: 'handover', unseen: 'announce', wontAsk: 'steps', ready: 'leave' }[t];
       // the coach goes to the people first: Tyler, then paint's side
       case 'otherside': return c.pending ? 'checkPaint' : !t ? (c.tried.includes('slowTyler') ? 'lookPaint' : 'slowTyler') : { wire: 'swapWire', rushing: 'slowTyler', noStandard: 'writeStandard', careful: 'leave' }[t];
       case 'customer': return !t ? 'askPaint' : { timing: 'fixTiming', order: 'fixOrder', info: 'fixInfo', theirs: 'askPaint' }[t];
@@ -121,6 +124,9 @@ const PROBLEM = {
       case 'newhand':
         if (!t) return 'watch';
         return { untaught: 'teach', afraid: 'pair', rushed: 'slowDown', settling: 'leave' }[t];
+      case 'bench':
+        if (!t) return 'ask';
+        return { unshown: 'handover', unseen: 'announce', wontAsk: 'steps', ready: 'leave' }[t];
       case 'otherside':
         if (c.pending) return 'checkPaint';
         if (!t) return 'lookPaint';

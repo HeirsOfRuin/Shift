@@ -1,10 +1,18 @@
-# Shift beta 13: seventeen modules, three seats, sessions on one screen
+# Shift beta 14: seventeen modules, three seats, the bench rebuilt
 
 Published 2026-11-05 as a private page, the same link as every beta:
 **https://claude.ai/artifact/4c5QqYTmZdn5iKcutCPZJx**
 (only the author can open it until he shares it from the page's Share menu).
 Rebuild with `npm run build` and republish `dist/shift.embed.html` to the same
 link. The build id is baked in, so an installed copy picks the new one up.
+
+**What changed in beta 14 (2026-11-05):** *Pulled off the floor* rebuilt.
+Why Kev is not ready to run the floor is now a hidden cause: never shown the
+pieces, never seen as in charge by the crew, won't say what he doesn't know,
+or ready and the problem is you. Sit down with him and find out, or guess;
+whatever you did not find lands on him in the audit weeks. The four
+hand-over cards are gone; the ticket replaces them. Gate: doing nothing fell
+from 40% to 13% (`FRAME-pulled.md`).
 
 **What changed in beta 13 (2026-11-05):** group sessions run on one screen.
 On the coach's *Group sessions* tab, *Run it on this screen* starts the

@@ -83,7 +83,7 @@ The verdict, and what beta 12 does about it:
 4. **The next build after this one is a rebuild, not an addition:** *Pulled
    off the floor* onto the problem-type pattern with a hidden cause (why the
    lead is not ready: never shown, never trusted, never told, or not the right
-   person), gated like the rest.
+   person), gated like the rest. Done as beta 14 (`FRAME-pulled.md`).
 
 ## 2. The coach's side
 

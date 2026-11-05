@@ -164,6 +164,22 @@ export const PROBLEMS = {
       document: { label: 'Write up the scrapped brackets', hours: 1, kind: 'hold', needs: 'supervisor' },
     },
   },
+  // ---- beta 14: Pulled off the floor rebuilt (A4 + D1): why the lead is not ready
+  bench: {
+    label: 'The bench',
+    causes: { unshown: 0.3, unseen: 0.25, wontAsk: 0.25, ready: 0.2 },
+    passing: 'ready',
+    stories: { wontAsk: { unshown: 0.4 } },
+    actions: {
+      ask: { label: 'Sit down with {a.him}: what worries {a.him} about the three weeks', hours: 1, kind: 'ask' },
+      handover: { label: "Hand {a.him} Jess's numbers and the huddle, and sit beside {a.him} the first time", hours: 1.5, kind: 'fix', fits: ['unshown'] },
+      announce: { label: 'Say it at the huddle with {a.him} beside you, and stop re-deciding what {a.he} decides', hours: 0.5, kind: 'fix', fits: ['unseen'] },
+      steps: { label: 'Walk {a.him} through the hard conversations, step by step', hours: 1.5, kind: 'fix', fits: ['wontAsk'] },
+      sheet: { label: 'Write {a.him} a handover sheet', hours: 1, kind: 'hold' },
+      doItAll: { label: 'Get everything done yourself before you go', hours: 3, kind: 'yourself' },
+      callMe: { label: 'Tell {a.him} to call you with anything', hours: 0.25, kind: 'soft' },
+    },
+  },
   // ---- beta 7: The other side (E2 + C3): your own bodies, from paint's side
   otherside: {
     label: 'Your own bodies, from the other side',

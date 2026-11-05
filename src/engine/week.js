@@ -34,6 +34,7 @@ export function kernel(s, r, lines) {
     // A signal about a problem you have not noticed yet stays out of the report:
     // the report would otherwise tell you before you knew.
     line(kind, key, vars = {}) { if (kind === 'signal' && vars.p && !vars.p.seen) return; lines.push({ kind, text: say(s, key, vars) }); },
+    say(key, vars = {}) { return say(s, key, vars); },
     lineRaw(kind, template, vars = {}) { lines.push({ kind, text: fill(s, template, vars) }); },
     spawn(type, who, opts) { return spawn(s, type, who, opts); },
     queue(weeks, kind, data, because) {
@@ -433,8 +434,9 @@ function triage(card, opt) {
 // lateness is accountability, on a hazard it is safety (CATALOGUE.md).
 function areaFor(type, kind = null) {
   if (type === 'otherside' && ['fix', 'hold', 'yourself', 'soft'].includes(kind)) return 'C3';
+  if (type === 'bench' && kind === 'ask') return 'D1';
   return { late: 'D2', rework: 'D1', load: 'D1', friction: 'D3',
-    hazard: 'C2', recurring: 'B3', escalation: 'E1', standards: 'E2', constraint: 'B1', huddle: 'F1', newhand: 'D4', otherside: 'E2', customer: 'E4', infowork: 'B5', erp: 'B6', lean: 'B2', flow: 'B7' }[type];
+    hazard: 'C2', recurring: 'B3', escalation: 'E1', standards: 'E2', constraint: 'B1', huddle: 'F1', newhand: 'D4', otherside: 'E2', customer: 'E4', infowork: 'B5', erp: 'B6', lean: 'B2', flow: 'B7', bench: 'A4' }[type];
 }
 
 // ---------------------------------------------------------------- the manager's seat

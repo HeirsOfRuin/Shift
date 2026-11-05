@@ -270,53 +270,30 @@ export const MODULES = {
   // -------------------------------------------------------------------- 5
   pulled: {
     title: 'Pulled off the floor', focus: ['A4', 'D1'], seats: ['supervisor'], onlySupervisor: 'it is about leaving the lead in charge', notManager: 'it is about a supervisor leaving his lead in charge',
-    purpose: 'To show what a floor does without you, and that the bench you have is the bench you built before you needed it.', handbook: '6: Leaders build leaders, not just output', weeks: 8, goal: 'held',
+    purpose: 'To show what a floor does without you, that the bench you have is the bench you built before you needed it, and that why your lead is not ready is a question, not a fact.', handbook: '6: Leaders build leaders, not just output', weeks: 8, goal: 'held',
     teaches: 'The bench: what you built before you left',
     brief: [
       'The customer audit is in three weeks, and Dana has put you on the team. For weeks three, four and five you will be in a room with a binder and an auditor most of every day. You will see the floor at lunch, if you eat lunch.',
-      "Kev will run the department. Kev is a very good welder and a very good lead, and he has never once run the department, because you have always been there. He knows that. He hasn't said it.",
+      "Kev will run the department. Kev is a very good welder and a very good lead, and he has never once run the department, because you have always been there. He knows that. He hasn't said why it worries him, and there is more than one reason it might.",
       'You have two weeks to make the floor need you less.',
     ],
     goalText: 'The floor holding while you are away: nothing blowing up from week three on, Kev still standing, nobody lost, paint fed.',
     lose: ['Paint short two weeks running', 'Losing a person', 'Anything blowing up from week three on', 'Kev buckling under it'],
     setup: { meetings: { 3: 18, 4: 18, 5: 18 } },
-    main: null,
+    main: { type: 'bench', who: ['kev'], seen: true, week: 1 },
     second: { weeks: [3, 3], not: [], avoid: ['kev'] },
     cards: [
-      { id: 'scheduler', week: 1, cue: 'develop', who: 'kev', title: "{c} could take Jess's numbers",
-        body: "Every week you give Jess the capacity numbers. It's an hour, and it's the hour that tells you what next week looks like. {c} has watched you do it a hundred times. He has never done it.",
-        options: [
-          { id: 'teach', label: 'Sit with him and hand it over', hours: 1.5, kind: 'delegate', effects: [{ bench: 0.15 }, { removeRoutine: 'scheduler' }, { morale: 0.03, who: 'kev' }], score: [['A4', 2, 'Handed over a real piece of the job']] },
-          { id: 'keep', label: 'Keep doing it yourself', hours: 0, kind: 'keep', score: [['A4', -1, 'Kept a piece of the job only you can do']] },
-        ] },
-      { id: 'huddles', week: 1, cue: 'develop', who: 'kev', title: 'Let {c} run the huddles',
-        body: 'The morning huddle is yours. Five minutes, every day. If {c} runs it, the crew starts looking at him first in the morning, which is the point.',
-        options: [
-          { id: 'teach', label: 'Run the first two together, then hand it over', hours: 1, kind: 'delegate', effects: [{ bench: 0.15 }, { removeRoutine: 'huddles' }], score: [['A4', 2, 'Let the lead lead']] },
-          { id: 'keep', label: 'Keep running them', hours: 0, kind: 'keep', score: [['A4', -1, 'Kept a piece of the job only you can do']] },
-        ] },
-      { id: 'steps', week: 2, cue: 'develop', who: 'kev', title: 'Walk {c} through the hard conversations',
-        body: "If someone is late three times while you're in the audit room, {c} is who they'll be late to. He doesn't know the steps, and he doesn't want to get them wrong in front of the crew.",
-        options: [
-          { id: 'teach', label: 'Walk him through how you handle it', hours: 1.5, kind: 'delegate', effects: [{ bench: 0.15 }, { flag: 'kevSteps' }], score: [['D1', 2, 'Prepared the lead for the hard part']] },
-          { id: 'keep', label: 'Tell him to call you', hours: 0, kind: 'keep', score: [['A4', -1, 'Planned to be reachable instead of replaceable']] },
-        ] },
       { id: 'cross', week: 2, cue: 'develop', who: 'marisol', title: 'Show {c} the finish checks',
         body: "If Donna's off while you're away, finish slows to a crawl. {c} could cover the checks with an hour of showing.",
         options: [
           { id: 'teach', label: 'Show her', hours: 1, kind: 'delegate', effects: [{ bench: 0.05 }, { skill: 0.03, who: 'marisol' }], score: [['A4', 1, 'Saw what only you were holding']] },
           { id: 'keep', label: 'Hope Donna stays healthy', hours: 0, kind: 'keep' },
         ] },
-      { id: 'announce', week: 2, cue: 'develop', who: 'kev', title: 'Tell the crew who is in charge',
-        body: "The crew knows you'll be busy. They don't know what that means for them. Ten minutes at the huddle with {c} standing beside you would settle it.",
-        options: [
-          { id: 'teach', label: 'Say it at the huddle with him there', hours: 0.5, kind: 'delegate', effects: [{ bench: 0.1 }], score: [['A4', 2, 'Made the handover visible']] },
-          { id: 'keep', label: 'Let them work it out', hours: 0, kind: 'keep', effects: [{ bench: -0.05 }] },
-        ] },
     ],
     pool: { perWeek: [0, 1], cards: pool('townHall', 'jessForecast', 'supplierCall', 'paintCall') },
     debrief: {
       questions: [
+        'Why was Kev not ready? Did you find out, or did you guess? What would you have done on the other guesses?',
         'What did you hand Kev before you left? What did you keep, and why?',
         'Which problem came up while you were away, and who dealt with it?',
         'If nothing went wrong: was it the bench, or was it luck? How would you tell?',
