@@ -105,6 +105,22 @@ export function supported(p) {
   return best && best[1] >= 2 ? best[0] : null;
 }
 
+/** The ticket's board of possible reasons (beta 17): each reason by its short
+ *  name, who has pointed to it, and what ruled it out. It shows what the
+ *  findings add up to without saying which is true. */
+export function boardOf(s, p) {
+  const def = PROBLEMS[p.type];
+  const f = def.find;
+  const named = (id) => anyone(s, id)?.name || id;
+  const ruledBy = {};
+  for (const x of p.findings || []) if (x.way === 'look') for (const c of x.rules) ruledBy[c] = f.look?.name || 'the evidence';
+  return Object.keys(def.causes).map((c) => ({
+    id: c, name: def.names?.[c] || c,
+    out: p.ruledOut.includes(c), by: p.ruledOut.includes(c) ? ruledBy[c] || 'a fix that did not hold' : null,
+    said: [...new Set((p.findings || []).filter((x) => x.says === c && !x.repeat && x.who).map((x) => named(x.who)))],
+  }));
+}
+
 /** How many people near it you have not asked yet. When none, the ticket stops offering it. */
 export function aroundLeft(s, p) {
   const f = PROBLEMS[p.type].find;

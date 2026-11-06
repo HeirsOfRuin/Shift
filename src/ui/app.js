@@ -411,13 +411,32 @@ function ticket(c) {
   if (c.kind === 'script') { kind = CUE[c.cue] || 'Request'; if (c.cue === 'safety' || c.cue === 'shortcut') cls += ' safety'; }
   const age = c.kind === 'problem' ? (c.weeks ? `<span class="label">Open ${c.weeks} week${c.weeks > 1 ? 's' : ''}${c.waiting ? ' &middot; waiting on someone' : ''}</span>` : `<span class="label tagged">New</span>`) : '';
   return `<article class="${cls}"><div class="kind"><span class="label">${kind}</span>${age}</div><h3>${esc(c.title)}</h3><p class="body">${esc(c.body)}</p>
-    ${c.know?.length ? `<div class="know"><span class="label">What you know</span>${c.know.map((k) => `<p>${esc(k)}</p>`).join('')}</div>` : ''}
-    ${c.find ? optGroup(`${c.id}~find`, 'Find out this week', c.find.options, plan.picks[`${c.id}~find`] ?? c.find.pick) : ''}
-    ${optGroup(c.id, c.find ? 'Do this week' : '', c.options, pick, c.title)}</article>`;
+    ${c.board ? board(c) : c.know?.length ? `<div class="know"><span class="label">What you know</span>${c.know.map((k) => `<p>${esc(k)}</p>`).join('')}</div>` : ''}
+    ${c.find ? findChips(c) : ''}
+    ${optGroup(c.id, c.find ? 'Do this week' : '', c.options, pick, c.title, c.find ? 'tight' : '')}</article>`;
 }
 
-function optGroup(key, label, options, pick, aria = label) {
-  return `${label ? `<p class="label optlabel">${label}</p>` : ''}<div class="opts" role="radiogroup" aria-label="${esc(aria)}">${options.map((o) => `<button class="opt ${o.id === pick ? 'on' : ''}" role="radio" aria-checked="${o.id === pick}" data-card="${key}" data-opt="${o.id}"><span class="dot"></span><span class="t">${esc(o.label)}</span><span class="h">${o.hours ? h(o.hours) : '0 h'}</span></button>`).join('')}</div>`;
+// The board of possible reasons: what the findings add up to, at a glance.
+// Each reason, who has pointed to it, and what ruled it out. The sentences
+// behind it fold underneath (beta 17: the two-row ticket had grown past a
+// phone screen).
+function board(c) {
+  const [band, ...rest] = c.know;
+  return `<div class="know board"><div class="row" style="justify-content:space-between"><span class="label">Possible reasons</span>${c.band && c.band !== 'opinion' ? `<span class="chip rule ${c.band === 'trusts' ? 'good' : c.band === 'wary' ? 'warnchip' : ''}">${esc(band)}</span>` : ''}</div>
+    <ul class="reasons">${c.board.map((r) => `<li class="${r.out ? 'out' : ''}"><span class="rn">${esc(r.name)}</span><span class="rt">${r.out ? `ruled out: ${esc(r.by)}` : r.said.length ? `${esc(r.said.join(', '))} said so` : ''}</span></li>`).join('')}</ul>
+    ${rest.length ? `<details class="fold"><summary>What each of them said</summary>${rest.map((k) => `<p>${esc(k)}</p>`).join('')}</details>` : ''}</div>`;
+}
+
+function findChips(c) {
+  const key = `${c.id}~find`;
+  const pick = plan.picks[key] ?? c.find.pick;
+  const on = c.find.options.find((o) => o.id === pick);
+  return `<p class="label optlabel">Find out this week</p><div class="chips grid" role="radiogroup" aria-label="Find out this week">${c.find.options.map((o) => `<button class="chip pick ${o.id === pick ? 'on' : ''}" role="radio" aria-checked="${o.id === pick}" data-card="${key}" data-opt="${o.id}">${esc(o.chip)}${o.hours ? ` &middot; ${h(o.hours)}` : ''}</button>`).join('')}</div>
+    ${on && on.id !== 'none' ? `<p class="soft small">${esc(on.label)}.</p>` : ''}`;
+}
+
+function optGroup(key, label, options, pick, aria = label, cls = '') {
+  return `${label ? `<p class="label optlabel">${label}</p>` : ''}<div class="opts ${cls}" role="radiogroup" aria-label="${esc(aria)}">${options.map((o) => `<button class="opt ${o.id === pick ? 'on' : ''}" role="radio" aria-checked="${o.id === pick}" data-card="${key}" data-opt="${o.id}"><span class="dot"></span><span class="t">${esc(o.label)}</span><span class="h">${o.hours ? h(o.hours) : '0 h'}</span></button>`).join('')}</div>`;
 }
 
 function crewTab(v) {

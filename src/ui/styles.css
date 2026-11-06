@@ -318,3 +318,19 @@ section { display: flex; flex-direction: column; gap: 10px; }
 .ways li.you { border-color: var(--amber); }
 .ways .wname { font-weight: 700; }
 .ways .how, .ways .turn { grid-column: 1 / -1; font-size: 14px; }
+
+/* the board of possible reasons (beta 17) */
+.board .reasons { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 4px; }
+.board .reasons li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: baseline; padding: 4px 0; border-top: 1px solid var(--line); }
+.board .reasons li:first-child { border-top: 0; }
+.board .rn { font-weight: 600; }
+.board .rt { font-size: 13px; color: var(--ink-soft); text-align: right; }
+.board .reasons li.out .rn { text-decoration: line-through; color: var(--ink-faint); font-weight: 400; }
+.chip.warnchip { border-color: var(--hivis); color: var(--ink); }
+.soft.small { font-size: 14px; margin: 4px 0 0; }
+/* the do row of a two-row ticket: one list, not five cards (beta 17) */
+.opts.tight { gap: 0; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+.opts.tight .opt { border: 0; border-radius: 0; border-top: 1px solid var(--line); min-height: 44px; padding: 8px 12px; font-size: 15px; line-height: 1.3; }
+.opts.tight .opt:first-child { border-top: 0; }
+.board .chips, .ticket .chips.grid { gap: 6px; }
+.ticket .chip.pick { min-height: 36px; padding: 6px 12px; font-size: 14px; }

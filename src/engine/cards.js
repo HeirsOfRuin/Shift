@@ -13,7 +13,7 @@ import { PROBLEMS } from '../data/problems.data.js';
 import { streamFor } from './rng.js';
 import { say, fill, hasText } from './text.js';
 import { active, routineFor } from './derive.js';
-import { knowLines, supported, candidates, bandOf, aroundLeft, bestGuess } from './findout.js';
+import { knowLines, supported, candidates, bandOf, aroundLeft, bestGuess, boardOf, whoIs } from './findout.js';
 
 export function buildCards(s, module) {
   const cards = [];
@@ -105,9 +105,11 @@ function problemCard(s, p) {
   }
   // a type that finds out: the ticket's two rows, find out and do
   const finds = !!def.find;
+  const asked = finds ? whoIs(s, p, def.find.ask?.who) : null;
+  const chipOf = (a) => (a.way === 'ask' ? `Ask ${asked?.name || 'them'}` : a.way === 'around' ? 'Ask around' : def.find.look?.name ? def.find.look.name.charAt(0).toUpperCase() + def.find.look.name.slice(1) : 'Look');
   const find = finds ? {
-    options: [{ id: 'none', label: say(s, 'find.none'), hours: 0, kind: 'leave', way: null },
-      ...Object.entries(def.actions).filter(([, a]) => a.way && !(a.way === 'around' && !aroundLeft(s, p))).map(([id, a]) => ({ id, label: fill(s, a.label, { p }), hours: a.hours, kind: 'ask', way: a.way }))],
+    options: [{ id: 'none', label: say(s, 'find.none'), chip: 'Nothing new', hours: 0, kind: 'leave', way: null },
+      ...Object.entries(def.actions).filter(([, a]) => a.way && !(a.way === 'around' && !aroundLeft(s, p))).map(([id, a]) => ({ id, label: fill(s, a.label, { p }), chip: chipOf(a), hours: a.hours, kind: 'ask', way: a.way }))],
     pick: 'none',
   } : null;
   return {
@@ -117,6 +119,7 @@ function problemCard(s, p) {
     know: finds ? [...knowLines(s, p), ...know.filter((k) => k !== say(s, `know.${p.type}.ruledOut`, { p, n: p.ruledOut.length }))] : know,
     find,
     findings: finds ? (p.findings || []).map((x) => ({ ...x })) : null,
+    board: finds ? boardOf(s, p) : null,
     band: finds ? bandOf(s, p) : null,
     supported: finds ? supported(p) : null,
     candidates: finds ? candidates(p) : null,

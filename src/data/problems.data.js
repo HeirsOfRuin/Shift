@@ -20,11 +20,12 @@ export const PROBLEMS = {
     // how you find out (engine/findout.js, docs/KILLGATE-ask.md): what Brent tells
     // his boss depends on how much he trusts you; Kev and Tyler know some of it,
     // and Tyler has a view; the timecards rule a reason out but never name one
+    names: { childcare: 'the kids', ride: 'his truck', attitude: 'doesn\'t care' },
     find: {
       trust: [0.25, 0.8],
       ask: { truth: { ride: [0.9, 0], childcare: [-0.1, 1], attitude: [0, 0.5] }, cover: ['ride', 'childcare'], told: true },
       around: { from: [{ who: 'senior', truth: { ride: 0.5, childcare: 0.35, attitude: 0.45 } }, { who: 'tyler', truth: { ride: 0.5, childcare: 0.2, attitude: 0.6 }, bias: ['attitude', 'childcare'], biasP: 0.6 }], noticed: 0.3 },
-      look: { rules: 1 },
+      look: { name: 'the timecards', rules: 1 },
     },
     actions: {
       talk: { label: 'Ask {a.him} privately what is going on', hours: 1, kind: 'ask', way: 'ask' },
@@ -41,7 +42,8 @@ export const PROBLEMS = {
     causes: { untrained: 0.4, rushing: 0.25, fixture: 0.15, newJig: 0.2 },
     passing: 'newJig',
     stories: {},
-    find: { trust: [0.3, 0.8], ask: { truth: { untrained: [0, 0.6], rushing: [0, 0.5], fixture: [0.8, 0], newJig: [0.8, 0] }, cover: ['fixture', 'newJig'] }, around: { from: [{ who: 'senior', truth: { untrained: 0.5, rushing: 0.5, fixture: 0.4, newJig: 0.5 } }, { who: 'donna', truth: { untrained: 0.3, rushing: 0.5, fixture: 0.4, newJig: 0.3 }, bias: ['rushing', 'fixture'], biasP: 0.5 }] }, look: { rules: 2 } },
+    names: { untrained: 'never shown how', rushing: 'going too fast', fixture: 'the fixture', newJig: 'the new jig' },
+    find: { trust: [0.3, 0.8], ask: { truth: { untrained: [0, 0.6], rushing: [0, 0.5], fixture: [0.8, 0], newJig: [0.8, 0] }, cover: ['fixture', 'newJig'] }, around: { from: [{ who: 'senior', truth: { untrained: 0.5, rushing: 0.5, fixture: 0.4, newJig: 0.5 } }, { who: 'donna', truth: { untrained: 0.3, rushing: 0.5, fixture: 0.4, newJig: 0.3 }, bias: ['rushing', 'fixture'], biasP: 0.5 }] }, look: { name: 'a morning watching', rules: 2 } },
     actions: {
       investigate: { label: 'Watch {a.him} weld for a morning', hours: 3, kind: 'ask', way: 'look' },
       askHim: { label: 'Ask {a.him} what is going wrong with the welds', hours: 0.5, kind: 'ask', way: 'ask' },
@@ -58,7 +60,8 @@ export const PROBLEMS = {
     causes: { unowned: 0.45, personal: 0.3, crunch: 0.25 },
     passing: 'crunch',
     stories: { personal: { unowned: 0.3 } },
-    find: { trust: [0.3, 0.8], ask: { truth: { unowned: [0.5, 0.3], personal: [-0.1, 0.9], crunch: [0.9, 0] }, cover: ['crunch', 'unowned'], told: true }, around: { from: [{ who: 'senior', truth: { unowned: 0.6, personal: 0.3, crunch: 0.5 } }, { who: 'donna', truth: { unowned: 0.4, personal: 0.25, crunch: 0.4 }, bias: ['crunch', 'personal'], biasP: 0.4 }, { who: 'brent', truth: { unowned: 0.4, personal: 0.2, crunch: 0.4 } }] }, look: { rules: 1 } },
+    names: { unowned: 'others\' work', personal: 'something at home', crunch: 'a heavy month' },
+    find: { trust: [0.3, 0.8], ask: { truth: { unowned: [0.5, 0.3], personal: [-0.1, 0.9], crunch: [0.9, 0] }, cover: ['crunch', 'unowned'], told: true }, around: { from: [{ who: 'senior', truth: { unowned: 0.6, personal: 0.3, crunch: 0.5 } }, { who: 'donna', truth: { unowned: 0.4, personal: 0.25, crunch: 0.4 }, bias: ['crunch', 'personal'], biasP: 0.4 }, { who: 'brent', truth: { unowned: 0.4, personal: 0.2, crunch: 0.4 } }] }, look: { name: 'a week of the desk', rules: 1 } },
     actions: {
       talk: { label: 'Take {a.him} for a coffee and ask', hours: 1, kind: 'ask', way: 'ask' },
       askAround: { label: 'Ask the crew what lands on {a.him}', hours: 0.5, kind: 'ask', way: 'around' },
@@ -73,7 +76,8 @@ export const PROBLEMS = {
     causes: { workload: 0.3, personal: 0.25, roles: 0.25, badWeek: 0.2 },
     passing: 'badWeek',
     stories: { personal: { workload: 0.35 } },
-    find: { trust: [0.3, 0.8], ask: { truth: { workload: [0.5, 0.4], personal: [-0.1, 0.8], roles: [0.15, 0.4], badWeek: [0.9, 0] }, cover: ['workload', 'badWeek'], told: true }, around: { from: [{ who: 'senior', truth: { workload: 0.45, personal: 0.3, roles: 0.35, badWeek: 0.4 }, bias: ['workload', 'roles'], biasP: 0.4 }, { who: 'joel', truth: { workload: 0.3, personal: 0.4, roles: 0.2, badWeek: 0.3 }, bias: ['personal', 'badWeek'], biasP: 0.4 }, { who: 'brent', truth: { workload: 0.4, personal: 0.3, roles: 0.3, badWeek: 0.4 } }] }, look: { rules: 2 } },
+    names: { workload: 'too much work', personal: 'between them', roles: 'whose job', badWeek: 'a bad week' },
+    find: { trust: [0.3, 0.8], ask: { truth: { workload: [0.5, 0.4], personal: [-0.1, 0.8], roles: [0.15, 0.4], badWeek: [0.9, 0] }, cover: ['workload', 'badWeek'], told: true }, around: { from: [{ who: 'senior', truth: { workload: 0.45, personal: 0.3, roles: 0.35, badWeek: 0.4 }, bias: ['workload', 'roles'], biasP: 0.4 }, { who: 'joel', truth: { workload: 0.3, personal: 0.4, roles: 0.2, badWeek: 0.3 }, bias: ['personal', 'badWeek'], biasP: 0.4 }, { who: 'brent', truth: { workload: 0.4, personal: 0.3, roles: 0.3, badWeek: 0.4 } }] }, look: { name: 'the handoff', rules: 2 } },
     actions: {
       separate: { label: 'Talk to each of them on their own', hours: 2, kind: 'ask', way: 'ask' },
       askAround: { label: 'Ask the crew what sets them off', hours: 0.5, kind: 'ask', way: 'around' },
@@ -102,7 +106,8 @@ export const PROBLEMS = {
     causes: { pin: 0.3, setup: 0.3, steel: 0.2, batch: 0.2 },
     passing: 'batch',
     stories: {},
-    find: { trust: [0.3, 0.8], ask: { truth: { pin: [0.5, 0], setup: [0, 0.6], steel: [0.4, 0], batch: [0.6, 0] }, cover: ['steel', 'pin'] }, around: { from: [{ who: 'senior', truth: { pin: 0.5, setup: 0.4, steel: 0.3, batch: 0.5 } }, { who: 'raymond', truth: { pin: 0.2, setup: 0.1, steel: 0.6, batch: 0.3 }, bias: ['setup', 'pin'], biasP: 0.5 }] }, look: { rules: 2 } },
+    names: { pin: 'worn pins', setup: 'the setup', steel: 'fab\'s parts', batch: 'this batch' },
+    find: { trust: [0.3, 0.8], ask: { truth: { pin: [0.5, 0], setup: [0, 0.6], steel: [0.4, 0], batch: [0.6, 0] }, cover: ['steel', 'pin'] }, around: { from: [{ who: 'senior', truth: { pin: 0.5, setup: 0.4, steel: 0.3, batch: 0.5 } }, { who: 'raymond', truth: { pin: 0.2, setup: 0.1, steel: 0.6, batch: 0.3 }, bias: ['setup', 'pin'], biasP: 0.5 }] }, look: { name: 'a morning on the jig', rules: 2 } },
     actions: {
       investigate: { label: 'A morning finding out why it keeps moving', hours: 3, kind: 'ask', way: 'look' },
       askHer: { label: 'Ask {a} what {a.he} thinks keeps moving it', hours: 0.5, kind: 'ask', way: 'ask' },
@@ -133,7 +138,8 @@ export const PROBLEMS = {
     causes: { pressure: 0.3, spec: 0.3, unaware: 0.25, newHire: 0.15 },
     passing: 'newHire',
     stories: { pressure: { unaware: 0.3 } },
-    find: { trust: [0.3, 0.8], ask: { who: 'theresa', truth: { pressure: [0, 0.6], spec: [0.3, 0.5], unaware: [0.1, 0.4], newHire: [0.9, 0] }, cover: ['newHire', 'spec'], told: true }, around: { from: [{ who: 'val', truth: { pressure: 0.3, spec: 0.5, unaware: 0.3, newHire: 0.4 }, bias: ['spec', 'unaware'], biasP: 0.5 }, { who: 'jess', truth: { pressure: 0.45, spec: 0.2, unaware: 0.2, newHire: 0.3 }, bias: ['pressure', 'newHire'], biasP: 0.4 }] }, look: { rules: 2 } },
+    names: { pressure: 'the schedule', spec: 'no written standard', unaware: 'painters don\'t know', newHire: 'the new painter' },
+    find: { trust: [0.3, 0.8], ask: { who: 'theresa', truth: { pressure: [0, 0.6], spec: [0.3, 0.5], unaware: [0.1, 0.4], newHire: [0.9, 0] }, cover: ['newHire', 'spec'], told: true }, around: { from: [{ who: 'val', truth: { pressure: 0.3, spec: 0.5, unaware: 0.3, newHire: 0.4 }, bias: ['spec', 'unaware'], biasP: 0.5 }, { who: 'jess', truth: { pressure: 0.45, spec: 0.2, unaware: 0.2, newHire: 0.3 }, bias: ['pressure', 'newHire'], biasP: 0.4 }] }, look: { name: 'the tickets', rules: 2 } },
     actions: {
       talkPeer: { label: 'Go and talk to Theresa', hours: 1, kind: 'ask', way: 'ask' },
       askAround: { label: 'Ask Val and Jess what they see at the door', hours: 0.5, kind: 'ask', way: 'around' },
@@ -151,7 +157,8 @@ export const PROBLEMS = {
     causes: { fit: 0.3, weld: 0.25, finish: 0.25, mix: 0.2 },
     passing: 'mix',
     stories: {},
-    find: { ask: { who: 'senior', band: false, truth: { fit: [0.4, 0], weld: [0.35, 0], finish: [0.4, 0], mix: [0.5, 0] }, cover: ['weld', 'fit'] }, around: { from: [{ who: 'jess', truth: { fit: 0.35, weld: 0.35, finish: 0.4, mix: 0.4 }, bias: ['finish', 'weld'], biasP: 0.5 }, { who: 'donna', truth: { fit: 0.25, weld: 0.25, finish: 0.45, mix: 0.25 }, bias: ['fit', 'weld'], biasP: 0.5 }] }, look: { rules: 2 } },
+    names: { fit: 'fit-up', weld: 'body weld', finish: 'finish', mix: 'the mix' },
+    find: { ask: { who: 'senior', band: false, truth: { fit: [0.4, 0], weld: [0.35, 0], finish: [0.4, 0], mix: [0.5, 0] }, cover: ['weld', 'fit'] }, around: { from: [{ who: 'jess', truth: { fit: 0.35, weld: 0.35, finish: 0.4, mix: 0.4 }, bias: ['finish', 'weld'], biasP: 0.5 }, { who: 'donna', truth: { fit: 0.25, weld: 0.25, finish: 0.45, mix: 0.25 }, bias: ['fit', 'weld'], biasP: 0.5 }] }, look: { name: 'a morning watching', rules: 2 } },
     actions: {
       look: { label: 'A morning watching where work waits', hours: 2, kind: 'ask', way: 'look' },
       askAround: { label: 'Ask Jess and Donna where the work piles up', hours: 0.5, kind: 'ask', way: 'around' },
@@ -167,7 +174,8 @@ export const PROBLEMS = {
     causes: { habit: 0.3, parts: 0.3, unheard: 0.25, newRoute: 0.15 },
     passing: 'newRoute',
     stories: { parts: { habit: 0.3 } },
-    find: { trust: [0.3, 0.8], ask: { who: 'brent', truth: { habit: [0, 0.4], parts: [0.8, 0], unheard: [0, 0.7], newRoute: [0.8, 0] }, cover: ['parts', 'newRoute'], told: true }, around: { from: [{ who: 'senior', truth: { habit: 0.5, parts: 0.4, unheard: 0.4, newRoute: 0.5 } }, { who: 'tyler', truth: { habit: 0.5, parts: 0.3, unheard: 0.2, newRoute: 0.3 }, bias: ['habit', 'unheard'], biasP: 0.6 }] }, look: { rules: 2 } },
+    names: { habit: 'just habit', parts: 'the parts', unheard: 'not heard', newRoute: 'the new route' },
+    find: { trust: [0.3, 0.8], ask: { who: 'brent', truth: { habit: [0, 0.4], parts: [0.8, 0], unheard: [0, 0.7], newRoute: [0.8, 0] }, cover: ['parts', 'newRoute'], told: true }, around: { from: [{ who: 'senior', truth: { habit: 0.5, parts: 0.4, unheard: 0.4, newRoute: 0.5 } }, { who: 'tyler', truth: { habit: 0.5, parts: 0.3, unheard: 0.2, newRoute: 0.3 }, bias: ['habit', 'unheard'], biasP: 0.6 }] }, look: { name: 'a week of mornings', rules: 2 } },
     actions: {
       talk: { label: 'Catch Brent after the huddle and ask', hours: 0.5, kind: 'ask', way: 'ask' },
       askAround: { label: 'Ask {senior} and Tyler about Brent at the huddle', hours: 0.5, kind: 'ask', way: 'around' },
@@ -185,7 +193,8 @@ export const PROBLEMS = {
     causes: { untaught: 0.35, afraid: 0.3, rushed: 0.15, settling: 0.2 },
     passing: 'settling',
     stories: { afraid: { untaught: 0.4 } },
-    find: { trust: [0.25, 0.75], ask: { truth: { untaught: [0.3, 0.4], afraid: [-0.2, 0.8], rushed: [0.4, 0.3], settling: [0.8, 0] }, cover: ['settling', 'rushed'] }, around: { from: [{ who: 'senior', truth: { untaught: 0.5, afraid: 0.3, rushed: 0.4, settling: 0.5 } }, { who: 'brent', truth: { untaught: 0.25, afraid: 0.15, rushed: 0.5, settling: 0.3 }, bias: ['settling', 'untaught'], biasP: 0.4 }] }, look: { rules: 2 } },
+    names: { untaught: 'never taught why', afraid: 'afraid to ask', rushed: 'racing the rack', settling: 'settling in' },
+    find: { trust: [0.25, 0.75], ask: { truth: { untaught: [0.3, 0.4], afraid: [-0.2, 0.8], rushed: [0.4, 0.3], settling: [0.8, 0] }, cover: ['settling', 'rushed'] }, around: { from: [{ who: 'senior', truth: { untaught: 0.5, afraid: 0.3, rushed: 0.4, settling: 0.5 } }, { who: 'brent', truth: { untaught: 0.25, afraid: 0.15, rushed: 0.5, settling: 0.3 }, bias: ['settling', 'untaught'], biasP: 0.4 }] }, look: { name: 'an hour at the table', rules: 2 } },
     actions: {
       watch: { label: 'Sit with {a.him} at the table for an hour and watch', hours: 1, kind: 'ask', way: 'look' },
       askHim: { label: 'Ask {a.him} how it is going', hours: 0.5, kind: 'ask', way: 'ask' },
@@ -204,7 +213,8 @@ export const PROBLEMS = {
     causes: { unshown: 0.3, unseen: 0.25, wontAsk: 0.25, ready: 0.2 },
     passing: 'ready',
     stories: { wontAsk: { unshown: 0.4 } },
-    find: { trust: [0.3, 0.8], ask: { truth: { unshown: [0.6, 0.3], unseen: [0, 0.6], wontAsk: [-0.1, 0.7], ready: [0.9, 0] }, cover: ['unshown', 'ready'], told: true }, around: { from: [{ who: 'brent', truth: { unshown: 0.3, unseen: 0.45, wontAsk: 0.25, ready: 0.4 }, bias: ['unshown', 'unseen'], biasP: 0.4 }, { who: 'donna', truth: { unshown: 0.2, unseen: 0.4, wontAsk: 0.4, ready: 0.5 } }] }, look: { rules: 2 } },
+    names: { unshown: 'never shown', unseen: 'crew doesn\'t follow', wontAsk: 'won\'t ask', ready: 'ready' },
+    find: { trust: [0.3, 0.8], ask: { truth: { unshown: [0.6, 0.3], unseen: [0, 0.6], wontAsk: [-0.1, 0.7], ready: [0.9, 0] }, cover: ['unshown', 'ready'], told: true }, around: { from: [{ who: 'brent', truth: { unshown: 0.3, unseen: 0.45, wontAsk: 0.25, ready: 0.4 }, bias: ['unshown', 'unseen'], biasP: 0.4 }, { who: 'donna', truth: { unshown: 0.2, unseen: 0.4, wontAsk: 0.4, ready: 0.5 } }] }, look: { name: 'a morning watching', rules: 2 } },
     actions: {
       ask: { label: 'Sit down with {a.him}: what worries {a.him} about the three weeks', hours: 1, kind: 'ask', way: 'ask' },
       askAround: { label: 'Ask Brent and Donna how the crew sees {a}', hours: 0.5, kind: 'ask', way: 'around' },
@@ -240,7 +250,8 @@ export const PROBLEMS = {
     causes: { timing: 0.3, order: 0.25, info: 0.25, theirs: 0.2 },
     passing: 'theirs',
     stories: { timing: { order: 0.3 } },
-    find: { trust: [0.3, 0.8], ask: { who: 'theresa', truth: { timing: [0.5, 0.3], order: [0.6, 0.2], info: [0.4, 0.3], theirs: [0, 0.6] }, cover: ['order', 'timing'], told: true }, around: { from: [{ who: 'jess', truth: { timing: 0.35, order: 0.45, info: 0.25, theirs: 0.25 }, bias: ['order', 'theirs'], biasP: 0.5 }, { who: 'val', truth: { timing: 0.25, order: 0.2, info: 0.45, theirs: 0.35 }, bias: ['info', 'timing'], biasP: 0.4 }] }, look: { rules: 2 } },
+    names: { timing: 'the time of day', order: 'the order', info: 'the paperwork', theirs: 'paint\'s own' },
+    find: { trust: [0.3, 0.8], ask: { who: 'theresa', truth: { timing: [0.5, 0.3], order: [0.6, 0.2], info: [0.4, 0.3], theirs: [0, 0.6] }, cover: ['order', 'timing'], told: true }, around: { from: [{ who: 'jess', truth: { timing: 0.35, order: 0.45, info: 0.25, theirs: 0.25 }, bias: ['order', 'theirs'], biasP: 0.5 }, { who: 'val', truth: { timing: 0.25, order: 0.2, info: 0.45, theirs: 0.35 }, bias: ['info', 'timing'], biasP: 0.4 }] }, look: { name: 'paint\'s door', rules: 2 } },
     actions: {
       askPaint: { label: 'Ask Theresa what paint needs, in her words', hours: 1, kind: 'ask', way: 'ask' },
       askAround: { label: 'Ask Jess and Val what paint complains about', hours: 0.5, kind: 'ask', way: 'around' },
@@ -258,7 +269,8 @@ export const PROBLEMS = {
     causes: { board: 0.3, travellers: 0.25, youAnswer: 0.25, newMix: 0.2 },
     passing: 'newMix',
     stories: { youAnswer: { board: 0.3 } },
-    find: { trust: [0.3, 0.8], ask: { who: 'senior', band: false, truth: { board: [0.5, 0], travellers: [0.4, 0], youAnswer: [0.25, 0], newMix: [0.5, 0] }, cover: ['board', 'newMix'] }, around: { from: [{ who: 'jess', truth: { board: 0.35, travellers: 0.35, youAnswer: 0.25, newMix: 0.35 }, bias: ['board', 'youAnswer'], biasP: 0.4 }, { who: 'donna', truth: { board: 0.3, travellers: 0.3, youAnswer: 0.35, newMix: 0.3 }, bias: ['travellers', 'board'], biasP: 0.4 }] }, look: { rules: 2 } },
+    names: { board: 'the plan', travellers: 'the drawings', youAnswer: 'you answer', newMix: 'the new models' },
+    find: { trust: [0.3, 0.8], ask: { who: 'senior', band: false, truth: { board: [0.5, 0], travellers: [0.4, 0], youAnswer: [0.25, 0], newMix: [0.5, 0] }, cover: ['board', 'newMix'] }, around: { from: [{ who: 'jess', truth: { board: 0.35, travellers: 0.35, youAnswer: 0.25, newMix: 0.35 }, bias: ['board', 'youAnswer'], biasP: 0.4 }, { who: 'donna', truth: { board: 0.3, travellers: 0.3, youAnswer: 0.35, newMix: 0.3 }, bias: ['travellers', 'board'], biasP: 0.4 }] }, look: { name: 'the tally', rules: 2 } },
     actions: {
       tally: { label: 'Keep a tally for a week: who asks what', hours: 1, kind: 'ask', way: 'look' },
       askKev: { label: 'Ask {senior} why the crew comes to you', hours: 0.5, kind: 'ask', way: 'ask' },
@@ -276,7 +288,8 @@ export const PROBLEMS = {
     causes: { lateEntries: 0.3, wrongOps: 0.25, noIssue: 0.25, upgrade: 0.2 },
     passing: 'upgrade',
     stories: { noIssue: { lateEntries: 0.3 } },
-    find: { trust: [0.3, 0.8], ask: { who: 'senior', truth: { lateEntries: [0, 0.6], wrongOps: [0.4, 0], noIssue: [0.4, 0], upgrade: [0.6, 0] }, cover: ['upgrade', 'wrongOps'] }, around: { from: [{ who: 'jess', truth: { lateEntries: 0.45, wrongOps: 0.4, noIssue: 0.3, upgrade: 0.4 }, bias: ['lateEntries', 'noIssue'], biasP: 0.5 }, { who: 'val', truth: { lateEntries: 0.2, wrongOps: 0.3, noIssue: 0.4, upgrade: 0.3 } }] }, look: { rules: 2 } },
+    names: { lateEntries: 'late entries', wrongOps: 'the routing', noIssue: 'material not issued', upgrade: 'the upgrade' },
+    find: { trust: [0.3, 0.8], ask: { who: 'senior', truth: { lateEntries: [0, 0.6], wrongOps: [0.4, 0], noIssue: [0.4, 0], upgrade: [0.6, 0] }, cover: ['upgrade', 'wrongOps'] }, around: { from: [{ who: 'jess', truth: { lateEntries: 0.45, wrongOps: 0.4, noIssue: 0.3, upgrade: 0.4 }, bias: ['lateEntries', 'noIssue'], biasP: 0.5 }, { who: 'val', truth: { lateEntries: 0.2, wrongOps: 0.3, noIssue: 0.4, upgrade: 0.3 } }] }, look: { name: 'the trace', rules: 2 } },
     actions: {
       trace: { label: 'Trace one job through {erp} with Jess, screen by screen', hours: 2, kind: 'ask', way: 'look' },
       askKev: { label: 'Ask {senior} how the crew enters it', hours: 0.5, kind: 'ask', way: 'ask' },

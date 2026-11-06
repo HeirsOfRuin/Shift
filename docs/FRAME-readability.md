@@ -67,6 +67,31 @@ The module gate at 60 seeds (every module, every seat) after the pass:
 identical, as it must be; the bots choose by id and nothing in the engine
 moved. Smoke at 390 px clean.
 
+## Beta 17: the two-row ticket, back inside a screen
+
+Betas 15 and 16 added a find-out row to every problem ticket, and the
+ticket grew past a phone screen again: *The late one*'s was 971 px in week
+one and 1,176 px by week three, at 390 px wide. The author's earlier note
+("very reading heavy") applied again.
+
+Three changes, no change to the game underneath:
+
+- **A board of possible reasons** replaces the sentences at the top: each
+  reason by a short name, who has pointed to it, and what ruled it out,
+  struck through. The trust line is a chip beside it. The sentences fold
+  under "What each of them said". The board is also the lesson made
+  visible: several explanations kept open until the evidence agrees.
+- **The find-out row is chips** ("Ask Brent · 1 h", "Ask around · 0.5 h",
+  "The timecards · 0.5 h"), with the chosen one's full wording underneath.
+- **The do row is one tight list** instead of five separate cards.
+
+| *The late one*'s ticket | Before | After |
+|---|---|---|
+| Week 1 | 971 px | 796 px |
+| Week 3 | 1,176 px | 850 px |
+
+A phone screen is 844 px. Measured with `tools/_latewalk.mjs` (scratch).
+
 ## What it does not do
 
 The voice is unchanged: the Friday report still says what happened in a
