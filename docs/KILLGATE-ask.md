@@ -91,6 +91,77 @@ changes are visible.
    The pattern threshold, the one the author's complaint is about, stayed at
    20 and is met at 22.
 
+## Beta 16: every module
+
+The ways went to twelve more problem types (rework, load, friction,
+recurring, standards, constraint, huddle, newhand, bench, customer,
+infowork, erp), and *Round two* got a crew to ask. The pattern condition is
+enforced on every module and seat except *Rush week* (below). At 200 runs:
+
+| Module | Pattern | Balanced | Behind |
+|---|---|---|---|
+| The week | 71% | 90% | 20 |
+| The late one | 47% | 79% | 33 |
+| The loop | 62% | 86% | 24 |
+| Firefighting | 59% | 87% | 29 |
+| Pulled off the floor | 55% | 73% | 17 |
+| Nobody upstairs | 66% | 90% | 25 |
+| Rush week | 86% | 87% | 1 (exempt) |
+| Across | 39% | 72% | 33 |
+| Where it waits | 64% | 89% | 25 |
+| Monday, 7:00 | 53% | 89% | 37 |
+| The new hand | 48% | 82% | 34 |
+| The other side | 23% | 81% | 58 |
+| Who you work for | 72% | 90% | 18 |
+| Say it once | 58% | 89% | 31 |
+| What the system sees | 44% | 74% | 30 |
+| It looked great for a week | 16% | 84% | 68 |
+| Round two | 57% | 84% | 27 |
+
+Supervisor's seat; the lead hand's seat is within three points except
+*The late one* (30) and *Round two* (51). Before beta 15 the average gap
+was 12 points and eleven modules were within three.
+
+What changed on the way, each for a reason and each recorded:
+
+1. **Evidence is one-time.** Looking at the same evidence twice ruled
+   everything out, which made "look twice" a new key. A second look now
+   shows nothing new.
+2. **Someone from the cast can be asked** (Theresa, Jess, Val, Raymond);
+   their trust in you for that problem lives on the problem.
+3. **A wary peer deflects.** Theresa's easy story was "there's no written
+   standard", which is also the fix that mostly works. When wary she now
+   blames the new painter.
+4. **An opinion counts once.** Asking Kev where the bottleneck is, or why
+   the crew comes to you, gives his view, not his own reason; it no longer
+   counts double like an admission, and the careful player looks first.
+5. **Everyone near a problem has a view.** The people you ask around were
+   written as neutral witnesses; the pattern took their word and won. Each
+   type now has a bystander with a bias (Jess sees lateness at finish, Donna
+   blames fit-up, Val wants a written standard), as Tyler had in the gate.
+6. **Misreading a person costs.** A fix aimed at a reason that was not the
+   reason costs that person's trust and makes the thing worse once (not
+   twice, if the type already punishes it).
+7. **A fix that failed twice rules its reasons out**, visibly. A careful
+   supervisor concludes "it probably isn't that".
+8. **Resetting the work does not settle whose job the handoff is**, and
+   people describe an unclear handoff as too much work.
+9. **The ticket stops offering "ask around" when nobody is left to ask.**
+10. **Two gate changes, both recorded.** The pattern check always runs on
+    200 runs: a difference between two win rates at 100 runs has a standard
+    error of about 7 points, too coarse for a 15-point bar (*Pulled off the
+    floor* read 10 on 100 runs and 18 on 200). And hours joined the axes of
+    "no style best on every axis": finding out costs hours, and in *Pulled
+    off the floor* that was the only price the careful style paid. Adding an
+    axis makes that check easier to pass; it is logged as a loosening.
+
+*Rush week* is exempt and named in the gate. Its choices are scripted
+shortcuts with a known right answer and nothing hidden behind them, so the
+pattern and the careful style play it alike. That is the "following the
+right answer" half of the author's note. The fix is a hidden reason behind
+why the crew keeps offering shortcuts: a new mechanic, kill gate first, beta
+17.
+
 ## What goes into the engine
 
 The three ways and the hold move on *The late one*, with Brent's trust drawn

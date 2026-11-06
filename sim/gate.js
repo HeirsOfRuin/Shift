@@ -6,15 +6,30 @@
 // A sixth condition since beta 15 (docs/REVIEW-loop.md, docs/KILLGATE-ask.md):
 // the two-rule pattern bot, which knows nothing about leadership, must trail
 // the balanced style by 15 points. For eleven betas the gate certified a loop
-// that pattern could win. It is enforced on every module whose problem finds
-// out the new way, and reported on the rest until they do.
+// that pattern could win. Since beta 16 it is enforced on every module but the
+// ones named in EXEMPT, each with its reason; an exempt module is reported.
 
 import { play, metrics } from './adapter.js';
 import { POLICIES } from './bot.js';
 import { TRACK, MODULES } from '../src/engine/game.js';
-import { PROBLEMS } from '../src/data/problems.data.js';
 
 const PATTERN_GAP = 0.15;
+const EXEMPT = {
+  // its choices are scripted shortcuts with a known right answer and no hidden
+  // reason behind them, so the pattern and the balanced style play it alike.
+  // The fix is a hidden reason behind why the crew keeps offering shortcuts:
+  // a new mechanic, kill gate first (docs/REVIEW-loop.md, beta 17).
+  rush: 'scripted shortcuts, no hidden reason yet',
+};
+// The difference between two win rates at 100 runs has a standard error of
+// about 7 points: too coarse to hold a 15-point bar. The pattern check always
+// uses at least 200 runs of the two styles it compares (beta 16).
+const PATTERN_RUNS = 200;
+function winRate(module, policy, seat, n) {
+  let w = 0;
+  for (let i = 0; i < n; i++) if (metrics(play(1000 + i, { module, policy, seat })).win) w++;
+  return w / n;
+}
 
 const args = Object.fromEntries(process.argv.slice(2).map((a) => { const [k, v] = a.replace(/^--/, '').split('='); return [k, v ?? true]; }));
 const RUNS = Number(args.runs || 100);
@@ -34,13 +49,16 @@ function table(module, seat) {
   });
 }
 
-function gate(rows, enforce, seat) {
+function gate(rows, enforce, seat, module) {
   const by = Object.fromEntries(rows.map((r) => [r.policy, r]));
   const wins = rows.map((r) => r.win);
   const out = [];
   const hi = Math.max(...wins), lo = Math.min(...wins);
   out.push([`styles diverge (spread ${(100 * (hi - lo)).toFixed(0)} points)`, hi - lo > floor(hi, lo)]);
-  const axes = ['win', 'schedule', 'kept', 'ship', 'morale', 'trust'];
+  // hours joined the axes in beta 16: finding out costs hours, and a style that pays them
+  // is trading something real (the author: "while attempting to keep under 40 hrs")
+  const axes = ['win', 'schedule', 'kept', 'ship', 'morale', 'trust', 'fewerHours'];
+  for (const r of rows) r.fewerHours = -r.hours;
   const dom = rows.filter((r) => axes.every((ax) => rows.every((o) => r[ax] >= o[ax] - 1e-9)));
   out.push([`no style best on every axis${dom.length ? ` (${dom.map((d) => d.policy)} is)` : ''}`, dom.length === 0]);
   const b = by.balanced.win;
@@ -50,8 +68,11 @@ function gate(rows, enforce, seat) {
   const best = rows.reduce((a, r) => (r.win > a.win ? r : a));
   out.push([`nothing beats balanced beyond the noise (best other: ${best.policy === 'balanced' ? 'none' : best.policy})`, best.win - b <= floor(best.win, b)]);
   if (seat !== 'manager') {
-    const gap = b - by.pattern.win;
-    out.push([`the two-rule pattern trails balanced by ${(100 * PATTERN_GAP).toFixed(0)} points (${pct(by.pattern.win)}, ${(100 * gap).toFixed(0)} behind)${enforce ? '' : ' [reported, not yet enforced]'}`, gap >= PATTERN_GAP, !enforce]);
+    const n = Math.max(RUNS, PATTERN_RUNS);
+    const bw = n === RUNS ? b : winRate(module, 'balanced', seat, n);
+    const pw = n === RUNS ? by.pattern.win : winRate(module, 'pattern', seat, n);
+    const gap = bw - pw;
+    out.push([`the two-rule pattern trails balanced by ${(100 * PATTERN_GAP).toFixed(0)} points (${n} runs: pattern ${(100 * pw).toFixed(0)}%, balanced ${(100 * bw).toFixed(0)}%, ${(100 * gap).toFixed(0)} behind)${enforce ? '' : ' [reported, not yet enforced]'}`, gap >= PATTERN_GAP, !enforce]);
   }
   return out;
 }
@@ -61,13 +82,13 @@ let pass = true;
 const md = [];
 for (const id of modules) for (const seat of (MODULES[id].seats || ['supervisor']).filter((x) => !args.seat || x === args.seat)) {
   const rows = table(id, seat);
-  const enforce = !!PROBLEMS[MODULES[id].main?.type]?.find;
+  const enforce = !EXEMPT[id];
   md.push(`\n### ${MODULES[id].title} (\`${id}\`${seat === 'supervisor' ? '' : `, ${seat} seat`}), ${RUNS} seeds per style\n`);
   md.push('| Style | Win | Schedule | Kept everyone | Problem settled | Paint starved | Bottleneck | Shipped / asked | Hours a week | Morale | Trust | Practice score |');
   md.push('|---|---|---|---|---|---|---|---|---|---|---|---|');
   for (const r of rows) md.push(`| ${r.policy} | ${pct(r.win)} | ${pct(r.schedule)} | ${pct(r.kept)} | ${pct(r.problem)} | ${pct(r.starved)} | ${pct(r.bottleneck)} | ${(100 * r.ship).toFixed(0)}% | ${r.hours.toFixed(1)} | ${r.morale.toFixed(2)} | ${r.trust.toFixed(2)} | ${(100 * r.practice).toFixed(0)}% |`);
   md.push('');
-  for (const [label, ok, soft] of gate(rows, enforce, seat)) { md.push(`- ${ok ? 'PASS' : soft ? 'REPORT' : 'FAIL'} ${label}`); if (!soft) pass &&= ok; }
+  for (const [label, ok, soft] of gate(rows, enforce, seat, id)) { md.push(`- ${ok ? 'PASS' : soft ? 'REPORT' : 'FAIL'} ${label}`); if (!soft) pass &&= ok; }
 }
 console.log(md.join('\n'));
 console.log(`\nModule gate: ${pass ? 'PASS' : 'FAIL'}`);

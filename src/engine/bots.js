@@ -25,16 +25,18 @@ function reader(c) {
   const fitFor = (cause) => c.options.find((o) => (o.fits || []).includes(cause) && !c.failedTwice.includes(o.id))?.id || (c.options.some((o) => o.id === 'takeUp') && !c.waiting && !c.tried.includes('takeUp') ? 'takeUp' : null);
   const sup = c.supported;
   if (sup) return sup === c.passing ? ['none', hold] : ['none', fitFor(sup) || hold];
-  const f = c.findings;
+  const f = c.findings.filter((x) => !x.repeat);
   const asked = f.some((x) => x.way === 'ask');
   const looked = f.some((x) => x.way === 'look');
-  if (!asked && (c.band === 'trusts' || looked || !ways.look)) return [ways.ask, hold];
-  if (!looked && ways.look) return [ways.look, hold];
-  // ask around until nobody is left who would know, before guessing
-  if (ways.around && !f.some((x) => x.way === 'around' && !x.who)) return [ways.around, hold];
-  // everything in hand and nothing agrees: try the likeliest reason that is not the easy story
-  const guess = c.candidates.find((x) => x !== c.cover && x !== c.passing) || c.candidates[0];
-  return ['none', fitFor(guess) || hold];
+  // while still finding out: hold the line if there is a way to; with nothing to hold
+  // and two findings in hand, act on the likeliest reading rather than wait
+  const meanwhile = c.holdId ? hold : f.length >= 2 && c.guess && c.guess !== c.passing ? fitFor(c.guess) || 'leave' : 'leave';
+  // ask the person first unless they are wary of you; an opinion is worth less than the evidence
+  if (!asked && ((c.band !== 'wary' && c.band !== 'opinion') || looked || !ways.look)) return [ways.ask, meanwhile];
+  if (!looked && ways.look) return [ways.look, meanwhile];
+  if (ways.around) return [ways.around, meanwhile];
+  // everything in hand and nothing agrees: act on the likeliest reading
+  return ['none', fitFor(c.guess && c.guess !== c.passing ? c.guess : c.candidates.find((x) => x !== c.cover && x !== c.passing) || c.candidates[0]) || hold];
 }
 
 // What each style does with a problem, given what it knows. Returns an option id.
@@ -97,8 +99,9 @@ const PROBLEM = {
     return 'leave';
   },
   ignorer() { return 'leave'; },
+  // find out until someone tells you something (each way once, in the order listed), then do what they said
   pattern(c) {
-    if (!c.told) { const ask = (c.find?.options || c.options).find((o) => o.kind === 'ask' && o.id !== 'none'); return ask ? ask.id : 'leave'; }
+    if (!c.told) { const ask = (c.find?.options || c.options).find((o) => o.kind === 'ask' && o.id !== 'none' && !c.tried.includes(o.id)); return ask ? ask.id : 'leave'; }
     const fit = c.options.find((o) => (o.fits || []).includes(c.told));
     return fit ? fit.id : 'leave';
   },

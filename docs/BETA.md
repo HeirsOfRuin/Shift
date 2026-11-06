@@ -1,10 +1,20 @@
-# Shift beta 15: finding out is the game
+# Shift beta 16: finding out is the game, everywhere
 
 Published 2026-11-06 as a private page, the same link as every beta:
 **https://claude.ai/artifact/4c5QqYTmZdn5iKcutCPZJx**
 (only the author can open it until he shares it from the page's Share menu).
 Rebuild with `npm run build` and republish `dist/shift.embed.html` to the same
 link. The build id is baked in, so an installed copy picks the new one up.
+
+**What changed in beta 16 (2026-11-06):** the find-out row is on every
+problem ticket now, not just *The late one*. Ask the person, ask the people
+around it, or look at the evidence; each tells you something different,
+everyone near a problem has a view, and the evidence rules reasons out
+without naming one. Acting on the wrong reason costs that person's trust and
+makes it worse. A fix that fails twice rules its reasons out on the ticket.
+*Round two* has a crew to ask, who mostly think the answer is more checking.
+Every module but *Rush week* now passes the test that a player who just
+believes the first answer loses clearly (`KILLGATE-ask.md`).
 
 **What changed in beta 15 (2026-11-06):** from your note that it felt like
 finding the right answer while keeping under forty hours. *The late one*'s

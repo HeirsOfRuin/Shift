@@ -103,8 +103,10 @@ Beta 15 (2026-11-06), after the author's "go with your recommendations. Fix
 this.": A and F on *The late one*, kill gate first (`KILLGATE-ask.md`); C
 (the end screen replays the same month five ways and says what the cause
 was) and D (33 wrong-move lines rewritten with reasons) for every module; E
-in part (the week's explainer leads with finding out). Beta 16 takes A to
-the other modules and enforces F everywhere.
+in part (the week's explainer leads with finding out). Beta 16 took A to
+every other module and enforces F everywhere but *Rush week*, which needs a
+new mechanic (`KILLGATE-ask.md`, "Beta 16: every module"). Average gap
+between the tuned style and the pattern: 12 points before, 33 after.
 
 ## What it does not change
 

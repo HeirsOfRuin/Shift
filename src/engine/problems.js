@@ -11,6 +11,7 @@
 // resolve(p, how, opts), score(p, sub, pts, note), week.
 
 import { supported } from './findout.js';
+import { say } from './text.js';
 import { PROBLEMS } from '../data/problems.data.js';
 import { CONFIG as C } from '../data/config.data.js';
 
@@ -29,8 +30,9 @@ export const TYPES = {
       const v = { p };
       switch (action) {
         case 'talk':
-          // what he says is engine/findout.js's; what talking does after a write-up is this type's
-          if (K.s.seat === 'manager') { told(p); a.trust = K.clamp(a.trust + 0.05); K.line('told', `late.told.${p.told}`, v); }
+          // the manager's seat: Kev finds out the old way. Elsewhere the find-out row does (afterFind)
+          told(p); a.trust = K.clamp(a.trust + 0.05);
+          K.line('told', `late.told.${p.told}`, v);
           if (p.cause === 'attitude' && p.tried.includes('document')) { K.resolve(p, 'late.fixed.talkAfterWriteup', { root: true }); }
           return;
         case 'document':
@@ -68,6 +70,10 @@ export const TYPES = {
           K.line('result', p.cause === 'attitude' ? 'late.remind.held' : 'late.remind.heldOther', v);
           return;
       }
+    },
+    // after finding out on the ticket's first row: talking to him after a write-up can settle it
+    afterFind(K, p, way) {
+      if (way === 'ask' && p.cause === 'attitude' && p.tried.includes('document')) K.resolve(p, 'late.fixed.talkAfterWriteup', { root: true });
     },
     week(K, p) {
       const [a] = p.who.map(K.person);
@@ -142,11 +148,11 @@ export const TYPES = {
       K.line('signal', 'rework.week', { p });
     },
     score(p, action) {
-      if (action === 'investigate') return p.told ? [] : [['D1', 2, 'Found out why before fixing it']];
-      if (action === 'coach') return [['D1', p.told === 'untrained' || p.told === 'rushing' || !p.told ? 2 : 1, 'Coached at the booth']];
+      if (action === 'investigate') return supported(p) ? [] : [['D1', 2, 'Found out why before fixing it']];
+      if (action === 'coach') return [['D1', supported(p) === 'untrained' || supported(p) === 'rushing' || !supported(p) ? 2 : 1, 'Coached at the booth']];
       if (action === 'fixYourself') return [['D1', p.firefought++ ? -1 : 0, 'Fixed the welds yourself']];
-      if (action === 'fixFixture') return p.told === 'fixture' ? [['B3', 2, 'Fixed the fixture, not the welder']] : [['B3', 0, 'Rebuilt a fixture nobody said was bad']];
-      if (action === 'document') return [['D2', p.told === 'rushing' ? 1 : -1, 'Wrote up quality']];
+      if (action === 'fixFixture') return supported(p) === 'fixture' ? [['B3', 2, 'Fixed the fixture, not the welder']] : [['B3', 0, 'Rebuilt a fixture nobody said was bad']];
+      if (action === 'document') return [['D2', supported(p) === 'rushing' ? 1 : -1, 'Wrote up quality']];
       if (action === 'correct') return [['D1', 0, 'Told him to tighten up']];
       return [];
     },
@@ -155,6 +161,11 @@ export const TYPES = {
   // ------------------------------------------------------------- carrying too much
   load: {
     notice(K, p) { const a = K.person(p.who[0]); return a.stress >= 3; },
+    // after finding out on the ticket's first row: being asked takes some weight off
+    afterFind(K, p, way) {
+      const [a] = p.who.map(K.person);
+      if (way === 'ask' && a) a.stress = Math.max(0, a.stress - 0.5);
+    },
     act(K, p, action) {
       const [a] = p.who.map(K.person);
       const v = { p };
@@ -192,9 +203,9 @@ export const TYPES = {
       K.line('signal', `load.week.${a.stress >= 3 ? 'showing' : 'quiet'}`, v);
     },
     score(p, action) {
-      if (action === 'talk') return p.told ? [['D1', 1, 'Checked in again']] : [['D1', 2, 'Asked before acting']];
-      if (action === 'redistribute') return p.told === 'unowned' ? [['A4', 2, 'Gave the work an owner']] : [['A4', 0, 'Moved work around without knowing why']];
-      if (action === 'timeOff') return p.told === 'personal' ? [['D1', 2, 'Fitted the fix to the reason']] : [['D1', 0, 'Time off for a reason nobody gave']];
+      if (action === 'talk') return supported(p) ? [['D1', 1, 'Checked in again']] : [['D1', 2, 'Asked before acting']];
+      if (action === 'redistribute') return supported(p) === 'unowned' ? [['A4', 2, 'Gave the work an owner']] : [['A4', 0, 'Moved work around without knowing why']];
+      if (action === 'timeOff') return supported(p) === 'personal' ? [['D1', 2, 'Fitted the fix to the reason']] : [['D1', 0, 'Time off for a reason nobody gave']];
       if (action === 'carry') return [['A4', -1, 'Took his load yourself']];
       return [];
     },
@@ -209,8 +220,10 @@ export const TYPES = {
       switch (action) {
         case 'separate': told(p); a.trust = K.clamp(a.trust + 0.03); b.trust = K.clamp(b.trust + 0.03); K.line('told', `friction.told.${p.told}`, v); return;
         case 'reset': {
-          const fits = p.cause === 'workload' || p.cause === 'roles' || p.cause === 'badWeek';
+          // resetting the work settles too much work and a bad week; it does not settle who owns the handoff
+          const fits = p.cause === 'workload' || p.cause === 'badWeek';
           if (fits && (p.told || K.r.outcomes.next() < 0.5) && works(K, p, action, 0.75, 0.85)) K.resolve(p, 'friction.fixed.reset', { root: true });
+          else if (p.cause === 'roles') { if (K.r.outcomes.next() < 0.1) K.resolve(p, 'friction.fixed.reset', { settled: true }); else K.line('result', 'friction.reset.roles', v); }
           else if (fits) K.line('result', 'friction.reset.notYet', v);
           else { a.morale = K.clamp(a.morale - 0.05); b.morale = K.clamp(b.morale - 0.05); p.severity++; K.line('result', 'friction.reset.wrong', v); }
           return;
@@ -244,10 +257,10 @@ export const TYPES = {
       K.line('signal', `friction.week.${p.severity >= 2 ? 'loud' : 'quiet'}`, v);
     },
     score(p, action) {
-      if (action === 'separate') return p.told ? [['D3', 1, 'Listened again']] : [['D3', 2, 'Heard both sides first']];
-      if (action === 'reset') return p.told === 'workload' ? [['D3', 2, 'Reset the work, not the people']] : p.told ? [['D3', 0, 'Reset the work when it was not the work']] : [['D3', 0, 'Reset before hearing them out']];
-      if (action === 'clarify') return p.told === 'roles' ? [['D3', 2, 'Gave the gap an owner']] : [['D3', 0, 'Wrote roles down for a different problem']];
-      if (action === 'expectations') return p.told === 'personal' ? [['D3', 2, 'Set out how people treat each other']] : [['D3', 0, 'A talk about conduct for a problem with the work']];
+      if (action === 'separate') return supported(p) ? [['D3', 1, 'Listened again']] : [['D3', 2, 'Heard both sides first']];
+      if (action === 'reset') return supported(p) === 'workload' ? [['D3', 2, 'Reset the work, not the people']] : supported(p) ? [['D3', 0, 'Reset the work when it was not the work']] : [['D3', 0, 'Reset before hearing them out']];
+      if (action === 'clarify') return supported(p) === 'roles' ? [['D3', 2, 'Gave the gap an owner']] : [['D3', 0, 'Wrote roles down for a different problem']];
+      if (action === 'expectations') return supported(p) === 'personal' ? [['D3', 2, 'Set out how people treat each other']] : [['D3', 0, 'A talk about conduct for a problem with the work']];
       if (action === 'warning') return [['D3', -1, 'Told them to knock it off']];
       return [];
     },
@@ -348,11 +361,11 @@ export const TYPES = {
       K.line('signal', 'recurring.week', v);
     },
     score(p, action) {
-      if (action === 'investigate') return p.told ? [] : [['B3', 2, 'Went after the cause, not the fire']];
+      if (action === 'investigate') return supported(p) ? [] : [['B3', 2, 'Went after the cause, not the fire']];
       if (action === 'fixYourself' || action === 'leadFix') return [['B3', p.firefought++ >= 1 ? -1 : 0, 'Put the fire out again']];
-      if (action === 'workOrder') return [['B3', p.told === 'pin' ? 2 : 0, 'Work order on the pins']];
-      if (action === 'standardWork') return [['B3', p.told === 'setup' ? 2 : 0, 'Wrote the setup down with the crew']];
-      if (action === 'raiseFab') return [['B3', p.told === 'steel' ? 2 : 0, 'Took the cause across to fabrication']];
+      if (action === 'workOrder') return [['B3', supported(p) === 'pin' ? 2 : 0, 'Work order on the pins']];
+      if (action === 'standardWork') return [['B3', supported(p) === 'setup' ? 2 : 0, 'Wrote the setup down with the crew']];
+      if (action === 'raiseFab') return [['B3', supported(p) === 'steel' ? 2 : 0, 'Took the cause across to fabrication']];
       if (action === 'escalate') return [['E2', -1, 'Went over a peer instead of to him']];
       return [];
     },
@@ -398,10 +411,10 @@ export const TYPES = {
       K.line('signal', 'escalation.week', v);
     },
     score(p, action) {
-      if (action === 'check') return p.told ? [] : [['E1', 2, 'Found out whose call it was first']];
-      if (action === 'decide') return p.told === 'yours' ? [['E1', 2, 'Made the call that was yours']] : p.told ? [['E1', -1, 'Made a call that was not yours']] : [['E1', -1, 'Decided before knowing whose call it was']];
-      if (action === 'askRuss') return [['E1', p.told === 'signoff' ? 2 : 0, 'Used the chain while Dana was away']];
-      if (action === 'engineering') return [['E1', p.told === 'engineering' ? 2 : 0, 'Sent it to the people who own the drawing']];
+      if (action === 'check') return supported(p) ? [] : [['E1', 2, 'Found out whose call it was first']];
+      if (action === 'decide') return supported(p) === 'yours' ? [['E1', 2, 'Made the call that was yours']] : supported(p) ? [['E1', -1, 'Made a call that was not yours']] : [['E1', -1, 'Decided before knowing whose call it was']];
+      if (action === 'askRuss') return [['E1', supported(p) === 'signoff' ? 2 : 0, 'Used the chain while Dana was away']];
+      if (action === 'engineering') return [['E1', supported(p) === 'engineering' ? 2 : 0, 'Sent it to the people who own the drawing']];
       if (action === 'around') return [['E1', -1, 'Went around the chain']];
       return [];
     },
@@ -410,6 +423,13 @@ export const TYPES = {
   // ------------------------------------------------------------- two standards
   standards: {
     notice() { return true; },
+    // after finding out on the ticket's first row: talking to her once she has said it can settle it
+    afterFind(K, p, way) {
+      if (way !== 'ask') return;
+      K.s.dept.peerTrust = K.clamp(K.s.dept.peerTrust + 0.05);
+      const earlier = (p.findings || []).filter((x) => x.way === 'ask').slice(0, -1);
+      if (p.cause === 'unaware' && earlier.some((x) => x.says === 'unaware') && works(K, p, 'talkPeer', 0.6, 0.75)) K.resolve(p, 'standards.fixed.talk', { root: true });
+    },
     act(K, p, action) {
       const v = { p };
       const d = K.s.dept;
@@ -456,9 +476,9 @@ export const TYPES = {
     score(p, action) {
       if (action === 'talkPeer') return [['E2', 2, 'Went across before going up']];
       if (action === 'complain') return p.tried.includes('talkPeer') ? [['E2', 0, 'Took it up after trying across']] : [['E2', -1, 'Went up before going across']];
-      if (action === 'writeStandard') return [['E2', p.told === 'spec' ? 2 : 1, 'Wrote one standard for both sides']];
-      if (action === 'handoff') return [['E2', p.told === 'pressure' ? 2 : 0, 'Fixed the handoff']];
-      if (action === 'showHer') return [['E2', p.told === 'unaware' ? 2 : 0, 'Showed her the tickets']];
+      if (action === 'writeStandard') return [['E2', supported(p) === 'spec' ? 2 : 1, 'Wrote one standard for both sides']];
+      if (action === 'handoff') return [['E2', supported(p) === 'pressure' ? 2 : 0, 'Fixed the handoff']];
+      if (action === 'showHer') return [['E2', supported(p) === 'unaware' ? 2 : 0, 'Showed her the tickets']];
       if (action === 'matchThem') return [['E2', -1, 'Dropped your standard to match']];
       return [];
     },
@@ -507,11 +527,11 @@ export const TYPES = {
     },
     score(p, action) {
       const station = { improveFit: 'fit', improveWeld: 'weld', improveFinish: 'finish' }[action];
-      if (action === 'look') return p.told ? [] : p.source === 'moved' ? [['B1', 2, 'Looked again when the constraint moved']] : [];
+      if (action === 'look') return supported(p) ? [] : p.source === 'moved' ? [['B1', 2, 'Looked again when the constraint moved']] : [];
       if (action === 'askCrew') return [['B1', 0, 'Asked the crew, who all said body weld']];
       if (station) {
-        if (p.told === station) return [['B1', 2, 'Spent improvement hours on the constraint']];
-        if (p.told) return [['B1', -1, 'Improved a station that was not the constraint']];
+        if (supported(p) === station) return [['B1', 2, 'Spent improvement hours on the constraint']];
+        if (supported(p)) return [['B1', -1, 'Improved a station that was not the constraint']];
         return [['B1', 0, 'Improved a station on a hunch']];
       }
       return [];
@@ -566,9 +586,9 @@ export const TYPES = {
     },
     score(p, action) {
       if (action === 'talk') return [];
-      if (action === 'parkingLot') return p.told === 'habit' ? [['F1', 2, 'Parked it and held the five minutes']] : [['F1', 0, 'Put up a parking lot for a problem that was not a habit']];
-      if (action === 'fixParts') return p.told === 'parts' ? [['F1', 2, 'Took the real problem where it belonged']] : [['F1', 0, 'Chased a parts problem nobody had confirmed']];
-      if (action === 'giveFloor') return p.told === 'unheard' ? [['F1', 2, 'Gave him the floor, first']] : [['F1', 0, 'Gave the floor to someone who already had it']];
+      if (action === 'parkingLot') return supported(p) === 'habit' ? [['F1', 2, 'Parked it and held the five minutes']] : [['F1', 0, 'Put up a parking lot for a problem that was not a habit']];
+      if (action === 'fixParts') return supported(p) === 'parts' ? [['F1', 2, 'Took the real problem where it belonged']] : [['F1', 0, 'Chased a parts problem nobody had confirmed']];
+      if (action === 'giveFloor') return supported(p) === 'unheard' ? [['F1', 2, 'Gave him the floor, first']] : [['F1', 0, 'Gave the floor to someone who already had it']];
       if (action === 'shutDown') return [['F1', -1, 'Shut him down in front of the crew']];
       if (action === 'letRun') return [['F1', -1, 'Let the huddle run long']];
       return [];
@@ -629,10 +649,10 @@ export const TYPES = {
       K.line('signal', `newhand.week.${p.severity >= 2 ? 'worse' : 'quiet'}`, v);
     },
     score(p, action) {
-      if (action === 'watch') return p.told ? [['D4', 1, 'Sat with him again']] : [];
-      if (action === 'teach') return p.told === 'untaught' ? (p.sessions >= 1 ? [['D4', 2, 'Checked that it landed before moving on']] : [['D4', 2, 'Taught the reason, not just the steps']]) : [['D4', 0, 'Taught a job for a reason nobody gave']];
-      if (action === 'pair') return p.told === 'afraid' ? [['D4', 2, 'Paired him with someone he could ask']] : [['D4', 0, 'Paired him up without knowing why']];
-      if (action === 'slowDown') return p.told === 'rushed' ? [['D4', 2, 'Took the pressure off a new hand']] : [['D4', 0, 'Slowed down a man who was not rushing']];
+      if (action === 'watch') return supported(p) ? [['D4', 1, 'Sat with him again']] : [];
+      if (action === 'teach') return supported(p) === 'untaught' ? (p.sessions >= 1 ? [['D4', 2, 'Checked that it landed before moving on']] : [['D4', 2, 'Taught the reason, not just the steps']]) : [['D4', 0, 'Taught a job for a reason nobody gave']];
+      if (action === 'pair') return supported(p) === 'afraid' ? [['D4', 2, 'Paired him with someone he could ask']] : [['D4', 0, 'Paired him up without knowing why']];
+      if (action === 'slowDown') return supported(p) === 'rushed' ? [['D4', 2, 'Took the pressure off a new hand']] : [['D4', 0, 'Slowed down a man who was not rushing']];
       if (action === 'sheet') return [['D4', 0, 'Handed him a sheet instead of a person']];
       if (action === 'fixHis') return [['D4', -1, "Fixed the new hand's work for him"]];
       if (action === 'document') return [['D4', -1, 'Wrote up a man in his first month']];
@@ -651,6 +671,10 @@ export const TYPES = {
   // Every right move raises dept.bench, which is what leadWhileAway runs on.
   bench: {
     notice() { return true; },
+    // after finding out on the ticket's first row: a ready lead who says so is the answer
+    afterFind(K, p, way) {
+      if (way === 'ask' && p.cause === 'ready' && p.told === 'ready') { K.s.dept.bench = K.clamp(K.s.dept.bench + 0.3); K.resolve(p, 'bench.passed.ready', { settled: true }); }
+    },
     act(K, p, action) {
       const [a] = p.who.map(K.person);
       const v = { p };
@@ -776,13 +800,13 @@ export const TYPES = {
       K.line('signal', `otherside.week.${p.severity >= 2 ? 'worse' : 'open'}`, v);
     },
     score(p, action) {
-      if (action === 'lookPaint') return p.told ? [] : [['E2', 2, 'Stood on the other side of the door']];
-      if (action === 'checkPaint') return p.pending ? [['C3', 2, 'Checked at the receiving end that the fix held']] : p.told ? [['C3', 0, 'Went to check before there was anything to check']] : [['E2', 2, 'Stood on the other side of the door']];
+      if (action === 'lookPaint') return supported(p) ? [] : [['E2', 2, 'Stood on the other side of the door']];
+      if (action === 'checkPaint') return p.pending ? [['C3', 2, 'Checked at the receiving end that the fix held']] : supported(p) ? [['C3', 0, 'Went to check before there was anything to check']] : [['E2', 2, 'Stood on the other side of the door']];
       if (action === 'sendBack') return [['C3', (p.sentBack || 0) <= 1 ? 1 : 0, 'Fed it back upstream, to your own crew']];
       if (action === 'fixInPaint') return [['C3', -1, "Let paint absorb welding's rework"]];
-      if (action === 'swapWire') return p.told === 'wire' ? [['C3', 2, 'Traced the defect to where it was made: the wire']] : [['C3', 0, 'Changed the wire on a hunch']];
-      if (action === 'slowTyler') return p.told === 'rushing' ? [['C3', 2, 'Traced the defect to where it was made: the booth']] : [['C3', 0, 'Slowed a welder who was not the cause']];
-      if (action === 'writeStandard') return p.told === 'noStandard' ? [['E2', 2, 'Agreed one standard at the interface']] : [['E2', 1, 'Wrote a standard both sides can use, for a different problem']];
+      if (action === 'swapWire') return supported(p) === 'wire' ? [['C3', 2, 'Traced the defect to where it was made: the wire']] : [['C3', 0, 'Changed the wire on a hunch']];
+      if (action === 'slowTyler') return supported(p) === 'rushing' ? [['C3', 2, 'Traced the defect to where it was made: the booth']] : [['C3', 0, 'Slowed a welder who was not the cause']];
+      if (action === 'writeStandard') return supported(p) === 'noStandard' ? [['E2', 2, 'Agreed one standard at the interface']] : [['E2', 1, 'Wrote a standard both sides can use, for a different problem']];
       if (action === 'waveThrough') return [['E2', -1, 'Left it for Theresa to find']];
       return [];
     },
@@ -791,6 +815,10 @@ export const TYPES = {
   // ------------------------------------------------------------- what paint needs (beta 8)
   customer: {
     notice() { return true; },
+    // after finding out on the ticket's first row: asking the receiver is itself a move
+    afterFind(K, p, way) {
+      if (way === 'ask') K.s.dept.peerTrust = K.clamp(K.s.dept.peerTrust + 0.04);
+    },
     act(K, p, action) {
       const v = { p };
       const d = K.s.dept;
@@ -823,8 +851,8 @@ export const TYPES = {
       K.line('signal', `customer.week.${p.severity >= 2 ? 'worse' : 'open'}`, v);
     },
     score(p, action) {
-      if (action === 'askPaint') return p.told ? [] : [['E4', 2, 'Asked the receiver what they need']];
-      if (['fixTiming', 'fixOrder', 'fixInfo'].includes(action)) return p.told && (PROBLEMS.customer.actions[action].fits || []).includes(p.told) ? [['E4', 2, 'Delivered what paint needed']] : p.told ? [['E4', -1, 'Changed something paint had not asked for']] : [['E4', 0, 'Guessed at what paint needed']];
+      if (action === 'askPaint') return supported(p) ? [] : [['E4', 2, 'Asked the receiver what they need']];
+      if (['fixTiming', 'fixOrder', 'fixInfo'].includes(action)) return supported(p) && (PROBLEMS.customer.actions[action].fits || []).includes(supported(p)) ? [['E4', 2, 'Delivered what paint needed']] : supported(p) ? [['E4', -1, 'Changed something paint had not asked for']] : [['E4', 0, 'Guessed at what paint needed']];
       if (action === 'pushMore') return [['E4', -1, 'Delivered more of what was asked for instead of what was needed']];
       if (action === 'defend') return [['E4', -1, 'Argued with the customer instead of asking them']];
       return [];
@@ -870,8 +898,8 @@ export const TYPES = {
       K.line('signal', `infowork.week.${p.severity >= 2 ? 'worse' : 'open'}`, v);
     },
     score(p, action) {
-      if (action === 'tally') return p.told ? [] : [['B5', 2, 'Counted the rework nobody counts']];
-      if (['board', 'travellers', 'point'].includes(action)) return p.told && (PROBLEMS.infowork.actions[action].fits || []).includes(p.told) ? [['B5', 2, 'Put the answer where they would find it']] : p.told ? [['B5', 0, 'Fixed where a different answer lives']] : [['B5', 0, 'Guessed where the answer should live']];
+      if (action === 'tally') return supported(p) ? [] : [['B5', 2, 'Counted the rework nobody counts']];
+      if (['board', 'travellers', 'point'].includes(action)) return supported(p) && (PROBLEMS.infowork.actions[action].fits || []).includes(supported(p)) ? [['B5', 2, 'Put the answer where they would find it']] : supported(p) ? [['B5', 0, 'Fixed where a different answer lives']] : [['B5', 0, 'Guessed where the answer should live']];
       if (action === 'faster') return [['B5', -1, 'Did the rework faster']];
       if (action === 'memo') return [['B5', 0, 'Sent a memo nobody will find when they need it']];
       return [];
@@ -914,8 +942,8 @@ export const TYPES = {
       K.line('signal', `erp.week.${p.severity >= 2 ? 'worse' : 'open'}`, v);
     },
     score(p, action) {
-      if (action === 'trace') return p.told ? [] : [['B6', 2, 'Traced a job past the screen you use']];
-      if (['clockNow', 'fixOps', 'issueMaterial'].includes(action)) return p.told && (PROBLEMS.erp.actions[action].fits || []).includes(p.told) ? [['B6', 2, 'Fixed the entry where it happens, not the report']] : p.told ? [['B6', 0, 'Fixed an entry that was not the one']] : [['B6', 0, 'Guessed at what the system was missing']];
+      if (action === 'trace') return supported(p) ? [] : [['B6', 2, 'Traced a job past the screen you use']];
+      if (['clockNow', 'fixOps', 'issueMaterial'].includes(action)) return supported(p) && (PROBLEMS.erp.actions[action].fits || []).includes(supported(p)) ? [['B6', 2, 'Fixed the entry where it happens, not the report']] : supported(p) ? [['B6', 0, 'Fixed an entry that was not the one']] : [['B6', 0, 'Guessed at what the system was missing']];
       if (action === 'ownSheet') return [['B6', -1, 'Kept a second system']];
       if (action === 'blame') return [['B6', -1, 'Blamed the system for what it was told']];
       return [];
@@ -979,10 +1007,10 @@ export const TYPES = {
       K.line('signal', d.lean < 0.35 ? 'lean.week.dead' : d.lean < 0.65 ? 'lean.week.slipping' : 'lean.week.fine', v);
     },
     score(p, action) {
-      if (action === 'ask') return p.told ? [] : [];
-      if (action === 'owners') return p.told === 'noOwner' ? [['B2', 2, 'Gave every area an owner the crew chose']] : p.pending ? [['B2', 1, 'Put a name on it so the fix would hold']] : [['B2', 0, 'Named owners for a problem that was not ownership']];
-      if (action === 'audit') return p.told === 'noAudit' ? [['B2', 2, 'Set up the audit that keeps it alive']] : p.pending ? [['B2', 1, 'Set up the audit so the fix would hold']] : [['B2', 0, 'Started an audit for a problem that was not the audit']];
-      if (action === 'redoWith') return p.told === 'forThem' ? [['B2', 2, 'Built it with the crew, not for them']] : [['B2', 0, 'Re-ran the event with the crew for a cause that was not theirs']];
+      if (action === 'ask') return supported(p) ? [] : [];
+      if (action === 'owners') return supported(p) === 'noOwner' ? [['B2', 2, 'Gave every area an owner the crew chose']] : p.pending ? [['B2', 1, 'Put a name on it so the fix would hold']] : [['B2', 0, 'Named owners for a problem that was not ownership']];
+      if (action === 'audit') return supported(p) === 'noAudit' ? [['B2', 2, 'Set up the audit that keeps it alive']] : p.pending ? [['B2', 1, 'Set up the audit so the fix would hold']] : [['B2', 0, 'Started an audit for a problem that was not the audit']];
+      if (action === 'redoWith') return supported(p) === 'forThem' ? [['B2', 2, 'Built it with the crew, not for them']] : [['B2', 0, 'Re-ran the event with the crew for a cause that was not theirs']];
       if (action === 'redoFor') return [['B2', -1, 'Re-ran the event instead of fixing why it died']];
       if (action === 'signs') return [['B2', 0, 'New labels on the same problem']];
       return [];
@@ -1001,11 +1029,18 @@ export const TYPES = {
       const set = (rule, to) => { if (d.flow[rule] === to) return false; d.flow[rule] = to; d.flowChanged.push(rule); p.changedAt = K.week; return true; };
       switch (action) {
         case 'readRound':
-          if (!p.told) { told(p); K.line('told', `flow.told.${p.told}`, v); return; }
+          if (!p.told || p.toldBy === 'crew') { p.told = null; p.toldBy = 'round'; told(p); K.line('told', `flow.told.${p.told}`, v); return; }
           // a second read after a change that did not move the number corrects a misread
           if (p.told !== p.cause) { p.told = p.cause; p.reread = true; K.line('told', 'flow.reread', v); K.line('told', `flow.told.${p.told}`, v); return; }
           K.line('result', 'flow.read.same', v);
           return;
+        case 'askCrew': {
+          // the people in the round see part of it; most of them think the answer is more checking
+          const says = K.r.outcomes.next() < 0.4 ? p.cause : K.r.outcomes.next() < 0.6 ? 'late' : 'batch';
+          if (!p.told || p.toldBy === 'crew') { p.told = says; p.toldBy = 'crew'; }
+          K.line('told', 'flow.crew', { ...v, what: say(K.s, `flow.short.${says}`, v) });
+          return;
+        }
         case 'batchOne': K.line('result', set('batch', 1) ? 'flow.set.batch' : 'flow.set.already', v); return;
         case 'pull': K.line('result', set('pull', true) ? 'flow.set.pull' : 'flow.set.already', v); return;
         case 'checkSource': K.line('result', set('check', 'source') ? 'flow.set.check' : 'flow.set.already', v); return;
@@ -1034,8 +1069,8 @@ export const TYPES = {
     },
     score(p, action) {
       const rule = { batchOne: 'batch', pull: 'push', checkSource: 'late' }[action];
-      if (action === 'readRound') return !p.told ? [['B7', 2, 'Read the round before changing a rule']] : p.changedAt ? [['B7', 2, 'Read the next round to see if the change took']] : [['B7', 0, 'Read the round again with nothing changed']];
-      if (rule) return p.told === rule ? [['B7', 2, 'Changed one rule: the one the round pointed at']] : p.told ? [['B7', -1, 'Changed a rule the round did not point at']] : [['B7', 0, 'Changed a rule before reading a round']];
+      if (action === 'readRound') return !supported(p) ? [['B7', 2, 'Read the round before changing a rule']] : p.changedAt ? [['B7', 2, 'Read the next round to see if the change took']] : [['B7', 0, 'Read the round again with nothing changed']];
+      if (rule) return supported(p) === rule ? [['B7', 2, 'Changed one rule: the one the round pointed at']] : supported(p) ? [['B7', -1, 'Changed a rule the round did not point at']] : [['B7', 0, 'Changed a rule before reading a round']];
       if (action === 'all') return [['B7', -1, 'Changed everything at once: no way to tell what worked']];
       return [];
     },

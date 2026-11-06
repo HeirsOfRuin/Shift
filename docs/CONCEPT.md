@@ -110,6 +110,7 @@ Google Doc copies of the same things.
 | 2026-11-04 | Lean tools and a standing rule: "Keep going with the lean tools module, kill gate first. I want every module for the weld department view point well developed and and clear in its purpose." Built as beta 9: `KILLGATE-lean.md`, the module *It looked great for a week*, and a one-sentence purpose on every module, shown on the brief and the track. |
 | 2026-11-04 | Testers: "help me set this up so I can send the link to my leads to play test this and get their thoughts on it". Beta 9 adds *Your thoughts, for the coach* (a send when the page is open on claude.ai and the viewer is signed in; copy-as-text always), a card for testers on the title screen, and `PLAYTEST.md`, the note to send with the link. The page declares the shared store with suggestion-box rules: each tester writes their own, only the owner reads. |
 | 2026-11-04 | First playtest of the whole: "Getting into it, it is very reading heavy... I think more readability, visualization, concise wording, etc would help the flow." Beta 10 is the readability pass (`FRAME-readability.md`): measured at 390 px, the profile went from 8.1 screens to 2.7, the track from 8.9 to 2.6, the brief from 3.1 to 1.3, a week from 5.0 to 3.2; chips, folds, meters, a paint chart, 39 option labels shortened. The engine and the voice did not change. |
+| 2026-11-06 | Beta 16, the rest of "Fix this": every problem type finds out three ways; the pattern trails the tuned style by 17 to 68 points in every module but *Rush week*, which is exempt by name until it has a hidden reason behind its shortcuts (beta 17, kill gate first). Ten changes on the way, each with its reason, in `KILLGATE-ask.md`. |
 | 2026-11-06 | "go with your recommendations. Fix this." Beta 15: the how-you-ask kill gate (`KILLGATE-ask.md`, the pattern trails a player who reads the person by 22 points), built on *The late one* (three ways to find out, Brent's trust drawn per run, a find-out row and a do row on the ticket); a sixth gate condition that the pattern trails the balanced style by 15 points; the end screen shows what the cause was and the same month worked five other ways; 33 wrong-move lines rewritten to say why. Beta 16 takes the ways to every module. |
 | 2026-11-06 | Playtest verdict on the core loop: "I don't actually feel like it imparts any information. It just feels like finding or following the right answer while attempting to keep under 40 hrs." Measured and confirmed (`REVIEW-loop.md`): a bot with two rules and no leadership knowledge wins 76% against the tuned bot's 88%, within three points in eleven of seventeen modules; 25 of 44 wrong-move lines say only "not that". Recommended: make how you ask matter (kill gate first, on *The late one*) and add a gate condition that the pattern bot must lose. No new modules until the loop teaches. Awaiting the author's direction. |
 | 2026-11-05 | Two answers. On the three catalogue areas with no module staying visible as "none yet": "Yes." On path or lock: "I don't know what you mean by locked", so the question was badly put and is withdrawn; today an assignment sets what the track shows and a trainee who starts over can play anything, which stays as it is unless the author says otherwise. And "How do I access the coach screen?": it was hidden once a device had a save; now it is a button on the track and on the title screen, and one save holds both the track and the roster. |
@@ -262,6 +263,12 @@ everything is urgent nothing is strategic; 3 Structure protects good people;
   API key, no server.
 
 ## 10. Status and the exact next steps
+
+**Update (2026-11-06, beta 16):** every module but *Rush week* now finds
+out three ways, and the gate enforces that the two-rule pattern loses
+(average gap 33 points, was 12). **Next:** beta 17, *Rush week* given a
+hidden reason behind the crew's shortcuts, kill gate first; then the leads'
+notes.
 
 **Update (2026-11-06, beta 15):** the fix begins. *The late one* finds out
 three ways (`KILLGATE-ask.md`); the gate now requires the two-rule pattern

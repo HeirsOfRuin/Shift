@@ -9,6 +9,7 @@
 import { MODULES, TRACK } from '../data/modules.data.js';
 import { AREAS, SELF_LIMIT } from '../data/focus.data.js';
 import { SEATS, DEPARTMENTS } from '../data/departments.data.js';
+import { ROLES } from '../data/crew.data.js';
 import { newModule, advance as advanceWeek } from './week.js';
 import { pathFor } from './path.js';
 
@@ -158,6 +159,8 @@ export function migrate(save) {
   }
   // modules added to the track since this save was made
   for (const id of TRACK.modules) if (!s.track.modules[id]) s.track.modules[id] = { plays: 0, wins: 0, last: null, debrief: null, signedOff: null };
+  // a run from before every seat named its senior hand (beta 16's labels name them)
+  if (s.run && !s.run.roles?.senior) s.run.roles = { ...structuredClone(ROLES[s.run.seat || 'supervisor']), erp: { name: 'the system', full: 'the system', pronoun: 'it' }, ...(s.run.roles || {}) };
   return s;
 }
 

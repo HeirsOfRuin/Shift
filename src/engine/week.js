@@ -10,7 +10,7 @@
 //   9 consequences land  10 morale and resignations  11 what you will know
 //   12 the record, the end check, and next Monday
 
-import { findOut, drawTrust, supported } from './findout.js';
+import { findOut, drawTrust, supported, misread } from './findout.js';
 import { CONFIG as C } from '../data/config.data.js';
 import { CREW, PLAYER_LEAD, DALE, ROLES } from '../data/crew.data.js';
 import { PROBLEMS, LANDS_ON } from '../data/problems.data.js';
@@ -229,7 +229,7 @@ export function advance(prev, plan = {}) {
         if (!p.tried.includes(fopt.id)) p.tried.push(fopt.id);
         p.tries[fopt.id] = (p.tries[fopt.id] || 0) + 1;
         findOut(K, p, fopt.way);
-        TYPES[p.type].act(K, p, fopt.id);
+        TYPES[p.type].afterFind?.(K, p, fopt.way);
         if (p.state === 'resolved') continue;
       }
       if (opt.id === 'leave') {
@@ -278,10 +278,16 @@ export function advance(prev, plan = {}) {
       if (!p.tried.includes(opt.id)) p.tried.push(opt.id);
       p.tries[opt.id] = (p.tries[opt.id] || 0) + 1;
       const before = p.state;
+      const sevBefore = p.severity;
       for (const [sub, pts, note] of TYPES[p.type].score(p, opt.id)) K.score(p, sub, pts, note);
       TYPES[p.type].act(K, p, opt.id);
       // a fix that needs rounds to show (the flow rules, a pending fix) is not a failure the week it is made
-      if (p.state === before && before === 'active' && ['fix', 'hold'].includes(opt.kind) && !p.pending && p.type !== 'flow') p.fails[opt.id] = (p.fails[opt.id] || 0) + 1;
+      if (p.state === before && before === 'active' && ['fix', 'hold'].includes(opt.kind) && !p.pending && p.type !== 'flow') {
+        p.fails[opt.id] = (p.fails[opt.id] || 0) + 1;
+        if (card.find && opt.fits?.length && !opt.fits.includes(p.cause)) misread(K, p, sevBefore);
+        // a fix that has failed twice is evidence: whatever it was for, it probably isn't that
+        if (card.find && p.fails[opt.id] >= 2) for (const c of opt.fits || []) if (!p.ruledOut.includes(c)) p.ruledOut.push(c);
+      }
       continue;
     }
     if (card.kind === 'cover') { cover = Number(opt.days || 0); continue; }

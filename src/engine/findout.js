@@ -18,24 +18,49 @@
 // true. Pure: every draw from the kernel's streams.
 
 import { PROBLEMS } from '../data/problems.data.js';
+import { CAST } from '../data/crew.data.js';
 import { say } from './text.js';
 
+export const bandOf = (s, p) => { const f = PROBLEMS[p.type].find; const c = whoIs(s, p, f?.ask?.who); return f.ask?.band === false ? 'opinion' : c ? BAND(trustOf(p, c)) : null; };
+
+/** A fix aimed at a reason that was not the reason: the person can tell you
+ *  acted without understanding them, tells you less next time, and the thing
+ *  itself gets worse once. */
+export function misread(K, p, severityBefore = p.severity) {
+  const f = PROBLEMS[p.type].find;
+  if (!f || f.ask?.band === false) return;
+  const c = whoIs(K.s, p, f.ask?.who);
+  if (c) setTrust(K, p, c, trustOf(p, c) - 0.05);
+  // and it does not just fail: the first time, it makes the real thing worse
+  // (unless the type's own consequence already made it worse this week)
+  if (!p.misread && p.severity === severityBefore) { p.misread = true; p.severity = Math.min(3, p.severity + 1); }
+}
 export const BAND = (t) => (t >= 0.65 ? 'trusts' : t >= 0.45 ? 'doubt' : 'wary');
 
 /** The person a "who" in the data names: an id, 'self' (the problem's person),
- *  or 'senior' (Kev beside the supervisor, Lyle beside the lead hand). */
+ *  or 'senior' (Kev beside the supervisor, Lyle beside the lead hand). Someone
+ *  from the cast (Theresa, Jess, Val) is not on the crew: their trust in you
+ *  for this problem lives on the problem. */
 export function whoIs(s, p, who) {
   const id = who === 'self' || !who ? p.who[0] : who === 'senior' ? (s.seat === 'lead' ? 'lyle' : 'kev') : who;
-  return s.crew.find((c) => c.id === id && c.status === 'active') || null;
+  if (!id) return null;
+  const c = s.crew.find((x) => x.id === id);
+  if (c) return c.status === 'active' ? c : null;
+  return CAST[id] ? { ...CAST[id], id, cast: true } : null;
 }
+/** Anyone named in a finding, for the words on the ticket, whether or not they are still here. */
+const anyone = (s, id) => s.crew.find((x) => x.id === id) || (CAST[id] ? { ...CAST[id], id, cast: true } : null);
+const trustOf = (p, c) => (c.cast ? p.srcTrust ?? 0.5 : c.trust);
+const setTrust = (K, p, c, x) => { if (c.cast) p.srcTrust = K.clamp(x); else c.trust = K.clamp(x); };
 
 /** Draw the person's trust in you for this run, so how to ask is a reading,
  *  not a rule. Called once, when the problem is made. */
 export function drawTrust(s, p, r) {
   const f = PROBLEMS[p.type].find;
   if (!f?.trust) return;
-  const c = s.crew.find((x) => x.id === (f.ask?.who && f.ask.who !== 'self' ? f.ask.who : p.who[0]));
-  if (c) c.trust = f.trust[0] + (f.trust[1] - f.trust[0]) * r.next();
+  const c = whoIs(s, p, f.ask?.who);
+  const t = f.trust[0] + (f.trust[1] - f.trust[0]) * r.next();
+  if (c?.cast) p.srcTrust = t; else if (c) c.trust = t;
 }
 
 /** The causes the evidence has not ruled out. */
@@ -52,11 +77,33 @@ export function supported(p) {
   const votes = {};
   for (const x of p.findings || []) {
     if (!x.says || !left.includes(x.says) || x.repeat) continue;
-    const w = x.way === 'ask' ? (x.band === 'trusts' || x.says !== f.ask.cover ? 2 : 1) : 1;
+    // an opinion (someone asked where the problem is, not why they do something) counts once
+    const w = x.way === 'ask' && f.ask.band !== false ? (x.band === 'trusts' || x.says !== f.ask.cover ? 2 : 1) : 1;
     votes[x.says] = (votes[x.says] || 0) + w;
   }
   const best = Object.entries(votes).sort((a, b) => b[1] - a[1])[0];
   return best && best[1] >= 2 ? best[0] : null;
+}
+
+/** How many people near it you have not asked yet. When none, the ticket stops offering it. */
+export function aroundLeft(s, p) {
+  const f = PROBLEMS[p.type].find;
+  if (!f?.around) return 0;
+  const subject = whoIs(s, p, f.ask?.who);
+  const used = (p.findings || []).filter((x) => x.way === 'around').map((x) => x.who);
+  const skip = new Set([...p.who, subject?.id, ...used]);
+  return f.around.from.filter((x) => { const c = whoIs(s, p, x.who); return c && !skip.has(c.id); }).length;
+}
+
+/** The likeliest reason on what is in hand, even when nothing agrees yet:
+ *  for a player who has to act before the evidence is complete. */
+export function bestGuess(p) {
+  const f = PROBLEMS[p.type].find;
+  const left = candidates(p);
+  const votes = Object.fromEntries(left.map((c) => [c, 0]));
+  for (const x of p.findings || []) if (x.says && x.says in votes && !x.repeat) votes[x.says] += x.way === 'ask' && f.ask.band !== false && x.says === f.ask.cover && x.band !== 'trusts' ? 0.5 : 1;
+  const pref = (c) => (c === f.ask?.cover ? 0.1 : 0) + (c === PROBLEMS[p.type].passing ? 0.2 : 0);
+  return left.sort((a, b) => votes[b] - votes[a] || pref(a) - pref(b))[0] || null;
 }
 
 /** One way of finding out, this week. */
@@ -69,34 +116,40 @@ export function findOut(K, p, way) {
   if (way === 'ask') {
     const src = subject;
     if (!src) { K.line('result', 'find.ask.away', v); return; }
+    const t = trustOf(p, src);
     const before = p.findings.filter((x) => x.way === 'ask' && !x.repeat).at(-1);
-    if (before && src.trust < before.trust + 0.15) {
-      p.findings.push({ way: 'ask', who: src.id, says: before.says, band: BAND(src.trust), trust: src.trust, repeat: true, week: s.week });
+    if (before && t < before.trust + 0.15) {
+      p.findings.push({ way: 'ask', who: src.id, says: before.says, band: BAND(t), trust: t, repeat: true, week: s.week });
       K.line('told', 'find.ask.same', { ...v, src });
       return;
     }
     const [base, k] = f.ask.truth[p.cause] || [1, 0];
-    const truth = K.r.outcomes.next() < base + k * src.trust;
+    const truth = K.r.outcomes.next() < base + k * t;
     const says = truth ? p.cause : (f.ask.cover ?? p.cause);
-    p.findings.push({ way: 'ask', who: src.id, says, band: BAND(src.trust), trust: src.trust, week: s.week });
-    src.trust = K.clamp(src.trust + 0.05);
+    p.findings.push({ way: 'ask', who: src.id, says, band: BAND(t), trust: t, week: s.week });
+    setTrust(K, p, src, t + 0.05);
     p.told = says;
-    K.line('told', `${p.type}.told.${says}`, v);
+    // the type's own told lines are written as what this person says; otherwise one shared line
+    if (f.ask.told) K.line('told', `${p.type}.told.${says}`, v);
+    else K.line('told', 'find.said', { ...v, src, what: say(s, `${p.type}.short.${says}`, v) });
     return;
   }
   if (way === 'around') {
-    const used = p.findings.filter((x) => x.way === 'around').length;
-    const from = f.around.from.slice(used).map((x) => ({ ...x, c: whoIs(s, p, x.who) })).find((x) => x.c);
+    const used = p.findings.filter((x) => x.way === 'around').map((x) => x.who);
+    const skip = new Set([...p.who, subject?.id, ...used]);
+    const from = f.around.from.map((x) => ({ ...x, c: whoIs(s, p, x.who) })).find((x) => x.c && !skip.has(x.c.id));
     if (!from) { p.findings.push({ way: 'around', who: null, says: null, week: s.week }); K.line('result', 'find.around.nobody', v); return; }
     const q = K.r.outcomes.next();
     const says = q < (from.truth[p.cause] ?? 0) ? p.cause : from.bias && K.r.outcomes.next() < (from.biasP ?? 0.5) ? from.bias : null;
     p.findings.push({ way: 'around', who: from.c.id, says, week: s.week });
     if (says) { p.told = says; K.line('told', 'find.heard', { ...v, src: from.c, what: say(s, `${p.type}.short.${says}`, v) }); }
     else K.line('told', 'find.heard.none', { ...v, src: from.c });
-    if (subject && K.r.outcomes.next() < (f.around.noticed ?? 0.3)) { subject.trust = K.clamp(subject.trust - 0.08); K.line('consequence', 'find.around.noticed', { ...v, src: subject }); }
+    if (subject && !subject.cast && p.who.includes(subject.id) && K.r.outcomes.next() < (f.around.noticed ?? 0.3)) { setTrust(K, p, subject, subject.trust - 0.08); K.line('consequence', 'find.around.noticed', { ...v, src: subject }); }
     return;
   }
   if (way === 'look') {
+    // the evidence is what it is: looking at it a second time shows nothing new
+    if (p.findings.some((x) => x.way === 'look')) { p.findings.push({ way: 'look', rules: [], week: s.week }); K.line('told', 'find.look.nothing', v); return; }
     const wrong = Object.keys(PROBLEMS[p.type].causes).filter((c) => c !== p.cause && !p.ruledOut.includes(c));
     const n = Math.min(f.look?.rules ?? 1, wrong.length);
     const out = [];
@@ -115,10 +168,10 @@ export function knowLines(s, p) {
   const v = { p };
   const out = [];
   const subject = whoIs(s, p, f.ask?.who);
-  if (subject) out.push(say(s, `find.band.${BAND(subject.trust)}`, { ...v, src: subject }));
+  if (subject && f.ask?.band !== false) out.push(say(s, `find.band.${BAND(trustOf(p, subject))}`, { ...v, src: subject }));
   for (const x of p.findings || []) {
-    if (x.way === 'ask' && !x.repeat) out.push(say(s, 'find.know.said', { ...v, src: s.crew.find((c) => c.id === x.who) || subject, what: say(s, `${p.type}.short.${x.says}`, v) }));
-    if (x.way === 'around' && x.who) out.push(say(s, x.says ? 'find.know.heard' : 'find.know.heardNone', { ...v, src: s.crew.find((c) => c.id === x.who), what: x.says ? say(s, `${p.type}.short.${x.says}`, v) : '' }));
+    if (x.way === 'ask' && !x.repeat) out.push(say(s, 'find.know.said', { ...v, src: anyone(s, x.who), what: say(s, `${p.type}.short.${x.says}`, v) }));
+    if (x.way === 'around' && x.who) out.push(say(s, x.says ? 'find.know.heard' : 'find.know.heardNone', { ...v, src: anyone(s, x.who), what: x.says ? say(s, `${p.type}.short.${x.says}`, v) : '' }));
     if (x.way === 'look') for (const c of x.rules) out.push(say(s, `${p.type}.not.${c}`, v));
   }
   return out;
