@@ -263,6 +263,8 @@ export function advance(prev, plan = {}) {
         const sup = supported(p);
         const told = (p.findings || []).filter((x) => x.says);
         const lastAsk = (p.findings || []).filter((x) => x.way === 'ask').at(-1);
+        // what was in hand when you acted, for the debrief's "the moment that decided it" (engine/moment.js)
+        if (!def?.holds && (fits.length || ['yourself', 'soft'].includes(opt.kind))) (p.acts = p.acts || []).push({ week: s.week, id: opt.id, kind: opt.kind, fits: [...fits], sup, findings: (p.findings || []).map((x) => ({ ...x })), ruledOut: [...p.ruledOut], right: fits.includes(p.cause) });
         if (def?.holds) { if (!sup) K.score(p, areaFor(p.type, opt.kind), 1, 'Held the line in front of the crew while you found out'); }
         else if (!(p.findings || []).length) K.score(p, areaFor(p.type, opt.kind), -1, 'Acted before finding out why');
         else if (sup && fits.includes(sup)) K.score(p, areaFor(p.type, opt.kind), 2, 'Acted on what you had checked');

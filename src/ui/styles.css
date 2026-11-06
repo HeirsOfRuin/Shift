@@ -334,3 +334,6 @@ section { display: flex; flex-direction: column; gap: 10px; }
 .opts.tight .opt:first-child { border-top: 0; }
 .board .chips, .ticket .chips.grid { gap: 6px; }
 .ticket .chip.pick { min-height: 36px; padding: 6px 12px; font-size: 14px; }
+/* the moment that decided it (beta 17) */
+.moment { border-left: 4px solid var(--amber); padding: 8px 12px; background: var(--amber-soft); border-radius: 0 var(--radius) var(--radius) 0; }
+.moment p { margin: 0 0 6px; }

@@ -37,6 +37,11 @@ what you typed, not your runs.
 5. If you came in on a code, tap *Progress code, for your coach* on your
    track when you are done, and send it the same way as your thoughts.
 
+**Three questions, for the version from 2026-11-06 on.** Did you ever doubt
+what someone in the game told you, and why? When the end screen told you
+what the real reason was, were you surprised? Which part of a ticket did you
+skim?
+
 **What we most want to know.** Which bits would never happen on a real floor.
 Which option you wanted and could not find. Whether the Friday report sounds
 like a person or a robot. How long it took.

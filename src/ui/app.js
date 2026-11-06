@@ -195,7 +195,7 @@ function traineesTab(r) {
     ${r.rows.map((t) => `<section class="you roster">
       <div class="row" style="justify-content:space-between"><p class="label">${esc(t.name)} &middot; ${esc(t.seat)}, ${esc(t.department)}</p><span class="chip ${t.done === t.modules.length ? 'good' : ''}">${t.done} of ${t.modules.length} signed off</span></div>
       ${t.note ? `<p class="soft">${esc(t.note)}</p>` : ''}
-      <ol class="notes">${t.modules.map((m) => `<li><strong>${esc(m.title)}</strong> <span class="chip ${STATE_CHIP[m.state]}">${esc(m.state)}</span>${m.plays ? ` <span class="soft">played ${m.plays}, got through ${m.wins}</span>` : ''}${m.reads.length ? `<br><span class="soft">${m.reads.map((x) => `${esc(x.area)}: ${esc(x.read)}`).join('; ')}</span>` : ''}${m.commitment ? `<br><em>&ldquo;${esc(m.commitment)}&rdquo;</em>${m.by ? ` <span class="soft">by ${esc(m.by)}</span>` : ''}` : ''}${m.signedOff ? `<br><span class="soft">Signed off by ${esc(m.signedOff)}</span>` : ''}</li>`).join('')}</ol>
+      <ol class="notes">${t.modules.map((m) => `<li><strong>${esc(m.title)}</strong> <span class="chip ${STATE_CHIP[m.state]}">${esc(m.state)}</span>${m.plays ? ` <span class="soft">played ${m.plays}, got through ${m.wins}</span>` : ''}${m.reads.length ? `<br><span class="soft">${m.reads.map((x) => `${esc(x.area)}: ${esc(x.read)}`).join('; ')}</span>` : ''}${m.moment ? `<br><span class="soft">The moment: ${esc(m.moment)}.</span>` : ''}${m.commitment ? `<br><em>&ldquo;${esc(m.commitment)}&rdquo;</em>${m.by ? ` <span class="soft">by ${esc(m.by)}</span>` : ''}` : ''}${m.signedOff ? `<br><span class="soft">Signed off by ${esc(m.signedOff)}</span>` : ''}</li>`).join('')}</ol>
       <p class="soft">${t.lastHeard ? `Last progress code ${esc(t.lastHeard)}.` : 'No progress code yet.'} Assigned ${esc(t.issued)}${t.open === 'all' ? ', all open at once' : ', in order'}.</p>
       <div class="row"><button class="btn small" data-act="coach-code" data-id="${t.id}">${openCode === t.id ? 'Hide the code' : 'Assignment code'}</button><button class="btn small" data-act="coach-paste" data-id="${t.id}">Paste a progress code</button><button class="btn small quiet" data-act="coach-edit" data-id="${t.id}">Edit</button>${pending?.act === 'coach-remove' && pending.id === t.id ? `<button class="btn small" data-act="coach-remove" data-id="${t.id}">Yes, remove</button><button class="btn small quiet" data-act="cancel">Keep</button>` : `<button class="btn small quiet" data-act="ask-coach-remove" data-id="${t.id}">Remove</button>`}</div>
       ${openCode === t.id ? `<div class="codebox"><label class="label" for="acode-${t.id}">Send this to ${esc(t.name)}. They paste it on the title screen.</label><textarea id="acode-${t.id}" class="code" rows="4" readonly>${esc(assignmentCode(save, t.id))}</textarea><div class="row"><button class="btn primary small" data-act="copy" data-target="acode-${t.id}">Copy</button></div></div>` : ''}
@@ -496,7 +496,8 @@ function waysFor(run) {
 function sameMonth(s) {
   const truth = truthOf(s);
   const ways = waysFor(s);
-  return `${truth ? `<section><h3>What it was</h3><p>${truth.short ? `${esc(TYPE[truth.type] || truth.label)}: ${esc(truth.text)}.` : esc(truth.text)}</p><p class="soft">Hidden from you until now. Was it what you thought it was, and when did you know?</p></section>` : ''}
+  const mo = s.over && save?.track?.modules?.[s.moduleId]?.last?.moment;
+  return `${mo ? `<section class="moment"><h3>The moment that decided it</h3><p>${esc(mo.text)}</p><p class="soft">Take this one to the debrief.</p></section>` : truth ? `<section><h3>What it was</h3><p>${truth.short ? `${esc(TYPE[truth.type] || truth.label)}: ${esc(truth.text)}.` : esc(truth.text)}</p><p class="soft">Hidden from you until now. Was it what you thought it was, and when did you know?</p></section>` : ''}
     <section><h3>Same month, other ways</h3><p class="soft">Your month again: the same people, the same causes, the same luck, worked five other ways.</p>
       <ul class="ways"><li class="you"><span class="wname">You</span><span class="chip ${s.outcome.win ? 'good' : ''}">${s.outcome.win ? 'Got through' : 'Did not'}</span></li>
       ${ways.map((w) => `<li><span class="wname">${esc(w.label)}</span><span class="chip ${w.win ? 'good' : ''}">${w.win ? 'Got through' : 'Did not'}</span><span class="soft how">${esc(w.how)}</span>${w.turn ? `<span class="turn">Week ${w.turn.week}: ${esc(w.turn.text)}${w.turn.because ? ` <span class="soft">${esc(w.turn.because)}</span>` : ''}</span>` : `<span class="turn soft">${esc(w.summary)}</span>`}</li>`).join('')}</ul></section>`;
@@ -545,6 +546,7 @@ function debriefScreen() {
     <div class="stack"><p class="label">Debrief &middot; ${esc(m.title)} &middot; Handbook ${esc(m.handbook)}</p><h2>Debrief</h2></div>
     <p class="soft">Ten minutes with your coach after a run. Answer in your own words. The answers stay on this device and travel in the save code.</p>
     ${t.last ? `<p class="banner info">Last run: ${t.last.win ? 'you got through it' : 'you did not get through it'}${t.last.reads?.length ? `. ${esc(t.last.reads.map((r) => `${MODULES[debriefId].focus.includes(r.id) ? r.id : r.id}: ${r.read}`).join('; '))}` : ''}. The end report and the log have the detail.</p>` : '<p class="warn">Play the module before debriefing it.</p>'}
+    ${t.last?.moment ? `<section class="moment"><p class="label">Start here: the moment that decided it</p><p>${esc(t.last.moment.text)}</p></section>` : ''}
     ${m.debrief.questions.map((q, i) => `<div class="q"><label for="dq${i}">${esc(q)}</label><textarea id="dq${i}" data-field="a${i}">${esc(d.answers[i] || '')}</textarea></div>`).join('')}
     <div class="q"><label for="dcommit">${esc(m.debrief.commitment)}</label><textarea id="dcommit" data-field="commitment">${esc(d.commitment || '')}</textarea>
       ${d.by ? `<span class="soft">Follow up by ${esc(d.by)}: ninety days from when you wrote it.</span>` : '<span class="soft">A follow-up date ninety days out is set when you write it.</span>'}</div>
@@ -561,6 +563,7 @@ function debriefText(id) {
   const d = t.debrief || { answers: [] };
   const who = save.profile ? `${save.profile.name ? `${save.profile.name}, ` : ''}${save.profile.seat}, ${save.profile.department}` : '';
   return [`Shift debrief: ${m.title}`, who, t.last ? `Last run: ${t.last.win ? 'got through it' : 'did not get through it'}. ${(t.last.reads || []).map((r) => `${r.id} ${r.read}`).join('; ')} (practice, not assessment).` : '',
+    t.last?.moment ? `The moment that decided it: ${t.last.moment.text}` : '',
     ...m.debrief.questions.map((q, i) => `\n${q}\n${d.answers[i] || '(no answer)'}`), `\n${m.debrief.commitment}\n${d.commitment || '(none yet)'}`, d.by ? `Follow up by ${d.by}.` : '',
     t.signedOff ? `Signed off by ${t.signedOff.coach}.` : 'Not signed off yet.'].filter(Boolean).join('\n');
 }

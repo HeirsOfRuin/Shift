@@ -12,6 +12,7 @@ import { SEATS, DEPARTMENTS } from '../data/departments.data.js';
 import { ROLES } from '../data/crew.data.js';
 import { newModule, advance as advanceWeek } from './week.js';
 import { pathFor } from './path.js';
+import { momentOf } from './moment.js';
 
 export const SAVE_KEY = 'shift.save.v1'; // never rename
 export const SAVE_VERSION = 4;
@@ -86,7 +87,8 @@ export function playWeek(save, plan) {
     const m = s.track.modules[state.moduleId];
     m.plays += 1;
     if (state.outcome.win) m.wins += 1;
-    m.last = { win: state.outcome.win, week: state.week - 1, seed: state.seed, reads: state.outcome.profile.focus.map((f) => ({ id: f.id, read: f.read.label })), summary: state.outcome.summary };
+    const mo = momentOf(state);
+    m.last = { win: state.outcome.win, week: state.week - 1, seed: state.seed, reads: state.outcome.profile.focus.map((f) => ({ id: f.id, read: f.read.label })), summary: state.outcome.summary, moment: mo ? { kind: mo.kind, text: mo.text } : null };
   }
   return { save: s, record };
 }

@@ -1,10 +1,23 @@
-# Shift beta 16: finding out is the game, everywhere
+# Shift beta 17: nothing to memorise, a ticket that fits, and the moment that decided it
 
 Published 2026-11-06 as a private page, the same link as every beta:
 **https://claude.ai/artifact/4c5QqYTmZdn5iKcutCPZJx**
 (only the author can open it until he shares it from the page's Share menu).
 Rebuild with `npm run build` and republish `dist/shift.embed.html` to the same
 link. The build id is baked in, so an installed copy picks the new one up.
+
+**What changed in beta 17 (2026-11-06):** three things, from "Do 1, then 4
+and 2." **Nothing to memorise:** the easy story each person gives and each
+bystander's view are drawn fresh every run, so who lies about what can't be
+learned by replaying; a bot that remembers betas 15 and 16's tells now does
+no better than one general rule (`KILLGATE-ask.md`). **A ticket that fits a
+phone again:** a board of possible reasons at the top (who pointed to each,
+what ruled it out), the find-out row as chips, the do row as one tight list;
+*The late one*'s ticket went from 1,176 px to 850 by week three
+(`FRAME-readability.md`). **The moment that decided it:** every end screen,
+debrief and coach's roster names the week your reading went wrong (or
+right), what you had in hand, and what it actually was, with one question
+to take to the debrief.
 
 **What changed in beta 16 (2026-11-06):** the find-out row is on every
 problem ticket now, not just *The late one*. Ask the person, ask the people

@@ -6,6 +6,7 @@ export { newModule, advance, hoursFor, tableFor, routineFor, crewFor } from './w
 export { trackView, briefView, weekView, floorView, crewView, demoFloor, crewStrip, peopleView, profileView, MODULES, TRACK } from './view.js';
 export { pathFor } from './path.js';
 export { otherWays, truthOf, WAYS } from './replay.js';
+export { momentOf } from './moment.js';
 export { decide, POLICIES } from './bots.js';
 export { becomeCoach, becomeTrainee, setTrainee, removeTrainee, assignmentCode, kindOf, readAssignment, takeAssignment, dropAssignment, progressOf, progressCode, readProgress, recordProgress, rosterView, assignable, startSession, endSession, roomView, ASSIGN_PREFIX, PROGRESS_PREFIX } from './coach.js';
 export { GROUPS as GROUP_SESSIONS, GROUP_ORDER } from '../data/groups.data.js';

@@ -6,7 +6,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { newModule, advance, weekView, TRACK, MODULES } from '../src/engine/game.js';
+import { newModule, advance, weekView, momentOf, TRACK, MODULES } from '../src/engine/game.js';
 import { decide, POLICIES } from '../sim/bot.js';
 import { TEXT } from '../src/data/text.data.js';
 import { PROBLEMS } from '../src/data/problems.data.js';
@@ -27,6 +27,8 @@ test('no raw tokens anywhere a player can read, across every module and bot', ()
     for (const c of s.outcome.checks) assert.doesNotMatch(c.label, RAW, c.label);
     for (const t of s.trace) assert.doesNotMatch(t.text + t.because, RAW, t.text);
     for (const t of s.outcome.carried) assert.doesNotMatch(t, RAW, t);
+    const mo = momentOf(s);
+    if (mo) assert.doesNotMatch(mo.text, RAW, `${module} moment: ${mo.text}`);
   }
 });
 

@@ -119,7 +119,7 @@ export function progressOf(save) {
     at: new Date().toISOString().slice(0, 10),
     m: ids.filter((id) => save.track.modules[id]?.plays).map((id) => {
       const t = save.track.modules[id];
-      return { id, p: t.plays, w: t.wins, r: (t.last?.reads || []).map((x) => [x.id, x.read]), k: t.debrief?.commitment || '', by: t.debrief?.by || '', so: t.signedOff?.coach || '' };
+      return { id, p: t.plays, w: t.wins, r: (t.last?.reads || []).map((x) => [x.id, x.read]), k: t.debrief?.commitment || '', by: t.debrief?.by || '', so: t.signedOff?.coach || '', mo: t.last?.moment?.kind || '' };
     }),
   };
 }
@@ -149,6 +149,15 @@ export function recordProgress(save, code) {
 
 // ---------------------------------------------------------------- views
 
+/** The moment that decided the last run (engine/moment.js), as the roster says it. */
+export const MOMENT_PHRASE = {
+  blind: 'acted before finding anything out', patched: 'kept patching it, never went after why', against: 'acted against the evidence',
+  oneWary: "acted on one wary person's word, and it was wrong", guessed: "guessed between findings that didn't agree, and missed",
+  passed: 'believed it would sort itself out', never: 'never acted on it', checkedWrong: 'checked, and the evidence misled',
+  lucky: "acted on one person's word, and it happened to be right", guessedRight: "guessed between findings that didn't agree, and it was right",
+  settled: 'it settled on its own', checked: 'checked, then acted: the move',
+};
+
 /** The roster as the coach's screen shows it: each trainee, each assigned
  *  module, and what the last progress code said about it. */
 export function rosterView(save) {
@@ -159,7 +168,7 @@ export function rosterView(save) {
       const p = prog[id];
       return {
         id, n: i + 1, title: m.title, purpose: m.purpose || '', focus: m.focus.map((a) => AREAS[a].label),
-        plays: p?.p || 0, wins: p?.w || 0, reads: (p?.r || []).map(([a, r]) => ({ area: AREAS[a]?.label || a, read: r })), commitment: p?.k || '', by: p?.by || '', signedOff: p?.so || '',
+        plays: p?.p || 0, wins: p?.w || 0, moment: p?.mo ? MOMENT_PHRASE[p.mo] || '' : '', reads: (p?.r || []).map(([a, r]) => ({ area: AREAS[a]?.label || a, read: r })), commitment: p?.k || '', by: p?.by || '', signedOff: p?.so || '',
         state: !p ? 'not started' : p.so ? 'signed off' : p.k ? 'debriefed' : p.w ? 'got through' : 'played',
       };
     });

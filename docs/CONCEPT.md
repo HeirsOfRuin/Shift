@@ -265,6 +265,14 @@ everything is urgent nothing is strategic; 3 Structure protects good people;
 
 ## 10. Status and the exact next steps
 
+**Update (2026-11-06, beta 17):** steps 1, 4 and 2 done. Nothing to
+memorise (stories and views drawn per run; a memoriser bot gains no more
+than the noise over one general rule); the ticket back inside a phone screen
+(a board of possible reasons, chips, a tight list); the moment that decided
+it on the end screen, the debrief and the roster. **Next:** the leads'
+playtest this week (`PLAYTEST.md` has the three questions); then *Rush
+week*'s hidden reason, kill gate first.
+
 **Update (2026-11-06, beta 16):** every module but *Rush week* now finds
 out three ways, and the gate enforces that the two-rule pattern loses
 (average gap 33 points, was 12). **Next:** beta 17, *Rush week* given a
