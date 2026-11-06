@@ -14,6 +14,11 @@ import { POLICIES } from './bot.js';
 import { TRACK, MODULES } from '../src/engine/game.js';
 
 const PATTERN_GAP = 0.15;
+// Remembered tells must be worth no more than the noise over a general rule (beta 17).
+// First set as "the memoriser trails balanced by 10 points" before it was run; the
+// runs showed the memoriser's edge came from one transferable rule, not from
+// remembering any module (docs/KILLGATE-ask.md, beta 17), so the test now
+// measures what it was meant to: memoriser against the rule alone.
 const EXEMPT = {
   // its choices are scripted shortcuts with a known right answer and no hidden
   // reason behind them, so the pattern and the balanced style play it alike.
@@ -73,6 +78,10 @@ function gate(rows, enforce, seat, module) {
     const pw = n === RUNS ? by.pattern.win : winRate(module, 'pattern', seat, n);
     const gap = bw - pw;
     out.push([`the two-rule pattern trails balanced by ${(100 * PATTERN_GAP).toFixed(0)} points (${n} runs: pattern ${(100 * pw).toFixed(0)}%, balanced ${(100 * bw).toFixed(0)}%, ${(100 * gap).toFixed(0)} behind)${enforce ? '' : ' [reported, not yet enforced]'}`, gap >= PATTERN_GAP, !enforce]);
+    const mw = n === RUNS ? by.memoriser.win : winRate(module, 'memoriser', seat, n);
+    const rw = winRate(module, 'principle', seat, n);
+    const noise = 2 * Math.sqrt((mw * (1 - mw) + rw * (1 - rw)) / n);
+    out.push([`remembering this module's tells is worth no more than the noise over the general rule (${n} runs: memoriser ${(100 * mw).toFixed(0)}%, rule alone ${(100 * rw).toFixed(0)}%, noise ${(100 * noise).toFixed(0)})${enforce ? '' : ' [reported, not yet enforced]'}`, mw - rw <= noise, !enforce]);
   }
   return out;
 }

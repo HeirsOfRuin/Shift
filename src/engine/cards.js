@@ -123,7 +123,9 @@ function problemCard(s, p) {
     guess: finds ? bestGuess(p) : null,
     holdId: finds ? Object.entries(def.actions).find(([, a]) => a.holds)?.[0] || null : null,
     passing: finds ? def.passing : null,
-    cover: finds ? def.find.ask?.cover || null : null,
+    // what a player who has played it before knows: every story this type's people tell, and every view
+    covers: finds ? [...new Set([].concat(def.find.ask?.cover ?? []))] : null,
+    views: finds ? [...new Set((def.find.around?.from || []).flatMap((x) => [].concat(x.bias ?? [])))] : null,
     weeks: s.week - (p.seenWeek ?? s.week),
     told: p.told, tried: [...p.tried], failed: Object.keys(p.fails), failedTwice: Object.keys(p.fails).filter((k) => p.fails[k] >= 2),
     sessions: p.sessions, ruledOut: [...p.ruledOut], waiting: !!(p.order || p.russDue || p.engDue || p.aroundDue), pending: !!p.pending,

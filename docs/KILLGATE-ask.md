@@ -162,6 +162,49 @@ right answer" half of the author's note. The fix is a hidden reason behind
 why the crew keeps offering shortcuts: a new mechanic, kill gate first, beta
 17.
 
+## Beta 17: nothing to memorise
+
+The author, 2026-11-06, agreeing to the first of three next steps: "Do 1,
+then 4 and 2." Step 1 was the risk that a player memorises who lies about
+what. In betas 15 and 16 each type's easy story and each bystander's view
+were fixed: Theresa always blamed the new painter, Brent always the truck.
+
+What was done and found, in order, because the first two attempts failed
+and the reasons matter:
+
+1. **A third bot, the memoriser**, given the fixed stories and views (what a
+   player of betas 15 and 16 would have learned). It discounts them and acts
+   on what is left, without reading trust or evidence. Bar set before it was
+   run: trail the careful style by 10 points at 200 runs.
+2. **Stories drawn per run from two options each.** The memoriser still
+   matched or beat the careful style in eight modules. With four reasons and
+   two known stories, "assume the known story is a lie and take the other"
+   is still a key.
+3. **Any reason can be the easy story, typical ones twice as likely.** Still
+   no. Wiping the memoriser's memory cost it 16 to 21 points, so the typical
+   stories were still a tell.
+4. **Uniform: the easy story is any reason but the true one, a bystander's
+   view any reason at all.** Memory was still worth 12 to 17 points, and it
+   held with every reason equally likely, so it was not frequencies either.
+5. **The edge was one rule.** A bot that remembers nothing about any module
+   except "don't accept 'it will sort itself out' without checking" did as
+   well as the full memoriser in all five modules tested. That is a
+   transferable principle, not a tell. The careful style now follows it too:
+   it checks an "it'll pass" reading against the evidence once.
+6. **So the test was replaced, and the change is recorded:** remembering a
+   module's tells must be worth no more than the noise (two standard errors,
+   about 7 points at 200 runs) over that rule alone. The original 10-point
+   bar measured a general principle, not memorising.
+7. **One leak found by the new test.** In *The loop* the memoriser learned
+   "when in doubt, set out how people treat each other", which worked
+   because that one-hour talk settled a problem with the work one time in
+   four. A talk about conduct now settles a work problem one time in ten.
+   *The loop* then passes: memoriser 6 and 7 points over the rule, noise 7.
+   Borderline, and worth watching.
+
+Every module but *Rush week* passes the pattern test and the memoriser test
+in every seat.
+
 ## What goes into the engine
 
 The three ways and the hold move on *The late one*, with Brent's trust drawn

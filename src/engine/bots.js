@@ -11,8 +11,33 @@ import { weekView } from './view.js';
 // `pattern` is the two-rule bot from docs/REVIEW-loop.md: press the find-out
 // option, then press the label that matches what you were told. It knows
 // nothing about leadership. Since beta 15 the gate requires it to lose.
-export const POLICIES = ['firefighter', 'documenter', 'coach', 'ignorer', 'balanced', 'pattern'];
-const CEILING = { firefighter: 60, documenter: 46, coach: 48, ignorer: 45, balanced: 50, pattern: 50 };
+// `memoriser` (beta 17) has played betas 15 and 16 and learned their tells:
+// the easy story each type's people told and each bystander's view (the
+// data's `cover` and `bias`, which since beta 17 are no longer used to draw
+// anything). It discounts those and acts on what is left, without reading
+// trust or looking at evidence. `principle` (not in the tables) remembers
+// nothing about any module except one rule: don't accept "it will sort
+// itself out" without checking. The gate requires that remembering the tells
+// is worth no more than the rule: there is nothing module-specific to learn.
+export const POLICIES = ['firefighter', 'documenter', 'coach', 'ignorer', 'balanced', 'pattern', 'memoriser'];
+const CEILING = { firefighter: 60, documenter: 46, coach: 48, ignorer: 45, balanced: 50, pattern: 50, memoriser: 50, principle: 50 };
+
+// the fix on the ticket for a reason; in the lead hand's seat what needs a signature goes to Kev
+const fitOn = (c, cause) => c.options.find((o) => (o.fits || []).includes(cause) && !c.failedTwice.includes(o.id))?.id || (c.options.some((o) => o.id === 'takeUp') && !c.waiting && !c.tried.includes('takeUp') ? 'takeUp' : null);
+
+function memoriser(c, remembers = true) {
+  if (!remembers) c = { ...c, covers: [c.passing], views: [] };
+  const ways = Object.fromEntries(c.find.options.filter((o) => o.way).map((o) => [o.way, o.id]));
+  const f = c.findings.filter((x) => !x.repeat);
+  const known = (x) => (x.way === 'ask' && c.covers.includes(x.says)) || (x.way === 'around' && c.views.includes(x.says));
+  const credible = f.filter((x) => x.says && !known(x) && c.candidates.includes(x.says));
+  if (credible.length) { const said = credible.at(-1).says; return ['none', said === c.passing ? 'leave' : fitOn(c, said) || 'leave']; }
+  if (!f.some((x) => x.way === 'ask') && ways.ask) return [ways.ask, 'leave'];
+  if (ways.around && !f.some((x) => x.way === 'around')) return [ways.around, 'leave'];
+  // a known story: assume it is the lie, and act on the likeliest reason it is covering
+  const other = c.candidates.find((x) => !c.covers.includes(x) && x !== c.passing) || c.candidates.find((x) => x !== c.passing);
+  return ['none', (other && fitOn(c, other)) || 'leave'];
+}
 
 // The balanced style on a ticket that finds out (engine/findout.js): read the
 // person, gather a second source before believing the easy story from someone
@@ -21,13 +46,14 @@ const CEILING = { firefighter: 60, documenter: 46, coach: 48, ignorer: 45, balan
 function reader(c) {
   const ways = Object.fromEntries(c.find.options.filter((o) => o.way).map((o) => [o.way, o.id]));
   const hold = c.holdId || 'leave';
-  // in the lead hand's seat what needs a signature is not on the ticket: take it to Kev
-  const fitFor = (cause) => c.options.find((o) => (o.fits || []).includes(cause) && !c.failedTwice.includes(o.id))?.id || (c.options.some((o) => o.id === 'takeUp') && !c.waiting && !c.tried.includes('takeUp') ? 'takeUp' : null);
+  const fitFor = (cause) => fitOn(c, cause);
   const sup = c.supported;
-  if (sup) return sup === c.passing ? ['none', hold] : ['none', fitFor(sup) || hold];
   const f = c.findings.filter((x) => !x.repeat);
   const asked = f.some((x) => x.way === 'ask');
   const looked = f.some((x) => x.way === 'look');
+  // "it will sort itself out" is checked against the evidence once before it is believed
+  if (sup === c.passing && !looked && ways.look) return [ways.look, hold];
+  if (sup) return sup === c.passing ? ['none', hold] : ['none', fitFor(sup) || hold];
   // while still finding out: hold the line if there is a way to; with nothing to hold
   // and two findings in hand, act on the likeliest reading rather than wait
   const meanwhile = c.holdId ? hold : f.length >= 2 && c.guess && c.guess !== c.passing ? fitFor(c.guess) || 'leave' : 'leave';
@@ -36,7 +62,7 @@ function reader(c) {
   if (!looked && ways.look) return [ways.look, meanwhile];
   if (ways.around) return [ways.around, meanwhile];
   // everything in hand and nothing agrees: act on the likeliest reading
-  return ['none', fitFor(c.guess && c.guess !== c.passing ? c.guess : c.candidates.find((x) => x !== c.cover && x !== c.passing) || c.candidates[0]) || hold];
+  return ['none', fitFor(c.guess && c.guess !== c.passing ? c.guess : c.candidates.find((x) => x !== c.passing) || c.candidates[0]) || hold];
 }
 
 // What each style does with a problem, given what it knows. Returns an option id.
@@ -99,6 +125,8 @@ const PROBLEM = {
     return 'leave';
   },
   ignorer() { return 'leave'; },
+  memoriser(c) { return c.find ? memoriser(c) : PROBLEM.pattern(c); },
+  principle(c) { return c.find ? memoriser(c, false) : PROBLEM.pattern(c); },
   // find out until someone tells you something (each way once, in the order listed), then do what they said
   pattern(c) {
     if (!c.told) { const ask = (c.find?.options || c.options).find((o) => o.kind === 'ask' && o.id !== 'none' && !c.tried.includes(o.id)); return ask ? ask.id : 'leave'; }
@@ -197,7 +225,7 @@ const PROBLEM = {
 
 // What each style does with a scripted card or a request.
 function scripted(policy, card, v) {
-  if (policy === 'pattern') policy = 'balanced';     // the pattern is about problems; it takes requests like anyone careful
+  if (['pattern', 'memoriser', 'principle'].includes(policy)) policy = 'balanced';     // these are about problems; they take requests like anyone careful
   const by = (kind) => card.options.find((o) => o.kind === kind)?.id;
   const cue = card.cue;
   const fallback = card.pick;
@@ -244,6 +272,8 @@ const MANAGER = {
   coach: () => 'coach',
   ignorer: () => 'leave',
   pattern: (c) => (!c.told ? 'coach' : 'direct'),
+  memoriser: (c) => (!c.told ? 'coach' : 'direct'),
+  principle: (c) => (!c.told ? 'coach' : 'direct'),
   balanced: (c) => (!c.told ? 'coach' : !c.plan ? (c.weeks >= 3 ? 'direct' : c.cap >= 0.55 ? 'leave' : 'coach') : 'leave'),
 };
 
@@ -260,13 +290,13 @@ export function decide(s, policy) {
   }
   for (const c of v.cards.filter((x) => x.kind === 'script')) want.push([c, scripted(policy, c, v)]);
   const coach = v.cards.find((c) => c.kind === 'coach');
-  if (coach && ['balanced', 'coach', 'pattern'].includes(policy)) {
+  if (coach && ['balanced', 'coach', 'pattern', 'memoriser', 'principle'].includes(policy)) {
     const learners = coach.options.filter((o) => o.id !== 'none');
     const joel = learners.find((o) => o.id === 'joel');
     want.push([coach, (joel || learners[0])?.id || 'none']);
   }
   const walk = v.cards.find((c) => c.kind === 'walk');
-  if (walk && ['balanced', 'coach', 'pattern'].includes(policy)) want.push([walk, 'walk']);
+  if (walk && ['balanced', 'coach', 'pattern', 'memoriser', 'principle'].includes(policy)) want.push([walk, 'walk']);
   for (const [card, id] of want) {
     if (card.find && card.find.options.some((o) => o.id === id)) {
       // the find-out row of a ticket
@@ -287,7 +317,7 @@ export function decide(s, policy) {
     // a lead hand is already producing at fit-up; welding a booth empties their own table
     // a lead hand is already producing at fit-up; a second day in a booth empties their own table
     const most = s.seat === 'lead' ? 1 : 2;
-    const days = { firefighter: Math.min(3, gap(0.8)), documenter: gap(-1.2) ? 1 : 0, coach: 0, ignorer: 0, balanced: Math.min(most, gap(-0.3)), pattern: Math.min(most, gap(-0.3)) }[policy];
+    const days = { firefighter: Math.min(3, gap(0.8)), documenter: gap(-1.2) ? 1 : 0, coach: 0, ignorer: 0, balanced: Math.min(most, gap(-0.3)), pattern: Math.min(most, gap(-0.3)), memoriser: Math.min(most, gap(-0.3)), principle: Math.min(most, gap(-0.3)) }[policy];
     const afford = Math.max(0, Math.min(days, Math.floor(left / 8)));
     picks[cover.id] = `d${afford}`;
   }

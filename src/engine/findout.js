@@ -6,10 +6,12 @@
 // ways, each with its own reliability (docs/KILLGATE-ask.md):
 //
 //   ask      the person. The truth with a probability that rises with their
-//            trust in you; otherwise the story people give a boss (`cover`).
+//            trust in you; otherwise the story people give a boss (`cover`,
+//            drawn per run from the data's choices, so it is never a fixed tell).
 //            Asking again gets the same answer until their trust has risen.
 //   around   the people near it, one at a time, in order. Each knows the
-//            cause with its own probability; some have a view (`bias`). The
+//            cause with its own probability; some have a view (`bias`, drawn
+//            per run from the data's choices like the cover). The
 //            person hears you went round them some of the time.
 //   look     the evidence. Rules out wrong causes; never names the right one.
 //
@@ -53,11 +55,28 @@ const anyone = (s, id) => s.crew.find((x) => x.id === id) || (CAST[id] ? { ...CA
 const trustOf = (p, c) => (c.cast ? p.srcTrust ?? 0.5 : c.trust);
 const setTrust = (K, p, c, x) => { if (c.cast) p.srcTrust = K.clamp(x); else c.trust = K.clamp(x); };
 
+const pickOf = (r, xs) => xs[Math.floor(r.next() * xs.length)];
+/** The easy story this person gives, and the view each bystander holds, for
+ *  this problem in this run: drawn once, so who lies about what cannot be
+ *  memorised across replays (the author's beta 17 note, docs/KILLGATE-ask.md). */
+export const coverOf = (p) => { const c = p.cover ?? PROBLEMS[p.type].find?.ask?.cover; return Array.isArray(c) ? c[0] : c; };
+const viewOf = (p, x) => (p.views && x.who in p.views ? p.views[x.who] : Array.isArray(x.bias) ? x.bias[0] : x.bias);
+
 /** Draw the person's trust in you for this run, so how to ask is a reading,
- *  not a rule. Called once, when the problem is made. */
+ *  not a rule; and the cover story and the bystanders' views. Called once,
+ *  when the problem is made. */
 export function drawTrust(s, p, r) {
   const f = PROBLEMS[p.type].find;
-  if (!f?.trust) return;
+  if (!f) return;
+  // any reason but the true one can be someone's easy story, equally likely; a bystander's view
+  // can be any reason at all, the truth included. A weighted draw (the typical stories twice as
+  // likely) was tried first: remembering the typical ones was worth 16 to 21 points to a bot
+  // that knew nothing else (docs/KILLGATE-ask.md, beta 17). The data's `cover` and `bias` are
+  // now what a player of betas 15 and 16 would have learned; the memoriser bot remembers them.
+  const causes = Object.keys(PROBLEMS[p.type].causes);
+  p.cover = pickOf(r, causes.filter((c) => c !== p.cause));
+  p.views = Object.fromEntries((f.around?.from || []).filter((x) => x.bias).map((x) => [x.who, pickOf(r, causes)]));
+  if (!f.trust) return;
   const c = whoIs(s, p, f.ask?.who);
   const t = f.trust[0] + (f.trust[1] - f.trust[0]) * r.next();
   if (c?.cast) p.srcTrust = t; else if (c) c.trust = t;
@@ -67,8 +86,9 @@ export function drawTrust(s, p, r) {
 export const candidates = (p) => Object.keys(PROBLEMS[p.type].causes).filter((c) => !p.ruledOut.includes(c));
 
 /** What the evidence in hand supports, or null: the one cause left, or a cause
- *  two sources name. An admission from the person counts twice (nobody invents
- *  the embarrassing reason); the cover story from someone wary counts once. */
+ *  two sources name. The person's own account counts twice when they trust
+ *  you and once when they don't: since beta 17 the easy story changes from run
+ *  to run, so no account is known to be the cover. An opinion counts once. */
 export function supported(p) {
   const f = PROBLEMS[p.type].find;
   if (!f) return p.told;
@@ -78,7 +98,7 @@ export function supported(p) {
   for (const x of p.findings || []) {
     if (!x.says || !left.includes(x.says) || x.repeat) continue;
     // an opinion (someone asked where the problem is, not why they do something) counts once
-    const w = x.way === 'ask' && f.ask.band !== false ? (x.band === 'trusts' || x.says !== f.ask.cover ? 2 : 1) : 1;
+    const w = x.way === 'ask' && f.ask.band !== false && x.band === 'trusts' ? 2 : 1;
     votes[x.says] = (votes[x.says] || 0) + w;
   }
   const best = Object.entries(votes).sort((a, b) => b[1] - a[1])[0];
@@ -101,8 +121,8 @@ export function bestGuess(p) {
   const f = PROBLEMS[p.type].find;
   const left = candidates(p);
   const votes = Object.fromEntries(left.map((c) => [c, 0]));
-  for (const x of p.findings || []) if (x.says && x.says in votes && !x.repeat) votes[x.says] += x.way === 'ask' && f.ask.band !== false && x.says === f.ask.cover && x.band !== 'trusts' ? 0.5 : 1;
-  const pref = (c) => (c === f.ask?.cover ? 0.1 : 0) + (c === PROBLEMS[p.type].passing ? 0.2 : 0);
+  for (const x of p.findings || []) if (x.says && x.says in votes && !x.repeat) votes[x.says] += x.way === 'ask' && f.ask.band !== false && x.band !== 'trusts' ? 0.5 : 1;
+  const pref = (c) => (c === PROBLEMS[p.type].passing ? 0.2 : 0);
   return left.sort((a, b) => votes[b] - votes[a] || pref(a) - pref(b))[0] || null;
 }
 
@@ -125,7 +145,7 @@ export function findOut(K, p, way) {
     }
     const [base, k] = f.ask.truth[p.cause] || [1, 0];
     const truth = K.r.outcomes.next() < base + k * t;
-    const says = truth ? p.cause : (f.ask.cover ?? p.cause);
+    const says = truth ? p.cause : (coverOf(p) ?? p.cause);
     p.findings.push({ way: 'ask', who: src.id, says, band: BAND(t), trust: t, week: s.week });
     setTrust(K, p, src, t + 0.05);
     p.told = says;
@@ -140,7 +160,8 @@ export function findOut(K, p, way) {
     const from = f.around.from.map((x) => ({ ...x, c: whoIs(s, p, x.who) })).find((x) => x.c && !skip.has(x.c.id));
     if (!from) { p.findings.push({ way: 'around', who: null, says: null, week: s.week }); K.line('result', 'find.around.nobody', v); return; }
     const q = K.r.outcomes.next();
-    const says = q < (from.truth[p.cause] ?? 0) ? p.cause : from.bias && K.r.outcomes.next() < (from.biasP ?? 0.5) ? from.bias : null;
+    const view = viewOf(p, from);
+    const says = q < (from.truth[p.cause] ?? 0) ? p.cause : view && K.r.outcomes.next() < (from.biasP ?? 0.5) ? view : null;
     p.findings.push({ way: 'around', who: from.c.id, says, week: s.week });
     if (says) { p.told = says; K.line('told', 'find.heard', { ...v, src: from.c, what: say(s, `${p.type}.short.${says}`, v) }); }
     else K.line('told', 'find.heard.none', { ...v, src: from.c });

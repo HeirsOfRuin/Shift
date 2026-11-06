@@ -229,7 +229,8 @@ export const TYPES = {
           return;
         }
         case 'expectations':
-          if (p.cause === 'personal' ? works(K, p, action, 0.65, 0.8) : K.r.outcomes.next() < 0.25) K.resolve(p, 'friction.fixed.expectations', { root: p.cause === 'personal', settled: true });
+          // a talk about conduct settles a problem between them; it rarely settles a problem with the work
+          if (p.cause === 'personal' ? works(K, p, action, 0.65, 0.8) : K.r.outcomes.next() < 0.1) K.resolve(p, 'friction.fixed.expectations', { root: p.cause === 'personal', settled: true });
           else K.line('result', 'friction.expectations.noHelp', v);
           return;
         case 'clarify':
