@@ -66,6 +66,11 @@ What it says:
   the debrief carries the rest; but a person who plays an area once has seen
   one week of it.
 
+**Correction, 2026-11-06.** This table measured content, not decisions.
+The author's playtest found the decisions shallow in every module in the
+same way, and a two-rule bot confirmed it (`REVIEW-loop.md`). "Depth is
+even" is true of the writing and false of the play.
+
 The verdict, and what beta 12 does about it:
 
 1. **Freeze the catalogue at 24 and build no new area until the leads'
