@@ -1,10 +1,23 @@
-# Shift beta 14: seventeen modules, three seats, the bench rebuilt
+# Shift beta 15: finding out is the game
 
-Published 2026-11-05 as a private page, the same link as every beta:
+Published 2026-11-06 as a private page, the same link as every beta:
 **https://claude.ai/artifact/4c5QqYTmZdn5iKcutCPZJx**
 (only the author can open it until he shares it from the page's Share menu).
 Rebuild with `npm run build` and republish `dist/shift.embed.html` to the same
 link. The build id is baked in, so an installed copy picks the new one up.
+
+**What changed in beta 15 (2026-11-06):** from your note that it felt like
+finding the right answer while keeping under forty hours. *The late one*'s
+ticket now has two rows. **Find out**: ask Brent, ask around the crew, or
+pull his timecards. What he tells you depends on how much he trusts you (the
+ticket says), Kev and Tyler know some of it and Tyler has a view, and the
+timecards rule a reason out without naming one. Nobody's answer comes
+labelled true. **Do**: act on what agrees, or say the standard at the huddle
+while you find out. Every module's end screen now says what the cause was,
+and replays your exact month five other ways so you can see what each
+instinct would have got. Wrong moves say why they were wrong. The other
+modules get the same treatment in beta 16 (`REVIEW-loop.md`,
+`KILLGATE-ask.md`).
 
 **What changed in beta 14 (2026-11-05):** *Pulled off the floor* rebuilt.
 Why Kev is not ready to run the floor is now a hidden cause: never shown the

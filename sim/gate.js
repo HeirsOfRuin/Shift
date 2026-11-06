@@ -2,10 +2,19 @@
 // The kill gate's five conditions (docs/KILLGATE.md), applied to every module
 // of the track with the engine's own bots. A module ships only if it passes.
 // Exit code 1 if any gated module fails, so `npm run check` can run it.
+//
+// A sixth condition since beta 15 (docs/REVIEW-loop.md, docs/KILLGATE-ask.md):
+// the two-rule pattern bot, which knows nothing about leadership, must trail
+// the balanced style by 15 points. For eleven betas the gate certified a loop
+// that pattern could win. It is enforced on every module whose problem finds
+// out the new way, and reported on the rest until they do.
 
 import { play, metrics } from './adapter.js';
 import { POLICIES } from './bot.js';
 import { TRACK, MODULES } from '../src/engine/game.js';
+import { PROBLEMS } from '../src/data/problems.data.js';
+
+const PATTERN_GAP = 0.15;
 
 const args = Object.fromEntries(process.argv.slice(2).map((a) => { const [k, v] = a.replace(/^--/, '').split('='); return [k, v ?? true]; }));
 const RUNS = Number(args.runs || 100);
@@ -25,7 +34,7 @@ function table(module, seat) {
   });
 }
 
-function gate(rows) {
+function gate(rows, enforce, seat) {
   const by = Object.fromEntries(rows.map((r) => [r.policy, r]));
   const wins = rows.map((r) => r.win);
   const out = [];
@@ -40,6 +49,10 @@ function gate(rows) {
   out.push([`ignoring loses most, not all (${pct(ig)}, want 3-40%)`, within(ig, 0.03, 0.4) && ig > 0]);
   const best = rows.reduce((a, r) => (r.win > a.win ? r : a));
   out.push([`nothing beats balanced beyond the noise (best other: ${best.policy === 'balanced' ? 'none' : best.policy})`, best.win - b <= floor(best.win, b)]);
+  if (seat !== 'manager') {
+    const gap = b - by.pattern.win;
+    out.push([`the two-rule pattern trails balanced by ${(100 * PATTERN_GAP).toFixed(0)} points (${pct(by.pattern.win)}, ${(100 * gap).toFixed(0)} behind)${enforce ? '' : ' [reported, not yet enforced]'}`, gap >= PATTERN_GAP, !enforce]);
+  }
   return out;
 }
 
@@ -48,12 +61,13 @@ let pass = true;
 const md = [];
 for (const id of modules) for (const seat of (MODULES[id].seats || ['supervisor']).filter((x) => !args.seat || x === args.seat)) {
   const rows = table(id, seat);
+  const enforce = !!PROBLEMS[MODULES[id].main?.type]?.find;
   md.push(`\n### ${MODULES[id].title} (\`${id}\`${seat === 'supervisor' ? '' : `, ${seat} seat`}), ${RUNS} seeds per style\n`);
   md.push('| Style | Win | Schedule | Kept everyone | Problem settled | Paint starved | Bottleneck | Shipped / asked | Hours a week | Morale | Trust | Practice score |');
   md.push('|---|---|---|---|---|---|---|---|---|---|---|---|');
   for (const r of rows) md.push(`| ${r.policy} | ${pct(r.win)} | ${pct(r.schedule)} | ${pct(r.kept)} | ${pct(r.problem)} | ${pct(r.starved)} | ${pct(r.bottleneck)} | ${(100 * r.ship).toFixed(0)}% | ${r.hours.toFixed(1)} | ${r.morale.toFixed(2)} | ${r.trust.toFixed(2)} | ${(100 * r.practice).toFixed(0)}% |`);
   md.push('');
-  for (const [label, ok] of gate(rows)) { md.push(`- ${ok ? 'PASS' : 'FAIL'} ${label}`); pass &&= ok; }
+  for (const [label, ok, soft] of gate(rows, enforce, seat)) { md.push(`- ${ok ? 'PASS' : soft ? 'REPORT' : 'FAIL'} ${label}`); if (!soft) pass &&= ok; }
 }
 console.log(md.join('\n'));
 console.log(`\nModule gate: ${pass ? 'PASS' : 'FAIL'}`);

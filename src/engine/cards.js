@@ -13,6 +13,7 @@ import { PROBLEMS } from '../data/problems.data.js';
 import { streamFor } from './rng.js';
 import { say, fill, hasText } from './text.js';
 import { active, routineFor } from './derive.js';
+import { knowLines, supported, candidates, BAND, whoIs } from './findout.js';
 
 export function buildCards(s, module) {
   const cards = [];
@@ -79,7 +80,7 @@ function problemCard(s, p) {
   const def = PROBLEMS[p.type];
   const fresh = p.seenWeek === s.week;
   const know = [];
-  if (p.told) know.push(say(s, `know.${p.type}.${p.told}`, { p }));
+  if (p.told && !(def.find && s.seat !== 'manager')) know.push(say(s, `know.${p.type}.${p.told}`, { p }));
   for (const id of p.tried) {
     if (p.fails[id]) know.push(fill(s, `Tried: ${def.actions[id].label.charAt(0).toLowerCase()}${def.actions[id].label.slice(1)}. It has not held.`, { p }));
   }
@@ -102,18 +103,34 @@ function problemCard(s, p) {
       pick: 'leave',
     };
   }
+  // a type that finds out: the ticket's two rows, find out and do
+  const finds = !!def.find;
+  const subject = finds ? whoIs(s, p, def.find.ask?.who) : null;
+  const find = finds ? {
+    options: [{ id: 'none', label: say(s, 'find.none'), hours: 0, kind: 'leave', way: null },
+      ...Object.entries(def.actions).filter(([, a]) => a.way).map(([id, a]) => ({ id, label: fill(s, a.label, { p }), hours: a.hours, kind: 'ask', way: a.way }))],
+    pick: 'none',
+  } : null;
   return {
     id: `p${p.id}`, kind: 'problem', problem: p.id, type: p.type, main: p.main, who: p.who,
     title: say(s, `card.${p.type}.title`, { p }),
     body: say(s, `card.${p.type}.body.${fresh ? 'new' : p.severity >= 2 ? 'worse' : 'open'}`, { p }),
-    know,
+    know: finds ? [...knowLines(s, p), ...know.filter((k) => k !== say(s, `know.${p.type}.ruledOut`, { p, n: p.ruledOut.length }))] : know,
+    find,
+    findings: finds ? (p.findings || []).map((x) => ({ ...x })) : null,
+    band: subject ? BAND(subject.trust) : null,
+    supported: finds ? supported(p) : null,
+    candidates: finds ? candidates(p) : null,
+    holdId: finds ? Object.entries(def.actions).find(([, a]) => a.holds)?.[0] || null : null,
+    passing: finds ? def.passing : null,
+    cover: finds ? def.find.ask?.cover || null : null,
     weeks: s.week - (p.seenWeek ?? s.week),
     told: p.told, tried: [...p.tried], failed: Object.keys(p.fails), failedTwice: Object.keys(p.fails).filter((k) => p.fails[k] >= 2),
     sessions: p.sessions, ruledOut: [...p.ruledOut], waiting: !!(p.order || p.russDue || p.engDue || p.aroundDue), pending: !!p.pending,
     lean: s.dept.lean === null || s.dept.lean === undefined ? null : { owner: !!s.dept.leanOwner, audit: !!s.dept.flags?.leanAudit, with: !!s.dept.leanWith },
     flow: s.dept.flow ? { ...s.dept.flow, held: p.held || 0, changedAgo: p.changedAt ? s.week - p.changedAt : null } : null,
     options: [
-      ...Object.entries(def.actions).filter(([, a]) => !(s.seat === 'lead' && a.needs)).map(([id, a]) => ({ id, label: fill(s, a.label, { p }), hours: a.hours, kind: a.kind, fits: a.fits || [] })),
+      ...Object.entries(def.actions).filter(([, a]) => !(s.seat === 'lead' && a.needs) && !(finds && a.way)).map(([id, a]) => ({ id, label: fill(s, a.label, { p }), hours: a.hours, kind: a.kind, fits: a.fits || [] })),
       // a lead hand's one move for what needs the supervisor's signature
       ...(s.seat === 'lead' && Object.values(def.actions).some((a) => a.needs) ? [{ id: 'takeUp', label: say(s, p.upDue ? 'option.takeUp.waiting' : 'option.takeUp'), hours: 0.5, kind: 'up', fits: [] }] : []),
       { id: 'leave', label: say(s, `option.leave.${fresh ? 'new' : 'open'}`), hours: 0, kind: 'leave', fits: [] },

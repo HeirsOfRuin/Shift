@@ -12,7 +12,7 @@
 import {
   newSave, setProfile, seatFor, startRun, playWeek, saveDebrief, signOff, setOpenAll, SAVE_KEY, serialize, deserialize, toCode, fromCode,
   trackView, briefView, weekView, demoFloor, crewStrip, peopleView, profileView, markSeen, MODULES, TRACK,
-  becomeCoach, becomeTrainee, setTrainee, removeTrainee, assignmentCode, kindOf, takeAssignment, progressOf, progressCode, recordProgress, rosterView, assignable, GROUP_SESSIONS, GROUP_ORDER, startSession, endSession, roomView,
+  otherWays, truthOf, becomeCoach, becomeTrainee, setTrainee, removeTrainee, assignmentCode, kindOf, takeAssignment, progressOf, progressCode, recordProgress, rosterView, assignable, GROUP_SESSIONS, GROUP_ORDER, startSession, endSession, roomView,
 } from '../engine/game.js';
 import { STORAGE_OK, lsGet, lsSet } from './storage.js';
 import { registerSW, installPrompt } from './sw-register.js';
@@ -332,8 +332,8 @@ function weekTab(v) {
 // The first week's explainer. The author on beta 1: "It definitely needs more
 // depth and more explanation."
 function howTo() {
-  return `<article class="ticket"><div class="kind"><span class="label">How a week works</span></div><h3>Forty hours. The floor takes most of them.</h3>
-    <p class="body">Pick what to do on each ticket; the bar shows your hours. Over forty costs you. Nobody tells you the cause of a problem: ask, watch, act, read Friday.</p>
+  return `<article class="ticket"><div class="kind"><span class="label">How a week works</span></div><h3>Find out before you act. Then act on what agrees.</h3>
+    <p class="body">Nobody tells you the cause of a problem, and nobody's answer comes labelled true. Some tickets have two rows: <strong>find out</strong> (ask the person, ask around, look at the evidence: each tells you something different) and <strong>do</strong> (act on what you found, or hold the line while you find out). Friday says what it did. Your hours are at the bottom; over forty costs you.</p>
     <button class="btn" data-act="howto-done">Got it</button></article>`;
 }
 
@@ -412,7 +412,12 @@ function ticket(c) {
   const age = c.kind === 'problem' ? (c.weeks ? `<span class="label">Open ${c.weeks} week${c.weeks > 1 ? 's' : ''}${c.waiting ? ' &middot; waiting on someone' : ''}</span>` : `<span class="label tagged">New</span>`) : '';
   return `<article class="${cls}"><div class="kind"><span class="label">${kind}</span>${age}</div><h3>${esc(c.title)}</h3><p class="body">${esc(c.body)}</p>
     ${c.know?.length ? `<div class="know"><span class="label">What you know</span>${c.know.map((k) => `<p>${esc(k)}</p>`).join('')}</div>` : ''}
-    <div class="opts" role="radiogroup" aria-label="${esc(c.title)}">${c.options.map((o) => `<button class="opt ${o.id === pick ? 'on' : ''}" role="radio" aria-checked="${o.id === pick}" data-card="${c.id}" data-opt="${o.id}"><span class="dot"></span><span class="t">${esc(o.label)}</span><span class="h">${o.hours ? h(o.hours) : '0 h'}</span></button>`).join('')}</div></article>`;
+    ${c.find ? optGroup(`${c.id}~find`, 'Find out this week', c.find.options, plan.picks[`${c.id}~find`] ?? c.find.pick) : ''}
+    ${optGroup(c.id, c.find ? 'Do this week' : '', c.options, pick, c.title)}</article>`;
+}
+
+function optGroup(key, label, options, pick, aria = label) {
+  return `${label ? `<p class="label optlabel">${label}</p>` : ''}<div class="opts" role="radiogroup" aria-label="${esc(aria)}">${options.map((o) => `<button class="opt ${o.id === pick ? 'on' : ''}" role="radio" aria-checked="${o.id === pick}" data-card="${key}" data-opt="${o.id}"><span class="dot"></span><span class="t">${esc(o.label)}</span><span class="h">${o.hours ? h(o.hours) : '0 h'}</span></button>`).join('')}</div>`;
 }
 
 function crewTab(v) {
@@ -460,6 +465,24 @@ function fridayModal(record, over) {
 }
 
 // ================================================================ the end
+// Same month, other ways: replayed once per run and kept, since it is five
+// whole runs of the engine.
+let waysCache = { key: null, ways: null };
+function waysFor(run) {
+  const key = `${run.moduleId}|${run.seed}|${run.seat}`;
+  if (waysCache.key !== key) waysCache = { key, ways: otherWays(run) };
+  return waysCache.ways;
+}
+
+function sameMonth(s) {
+  const truth = truthOf(s);
+  const ways = waysFor(s);
+  return `${truth ? `<section><h3>What it was</h3><p>${truth.short ? `${esc(TYPE[truth.type] || truth.label)}: ${esc(truth.text)}.` : esc(truth.text)}</p><p class="soft">Hidden from you until now. Was it what you thought it was, and when did you know?</p></section>` : ''}
+    <section><h3>Same month, other ways</h3><p class="soft">Your month again: the same people, the same causes, the same luck, worked five other ways.</p>
+      <ul class="ways"><li class="you"><span class="wname">You</span><span class="chip ${s.outcome.win ? 'good' : ''}">${s.outcome.win ? 'Got through' : 'Did not'}</span></li>
+      ${ways.map((w) => `<li><span class="wname">${esc(w.label)}</span><span class="chip ${w.win ? 'good' : ''}">${w.win ? 'Got through' : 'Did not'}</span><span class="soft how">${esc(w.how)}</span>${w.turn ? `<span class="turn">Week ${w.turn.week}: ${esc(w.turn.text)}${w.turn.because ? ` <span class="soft">${esc(w.turn.because)}</span>` : ''}</span>` : `<span class="turn soft">${esc(w.summary)}</span>`}</li>`).join('')}</ul></section>`;
+}
+
 function endScreen() {
   const s = save.run;
   const o = s.outcome;
@@ -472,6 +495,7 @@ function endScreen() {
     <section><h3>How it went</h3><ul class="checks">${o.checks.map((c) => `<li><span class="stamp ${c.ok ? 'met' : 'missed'}">${c.ok ? 'Met' : 'Missed'}</span><span>${esc(c.label)}</span></li>`).join('')}</ul></section>
     <section><h3>What came from what</h3>${s.trace.length ? `<ul class="trace">${s.trace.map((t) => `<li><span><span class="label">Week ${t.week}</span> ${esc(t.text)}</span><span class="because">${esc(t.because)}</span></li>`).join('')}</ul>` : '<p class="soft">Nothing landed on you this time. The log shows how close it came.</p>'}</section>
     ${o.carried.length ? `<section><h3>Still open</h3><ul class="notes">${o.carried.map((c) => `<li>${esc(c)}</li>`).join('')}</ul></section>` : ''}
+    ${sameMonth(s)}
     <section class="profile"><div class="row" style="justify-content:space-between"><h3>What this module trains</h3><span class="chip amber">${esc(p.label)}</span></div>
       <p class="soft">Your decisions against what you knew at the time, on this module's focus only. For the debrief, never a score on a person.</p>
       ${p.focus.map((f) => { const lvl = { thin: 0, notyet: 1, getting: 2, solid: 3 }[f.read.id]; const list = (xs, cap) => `<ul class="notes small">${xs.slice(0, cap).map((e) => `<li>Wk ${e.week}: ${esc(e.note)}</li>`).join('')}</ul>${xs.length > cap ? `<details class="fold"><summary>${xs.length - cap} more</summary><ul class="notes small">${xs.slice(cap).map((e) => `<li>Wk ${e.week}: ${esc(e.note)}</li>`).join('')}</ul></details>` : ''}`; return `<div class="dom"><span>${esc(f.label)}</span><span class="score read-${f.read.id}">${esc(f.read.label)}</span>

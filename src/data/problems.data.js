@@ -17,12 +17,23 @@ export const PROBLEMS = {
     causes: { childcare: 0.35, ride: 0.3, attitude: 0.35 },
     passing: 'ride',
     stories: { attitude: { ride: 0.4 } },
+    // how you find out (engine/findout.js, docs/KILLGATE-ask.md): what Brent tells
+    // his boss depends on how much he trusts you; Kev and Tyler know some of it,
+    // and Tyler has a view; the timecards rule a reason out but never name one
+    find: {
+      trust: [0.25, 0.8],
+      ask: { truth: { ride: [0.9, 0], childcare: [-0.1, 1], attitude: [0, 0.5] }, cover: 'ride' },
+      around: { from: [{ who: 'senior', truth: { ride: 0.5, childcare: 0.35, attitude: 0.45 } }, { who: 'tyler', truth: { ride: 0.5, childcare: 0.2, attitude: 0.6 }, bias: 'attitude', biasP: 0.6 }], noticed: 0.3 },
+      look: { rules: 1 },
+    },
     actions: {
-      talk: { label: 'Talk to {a.him} privately', hours: 1, kind: 'ask' },
+      talk: { label: 'Ask {a.him} privately what is going on', hours: 1, kind: 'ask', way: 'ask' },
+      around: { label: 'Ask around the crew what they know', hours: 0.5, kind: 'ask', way: 'around' },
+      cards: { label: "Pull {a.his} timecards for the last two months", hours: 0.5, kind: 'ask', way: 'look' },
       document: { label: 'Write it up: the discipline steps', hours: 1.5, kind: 'hold', fits: ['attitude'], needs: 'supervisor' },
       accommodate: { label: 'Offer {a.him} a later start time', hours: 0.5, kind: 'fix', fits: ['childcare'], needs: 'supervisor' },
       carpool: { label: 'Sort out a ride on {a.his} road', hours: 1, kind: 'fix', fits: ['ride'] },
-      remind: { label: 'Mention it in passing', hours: 0.25, kind: 'soft' },
+      remind: { label: 'Say it at the huddle: on time means on time, for everyone', hours: 0.25, kind: 'soft', holds: true },
     },
   },
   rework: {

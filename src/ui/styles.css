@@ -308,3 +308,13 @@ section { display: flex; flex-direction: column; gap: 10px; }
 .facil p { margin: 0; }
 @media (min-width: 900px) { #app.room { max-width: 960px; font-size: 1.12em; } #app.room .runbar .inner, #app.room .sheet { max-width: 960px; } }
 @media print { .noprint, .btn, .tabs, .runbar { display: none !important; } #app { max-width: none; padding: 0; } .facil, .fold { border-color: #999; } }
+
+/* a ticket's two rows: find out, then do */
+.optlabel { margin: 10px 0 2px; }
+
+/* same month, other ways */
+.ways { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.ways li { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); }
+.ways li.you { border-color: var(--amber); }
+.ways .wname { font-weight: 700; }
+.ways .how, .ways .turn { grid-column: 1 / -1; font-size: 14px; }

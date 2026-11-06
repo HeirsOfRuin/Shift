@@ -10,6 +10,7 @@
 //   9 consequences land  10 morale and resignations  11 what you will know
 //   12 the record, the end check, and next Monday
 
+import { findOut, drawTrust, supported } from './findout.js';
 import { CONFIG as C } from '../data/config.data.js';
 import { CREW, PLAYER_LEAD, DALE, ROLES } from '../data/crew.data.js';
 import { PROBLEMS, LANDS_ON } from '../data/problems.data.js';
@@ -65,6 +66,7 @@ export function spawn(s, type, who, { main = false, seen = false, source = 'scri
   };
   const story = def.stories[pick];
   if (story) for (const [alt, chance] of Object.entries(story)) if (r.chance(chance)) p.story = alt;
+  if (def.find) { p.findings = []; drawTrust(s, p, r); }
   s.problems.push(p);
   return p;
 }
@@ -147,9 +149,13 @@ export function hoursFor(s, plan) {
     if (card.kind === 'routine') continue;
     const opt = card.options.find((o) => o.id === (plan.picks?.[card.id] ?? card.pick));
     if (opt) h += opt.hours;
+    if (card.find) { const f = card.find.options.find((o) => o.id === (plan.picks?.[findKey(card)] ?? card.find.pick)); if (f) h += f.hours; }
   }
   return h;
 }
+
+/** The find-out row of a ticket is picked under its own key. */
+export const findKey = (card) => `${card.id}~find`;
 
 // ---------------------------------------------------------------- the week
 export function advance(prev, plan = {}) {
@@ -172,6 +178,11 @@ export function advance(prev, plan = {}) {
     const id = plan.picks?.[card.id] ?? card.pick;
     if (!card.options.some((o) => o.id === id)) throw new Error(`no option ${id} on card ${card.id}`);
     picks[card.id] = id;
+    if (card.find) {
+      const fid = plan.picks?.[findKey(card)] ?? card.find.pick;
+      if (!card.find.options.some((o) => o.id === fid)) throw new Error(`no find option ${fid} on card ${card.id}`);
+      picks[findKey(card)] = fid;
+    }
   }
   const skip = (plan.skip || []).filter((id) => routineFor(s).some((it) => it.id === id));
   const P = { skip, picks };
@@ -207,7 +218,22 @@ export function advance(prev, plan = {}) {
     if (card.kind === 'problem') {
       const p = s.problems.find((x) => x.id === card.problem);
       if (!p || p.state === 'resolved') continue;
+      // the find-out row first: what you learn this week, you act on this week
+      let foundNow = false;
+      if (card.find && picks[findKey(card)] !== 'none') {
+        const fopt = card.find.options.find((o) => o.id === picks[findKey(card)]);
+        if (!(p.findings || []).length) K.score(p, areaFor(p.type, 'ask'), 2, 'Found out before acting');
+        else if (fopt.way === 'ask' && (p.findings || []).some((x) => x.way === 'ask' && !x.repeat) && !(p.findings || []).some((x) => x.way !== 'ask')) K.score(p, areaFor(p.type, 'ask'), 0, 'Asked the same person the same question');
+        else K.score(p, areaFor(p.type, 'ask'), 1, 'Checked what you had heard another way');
+        p.acted = true; foundNow = true;
+        if (!p.tried.includes(fopt.id)) p.tried.push(fopt.id);
+        p.tries[fopt.id] = (p.tries[fopt.id] || 0) + 1;
+        findOut(K, p, fopt.way);
+        TYPES[p.type].act(K, p, fopt.id);
+        if (p.state === 'resolved') continue;
+      }
       if (opt.id === 'leave') {
+        if (foundNow) continue;
         const weeksSeen = s.week - (p.seenWeek ?? s.week);
         if (p.told && p.told === PROBLEMS[p.type].passing) K.score(p, areaFor(p.type), 1, 'Watched a passing thing instead of acting');
         else if (weeksSeen >= 1 && p.state === 'active') K.score(p, areaFor(p.type), -1, 'Left a signal alone');
@@ -218,18 +244,32 @@ export function advance(prev, plan = {}) {
       if (opt.id === 'takeUp') {
         // the lead hand's one move for what is not theirs: take it to the supervisor
         const sup = s.roles.sup;
-        const mine = Object.entries(PROBLEMS[p.type].actions).some(([, a]) => !a.needs && p.told && (a.fits || []).includes(p.told));
-        if (!p.told) K.score(p, 'E1', -1, `Took it to ${sup.name} with nothing but a complaint`);
+        // what goes up is what you have: on a ticket that finds out, the reading the evidence supports
+        const reading = card.find ? supported(p) || p.told : p.told;
+        const mine = Object.entries(PROBLEMS[p.type].actions).some(([, a]) => !a.needs && reading && (a.fits || []).includes(reading));
+        if (!reading) K.score(p, 'E1', -1, `Took it to ${sup.name} with nothing but a complaint`);
         else if (mine) K.score(p, 'E1', 0, `Sent ${sup.name} something that was yours to handle`);
         else { K.score(p, 'E1', 2, `Took it to ${sup.name} with the facts`); K.score(p, areaFor(p.type), 2, `Fitted the response to the cause, through ${sup.name}`); }
         if (!p.tried.includes('takeUp')) p.tried.push('takeUp');
         p.upDue = s.week + 1;
-        s.queue.push({ week: s.week + 1, kind: 'leadUp', data: { id: p.id, told: p.told }, because: { week: s.week, text: '' } });
-        lines.push({ kind: 'result', text: say(s, p.told ? 'lead.up.taken' : 'lead.up.takenBlind', { p }) });
+        s.queue.push({ week: s.week + 1, kind: 'leadUp', data: { id: p.id, told: reading }, because: { week: s.week, text: '' } });
+        lines.push({ kind: 'result', text: say(s, reading ? 'lead.up.taken' : 'lead.up.takenBlind', { p }) });
         continue;
       }
       // knowing what you know: find out before acting, then act on what you found
-      if (!p.told && opt.kind === 'ask') K.score(p, areaFor(p.type), 2, 'Found out before acting');
+      if (card.find) {
+        const def = PROBLEMS[p.type].actions[opt.id];
+        const fits = opt.fits || [];
+        const sup = supported(p);
+        const told = (p.findings || []).filter((x) => x.says);
+        const lastAsk = (p.findings || []).filter((x) => x.way === 'ask').at(-1);
+        if (def?.holds) { if (!sup) K.score(p, areaFor(p.type, opt.kind), 1, 'Held the line in front of the crew while you found out'); }
+        else if (!(p.findings || []).length) K.score(p, areaFor(p.type, opt.kind), -1, 'Acted before finding out why');
+        else if (sup && fits.includes(sup)) K.score(p, areaFor(p.type, opt.kind), 2, 'Acted on what you had checked');
+        else if (fits.some((c) => p.ruledOut.includes(c))) K.score(p, areaFor(p.type, opt.kind), -1, 'Acted against what the evidence said');
+        else if (fits.some((c) => told.some((x) => x.says === c))) K.score(p, areaFor(p.type, opt.kind), lastAsk?.band === 'wary' ? -1 : 0, lastAsk?.band === 'wary' ? 'Took a wary answer at face value' : 'Acted on one account');
+      }
+      else if (!p.told && opt.kind === 'ask') K.score(p, areaFor(p.type), 2, 'Found out before acting');
       else if (!p.told && ['fix', 'hold', 'soft', 'yourself', 'up', 'around'].includes(opt.kind)) K.score(p, areaFor(p.type, opt.kind), -1, 'Acted before finding out why');
       else if (p.told && (opt.fits || []).includes(p.told)) K.score(p, areaFor(p.type, opt.kind), 2, 'Acted on what you had found out');
       // changing course when a fix did not hold
@@ -454,6 +494,8 @@ function kevDoes(s, r, p, action) {
   if (!p.tried.includes(action)) p.tried.push(action);
   p.tries[action] = (p.tries[action] || 0) + 1;
   const before = p.state;
+  // Kev, in the manager's seat, finds out the way every type did before: he hears the story
+  if (PROBLEMS[p.type].actions[action]?.way && !p.told) p.told = p.story;
   TYPES[p.type].act(K2, p, action);
   if (p.state === before && before === 'active' && ['fix', 'hold'].includes(PROBLEMS[p.type].actions[action].kind)) p.fails[action] = (p.fails[action] || 0) + 1;
   return p.state === 'resolved';

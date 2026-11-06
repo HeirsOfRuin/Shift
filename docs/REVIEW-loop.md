@@ -97,6 +97,15 @@ No new modules until the loop is fixed. Seventeen modules on a loop that
 does not teach is the thing the author warned against on 2026-11-05:
 covering everything and showing nothing properly.
 
+## What was done
+
+Beta 15 (2026-11-06), after the author's "go with your recommendations. Fix
+this.": A and F on *The late one*, kill gate first (`KILLGATE-ask.md`); C
+(the end screen replays the same month five ways and says what the cause
+was) and D (33 wrong-move lines rewritten with reasons) for every module; E
+in part (the week's explainer leads with finding out). Beta 16 takes A to
+the other modules and enforces F everywhere.
+
 ## What it does not change
 
 The catalogue, the seats, the coach's side and the group sessions stand.

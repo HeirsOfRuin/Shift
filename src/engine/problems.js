@@ -10,6 +10,7 @@
 // active(c), clamp, line(kind, key, vars), queue(weeks, kind, data, because),
 // resolve(p, how, opts), score(p, sub, pts, note), week.
 
+import { supported } from './findout.js';
 import { PROBLEMS } from '../data/problems.data.js';
 import { CONFIG as C } from '../data/config.data.js';
 
@@ -28,8 +29,8 @@ export const TYPES = {
       const v = { p };
       switch (action) {
         case 'talk':
-          told(p); a.trust = K.clamp(a.trust + 0.05);
-          K.line('told', `late.told.${p.told}`, v);
+          // what he says is engine/findout.js's; what talking does after a write-up is this type's
+          if (K.s.seat === 'manager') { told(p); a.trust = K.clamp(a.trust + 0.05); K.line('told', `late.told.${p.told}`, v); }
           if (p.cause === 'attitude' && p.tried.includes('document')) { K.resolve(p, 'late.fixed.talkAfterWriteup', { root: true }); }
           return;
         case 'document':
@@ -62,9 +63,9 @@ export const TYPES = {
           else K.line('result', p.cause === 'ride' ? 'late.carpool.notYet' : 'late.carpool.noHelp', v);
           return;
         case 'remind':
+          // the standard, said out loud for everyone: holds the line while you find out; fixes nothing
           p.heldThisWeek = true;
-          if (p.cause === 'attitude') { p.state = 'quiet'; p.quietUntil = K.week + 2; K.line('result', 'late.remind.quiet', v); }
-          else K.line('result', 'late.remind.noHelp', v);
+          K.line('result', p.cause === 'attitude' ? 'late.remind.held' : 'late.remind.heldOther', v);
           return;
       }
     },
@@ -85,12 +86,12 @@ export const TYPES = {
       if (p.cause === 'ride' && K.week - p.since >= 1 && K.r.people.next() < 0.4) { K.resolve(p, 'late.passed.truck', { settled: true }); return; }
       K.line('signal', 'late.week', v);
     },
+    // scored against what the evidence in hand supported, never the hidden cause
     score(p, action) {
-      if (action === 'talk') return p.told ? [] : [['D2', 2, 'Asked before acting']];
-      if (action === 'document') return p.told === 'attitude' ? [['D2', 2, 'Held the standard when it was attitude']] : p.told ? [['D2', -1, 'Wrote up a reason, not a choice']] : [['D2', 0, 'Wrote it up before asking']];
-      if (action === 'accommodate') return p.told === 'childcare' ? [['D2', 2, 'Fitted the fix to the reason']] : p.told === 'attitude' ? [['D2', -1, 'Bent the rule for attitude']] : [['D2', 1, 'Tried to help']];
-      if (action === 'carpool') return p.told === 'ride' ? [['D2', 2, 'Fitted the fix to the reason']] : [['D2', 0, 'A fix for a reason nobody gave']];
-      if (action === 'remind') return [['D2', 0, 'Mentioned it in passing']];
+      const sup = supported(p);
+      if (action === 'document') return sup === 'attitude' ? [['D2', 2, 'Held the standard when the evidence said it was a choice']] : sup ? [['D2', -1, 'Wrote up a reason, not a choice']] : [['D2', 0, 'Wrote it up before the evidence was in']];
+      if (action === 'accommodate') return sup === 'childcare' ? [['D2', 2, 'Fitted the fix to the reason']] : sup === 'attitude' ? [['D2', -1, 'Bent the rule for a choice']] : [];
+      if (action === 'carpool') return sup === 'ride' ? [['D2', 2, 'Fitted the fix to the reason']] : [];
       return [];
     },
   },
